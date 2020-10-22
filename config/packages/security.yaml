@@ -3,6 +3,14 @@ security:
         App\Entity\User:
             algorithm: auto
 
+
+    role_hierarchy:
+        ROLE_MANAGER: ROLE_USER
+        ROLE_DELIVERY_MAN: ROLE_USER
+        ROLE_ADMIN: ROLE_MANAGER
+        ROLE_SUPER_ADMIN: [ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH]
+
+
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
     providers:
         # used to reload user from session & other features (e.g. switch_user)
@@ -18,6 +26,13 @@ security:
             anonymous: true
             lazy: true
             provider: app_user_provider
+            guard:
+                authenticators:
+                    - App\Security\UserAuthenticator
+            logout:
+                path: app_logout
+                # where to redirect after logout
+                # target: app_any_route
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication
@@ -28,5 +43,10 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+          - { path: ^/user/admin/dashboard, roles: ROLE_ADMIN }
+          - { path: ^/user/manager/dashboard, roles: ROLE_MANAGER }
+          - { path: ^/user/delivery-man/dashboard, roles: ROLE_DELIVERY_MAN }
+          - { path: ^/user/super-admin/dashboard, roles: ROLE_SUPER_ADMIN }
+
+
+
