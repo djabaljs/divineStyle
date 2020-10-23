@@ -6,12 +6,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Route("/user/admin")
+ * @Route("/user/manager")
  */
-class AdminController extends AbstractController
+class ManagerController extends AbstractController
 {
     /**
-     * @Route("/dashboard", name="admin_dashboard")
+     * @Route("/dashboard", name="manager_dashboard")
      */
     public function index()
     {
