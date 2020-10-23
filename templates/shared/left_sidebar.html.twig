@@ -118,6 +118,7 @@
                                 </div>
                             </li>
                             {% elseif is_granted('ROLE_MANAGER') %}
+                            <li>
                                 <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1" aria-controls="submenu-2"><i class="fa fa-fw fa-cubes"></i>Produits</a>
                                 <div id="submenu-1" class="collapse submenu" style="">
                                     <ul class="nav flex-column">
@@ -159,7 +160,7 @@
                                     </ul>
                                 </div>
                             </li>
-                            <li class="nav-item ">
+                            {# <li class="nav-item ">
                                 <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-4" aria-controls="submenu-4"><i class="fab fa-fw fa fa-truck"></i>Gestion des stocks</a>
                                 <div id="submenu-4" class="collapse submenu" style="">
                                     <ul class="nav flex-column">
@@ -174,17 +175,17 @@
                                         </li>
                                     </ul>
                                 </div>
-                            </li>
-                            <li class="nav-item">
+                            </li> #}
+                            {# <li class="nav-item">
                                 <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-5" aria-controls="submenu-5"><i class="fas fa-fw fa-home"></i>Magasins</a>
                                 <div id="submenu-5" class="collapse submenu" style="">
                                     <ul class="nav flex-column">
-                                        {# <li class="nav-item">
+                                        <li class="nav-item">
                                             <a class="nav-link" href="pages/general-table.html">General Tables</a>
-                                        </li> #}
+                                        </li>
                                     </ul>
                                 </div>
-                            </li>
+                            </li> #}
                             <li class="nav-item">
                                 <a class="nav-link" href="pages/general-table.html"><i class="fab fa-fw fas fa-chart-line" aria-hidden="true"></i>Rapports</a>
                             </li>
@@ -200,81 +201,11 @@
                                     </ul>
                                 </div>
                             </li>
-                            {% elseif is_granted('ROLE_MANAGER') %}
+                            {% elseif is_granted('ROLE_DELIVERY_MAN') %}
+                            
                             <li class="nav-item">
-                                <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-1" aria-controls="submenu-2"><i class="fa fa-fw fa-cubes"></i>Produits</a>
-                                <div id="submenu-1" class="collapse submenu" style="">
-                                    <ul class="nav flex-column">
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="pages/cards.html">Produits <span class="badge badge-secondary">New</span></a>
-                                        </li>
-                                         <li class="nav-item">
-                                            <a class="nav-link" href="pages/cards.html">Catégories <span class="badge badge-secondary">New</span></a>
-                                        </li>
-                                    </ul>
-                                </div>
+                                <a class="nav-link" href="pages/general-table.html"><i class="fab fa-fw fa fa-truck" aria-hidden="true"></i>Livraisons</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-2" aria-controls="submenu-3"><i class="fas fa-fw fa-shopping-cart"></i>Ventes</a>
-                                <div id="submenu-2" class="collapse submenu" style="">
-                                    <ul class="nav flex-column">
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Ventes</a>
-                                        </li>
-                                          <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Factures</a>
-                                        </li>
-                                          <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Bon de commande</a>
-                                        </li>
-                                          <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Bon de livraison</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </li>
-                                   <li class="nav-item">
-                                <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-3" aria-controls="submenu-3"><i class="fas fa-fw fa-users"></i>Contacts</a>
-                                <div id="submenu-3" class="collapse submenu" style="">
-                                    <ul class="nav flex-column">
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Clients</a>
-                                        </li>
-                                         <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Fournisseurs</a>
-                                        </li>
-                                           <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Personnel</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </li>
-                            <li class="nav-item ">
-                                <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-4" aria-controls="submenu-4"><i class="fab fa-fw fa fa-truck"></i>Gestion des stocks</a>
-                                <div id="submenu-4" class="collapse submenu" style="">
-                                    <ul class="nav flex-column">
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="pages/form-elements.html">Niveau de stock</a>
-                                        </li>
-                                          <li class="nav-item">
-                                            <a class="nav-link" href="pages/form-elements.html">Livraison</a>
-                                        </li>
-                                           <li class="nav-item">
-                                            <a class="nav-link" href="pages/form-elements.html">Seuil de réapprovisionnement</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </li>
-                            {# <li class="nav-item">
-                                <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-5" aria-controls="submenu-5"><i class="fas fa-fw fa-home"></i>Magasins</a>
-                                <div id="submenu-5" class="collapse submenu" style="">
-                                    <ul class="nav flex-column">
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="pages/general-table.html">General Tables</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </li> #}
                             <li class="nav-item">
                                 <a class="nav-link" href="pages/general-table.html"><i class="fab fa-fw fas fa-chart-line" aria-hidden="true"></i>Rapports</a>
                             </li>

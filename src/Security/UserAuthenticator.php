@@ -98,14 +98,16 @@ class UserAuthenticator extends AbstractFormLoginAuthenticator implements Passwo
 
         
         $user = $token->getUser();
-        if (in_array('ROLE_ADMIN', $user->getRoles())) {
+        // dd(in_array('ROLE_MANAGER', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles()));
+
+        if (in_array('ROLE_ADMIN', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles())){
             return new RedirectResponse($this->urlGenerator->generate('admin_dashboard'));
-        } elseif (in_array('ROLE_MANAGER', $user->getRoles())) {
+        } elseif (in_array('ROLE_MANAGER', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles())) {
             return new RedirectResponse($this->urlGenerator->generate('manager_dashboard'));
-        } elseif (in_array('ROLE_DELIVERY_MAN', $user->getRoles())) {
+        } elseif (in_array('ROLE_DELIVERY_MAN', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles())) {
             return new RedirectResponse($this->urlGenerator->generate('delivery_man_dashboard'));
-        } elseif (in_array('ROLE_SUPER_ADMIN', $user->getRoles())) {
-            return new RedirectResponse($this->urlGenerator->generate('super_admin_dashboard_dashboard'));
+        } elseif (in_array('ROLE_SUPER_ADMIN', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles())) {
+            return new RedirectResponse($this->urlGenerator->generate('super_admin_dashboard'));
         }
     }
 

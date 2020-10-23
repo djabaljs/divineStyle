@@ -19,15 +19,16 @@ class SecurityController extends AbstractController
             
             $user = $this->getUser();
     
-            if (in_array('ROLE_ADMIN', $user->getRoles())) {
-                return $this->redirectToRoute('admin_dashboard');
-            } elseif (in_array('ROLE_DELIVERY_MAN', $user->getRoles())) {
-                return $this->redirectToRoute('delivery_man_dashboard');
-            } elseif (in_array('ROLE_MANAGER', $user->getRoles())) {
-                return $this->redirectToRoute('manager_dashboard');
-            } elseif (in_array('ROLE_SUPER_ADMIN', $user->getRoles())) {
-                return $this->redirectToRoute('super_admin_dashboard');
-            }
+         
+        if (in_array('ROLE_ADMIN', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles())){
+            return new RedirectResponse($this->urlGenerator->generate('admin_dashboard'));
+        } elseif (in_array('ROLE_MANAGER', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles())) {
+            return new RedirectResponse($this->urlGenerator->generate('manager_dashboard'));
+        } elseif (in_array('ROLE_DELIVERY_MAN', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles())) {
+            return new RedirectResponse($this->urlGenerator->generate('delivery_man_dashboard'));
+        } elseif (in_array('ROLE_SUPER_ADMIN', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles())) {
+            return new RedirectResponse($this->urlGenerator->generate('super_admin_dashboard'));
+        }
         }
         // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
