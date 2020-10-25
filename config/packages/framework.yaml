@@ -3,6 +3,19 @@ framework:
     secret: '%env(APP_SECRET)%'
     #csrf_protection: true
     #http_method_override: true
+    http_client:
+        scoped_clients:
+            test.btest-ci.com:
+                base_uri: 'http://test.btest-ci.com/'
+
+                # HTTP Basic authentication
+                auth_basic: 'ck_dc6ce29874aea34450055beb8cd376b55896f2af:cs_d4109a560b6a46091b51a87ec2a98335bf54f1bd'
+
+                # HTTP Bearer authentication (also called token authentication)
+                auth_bearer: the-bearer-token
+
+                # Microsoft NTLM authentication
+                auth_ntlm: 'the-username:the-password'
 
     # Enables session support. Note that the session will ONLY be started if you read or write from it.
     # Remove or comment this section to explicitly disable session support.

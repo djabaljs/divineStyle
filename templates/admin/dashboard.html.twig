@@ -35,10 +35,10 @@
                                     <div class="card-body">
                                         <h5 class="text-muted">Ventes</h5>
                                         <div class="metric-value d-inline-block">
-                                            <h1 class="mb-1">$12099</h1>
+                                            <h1 class="mb-1">{{sales[0]["total_sales"]}} FCFA</h1>
                                         </div>
                                         <div class="metric-label d-inline-block float-right text-success font-weight-bold">
-                                            <span class="icon-circle-small icon-box-xs text-success bg-success-light"><i class="fa fa-fw fa-arrow-up"></i></span><span class="ml-1">5.86%</span>
+                                            {# <span class="icon-circle-small icon-box-xs text-success bg-success-light"><i class="fa fa-fw fa-arrow-up"></i></span><span class="ml-1">${{sales[0]["total_sales"] * 10}}%</span> #}
                                         </div>
                                     </div>
                                 </div>
@@ -54,10 +54,10 @@
                                     <div class="card-body">
                                         <h5 class="text-muted">Nouveau client</h5>
                                         <div class="metric-value d-inline-block">
-                                            <h1 class="mb-1">1245</h1>
+                                            <h1 class="mb-1">{{customers|length}}</h1>
                                         </div>
                                         <div class="metric-label d-inline-block float-right text-success font-weight-bold">
-                                            <span class="icon-circle-small icon-box-xs text-success bg-success-light"><i class="fa fa-fw fa-arrow-up"></i></span><span class="ml-1">10%</span>
+                                            {# <span class="icon-circle-small icon-box-xs text-success bg-success-light"><i class="fa fa-fw fa-arrow-up"></i></span><span class="ml-1">10%</span> #}
                                         </div>
                                     </div>
                                 </div>
@@ -71,12 +71,12 @@
                             <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
                                 <div class="card border-3 border-top border-top-primary">
                                     <div class="card-body">
-                                        <h5 class="text-muted">Visitor</h5>
+                                        <h5 class="text-muted">Articles</h5>
                                         <div class="metric-value d-inline-block">
-                                            <h1 class="mb-1">13000</h1>
+                                            <h1 class="mb-1">{{products|length}}</h1>
                                         </div>
                                         <div class="metric-label d-inline-block float-right text-success font-weight-bold">
-                                            <span class="icon-circle-small icon-box-xs text-success bg-success-light"><i class="fa fa-fw fa-arrow-up"></i></span><span class="ml-1">5%</span>
+                                            {# <span class="icon-circle-small icon-box-xs text-success bg-success-light"><i class="fa fa-fw fa-arrow-up"></i></span><span class="ml-1">5%</span> #}
                                         </div>
                                     </div>
                                 </div>
@@ -92,10 +92,10 @@
                                     <div class="card-body">
                                         <h5 class="text-muted">Total des commandes</h5>
                                         <div class="metric-value d-inline-block">
-                                            <h1 class="mb-1">1340</h1>
+                                            <h1 class="mb-1">{{orders|length}}</h1>
                                         </div>
                                         <div class="metric-label d-inline-block float-right text-danger font-weight-bold">
-                                            <span class="icon-circle-small icon-box-xs text-danger bg-danger-light bg-danger-light "><i class="fa fa-fw fa-arrow-down"></i></span><span class="ml-1">4%</span>
+                                            {# <span class="icon-circle-small icon-box-xs text-danger bg-danger-light bg-danger-light "><i class="fa fa-fw fa-arrow-down"></i></span><span class="ml-1">4%</span> #}
                                         </div>
                                     </div>
                                 </div>
@@ -339,5 +339,20 @@
                 </div>
           
           
+
+{% endblock %}
+{% block javascripts  %}
+    <!-- chart chartist js -->
+    <script src="{{asset('concept/assets/vendor/charts/chartist-bundle/chartist.min.js')}}"></script>
+    <!-- sparkline js -->
+    <script src="{{asset('concept/assets/vendor/charts/sparkline/jquery.sparkline.js')}}"></script>
+    <!-- morris js -->
+    <script src="{{asset('concept/assets/vendor/charts/morris-bundle/raphael.min.js')}}"></script>
+    <script src="{{asset('concept/assets/vendor/charts/morris-bundle/morris.js')}}"></script>
+    <!-- chart c3 js -->
+    <script src="{{asset('concept/assets/vendor/charts/c3charts/c3.min.js')}}"></script>
+    <script src="{{asset('concept/assets/vendor/charts/c3charts/d3-5.4.0.min.js')}}"></script>
+    <script src="{{asset('concept/assets/vendor/charts/c3charts/C3chartjs.js')}}"></script>
+    <script src="{{asset('concept/assets/libs/js/dashboard-ecommerce.js')}}"></script>
 
 {% endblock %}

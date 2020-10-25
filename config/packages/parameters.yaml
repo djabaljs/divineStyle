@@ -1,0 +1,2 @@
+parameters:
+  your_variable: '%env(YOUR_ENV_VARIABLE)%'
