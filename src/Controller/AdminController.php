@@ -27,6 +27,7 @@ class AdminController extends AbstractController
      $customers = $apiService->clientRequest('GET', 'customers');
      $products = $apiService->clientRequest('GET', 'products');
      $orders = $apiService->clientRequest('GET', 'orders');
+
       return $this->render('admin/dashboard.html.twig', [
           'sales' => $sales,
           'customers' => $customers,
@@ -218,6 +219,34 @@ class AdminController extends AbstractController
         $categories = $apiService->clientRequest('GET', 'products/categories/'.$id);
         return $this->render('admin/products/categories/show.html.twig', [
             'categories' => $categories 
+        ]);
+    }
+
+
+    /**
+     * @Route("/customers", name="admin_customers", methods={"GET"})
+     * @param ApiService $apiService
+     * @return Response
+     */
+    public function customers(ApiService $apiService)
+    {
+        $customers = $apiService->clientRequest('GET', 'customers');
+        return $this->render('admin/contacts/customers/index.html.twig',[
+            'customers' => $customers
+        ]);
+    }
+
+    /**
+     * @Route("/customers", name="admin_customer_create", methods={"POST"})
+     * @param Request
+     * @param ApiService $apiService
+     * @return Response
+     */
+    public function customers(Request $request, ApiService $apiService)
+    {
+        $customers = $apiService->clientRequest('GET', 'customers');
+        return $this->render('admin/contacts/customers/create.html.twig',[
+            'customers' => $customers
         ]);
     }
 }
