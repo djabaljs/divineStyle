@@ -2,19 +2,30 @@
 
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Routing\Annotation\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
+use App\Entity\Customer;
+use App\Form\CustomerType;
+use App\Services\ApiService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Services\ApiService;
+use Symfony\Component\Routing\Annotation\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+
 /**
  * @IsGranted("ROLE_ADMIN")
  * @Route("/user/admin")
  */
 class AdminController extends AbstractController
 {
-    
+    private $manger;
+
+
+    public function __construct(EntityManagerInterface $entityManager)
+    {
+        $this->manager = $entityManager;
+    }
+
     /**
      * @Route("/dashboard", name="admin_dashboard")
      * @param ApiService $apiService
@@ -82,7 +93,7 @@ class AdminController extends AbstractController
             ]
         ];
 
-        $response = $apiService->clientRequest('POST', 'products',$data);
+        $products = $apiService->clientRequest('POST', 'products',$data);
         return $this->render('admin/products/products.html.twig', [
             'products' => $products 
         ]);
@@ -135,7 +146,7 @@ class AdminController extends AbstractController
             ]
         ];
 
-        $response = $apiService->clientRequest('POST', 'products',$data);
+        $products = $apiService->clientRequest('POST', 'products',$data);
         return $this->render('admin/products/products.html.twig', [
             'products' => $products 
         ]);
@@ -173,7 +184,7 @@ class AdminController extends AbstractController
             ]
         ];
 
-        $response = $apiService->clientRequest('POST', 'products',$data);
+        $products = $apiService->clientRequest('POST', 'products',$data);
         return $this->render('admin/products/products.html.twig', [
             'products' => $products 
         ]);
@@ -237,16 +248,57 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("/customers", name="admin_customer_create", methods={"POST"})
+     * @Route("/customers/create", name="admin_customer_create", methods={"POST", "GET"})
      * @param Request
      * @param ApiService $apiService
      * @return Response
      */
-    public function customers(Request $request, ApiService $apiService)
+    public function createCustomer(Request $request, ApiService $apiService)
     {
-        $customers = $apiService->clientRequest('GET', 'customers');
+        $customer = new Customer();
+
+        $form = $this->createForm(CustomerType::class, $customer);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid())
+        {
+            $this->manger->persist($customer);
+            $this->manger->flush($customer);
+
+            $this->addFlash("success", "Client enregistré avec succès!");
+            
+        }
+
         return $this->render('admin/contacts/customers/create.html.twig',[
-            'customers' => $customers
+            'form' => $form->createView()
+        ]);
+    }
+
+     /**
+     * @Route("/customers/update", name="admin_customer_create", methods={"PUT", "GET"})
+     * @param Request
+     * @param ApiService $apiService
+     * @param $id
+     * @return Response
+     */
+    public function updateCustomer(Request $request, ApiService $apiService, $id)
+    {
+        $customer = $this->getDoctrine()->getRepository(Customer::class)->find($id);
+
+        $form = $this->createForm(CustomerType::class, $customer);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid())
+        {
+            $this->manger->persist($customer);
+            $this->manger->flush($customer);
+
+            $this->addFlash("success", "Client modifié avec succès!");
+            
+        }
+
+        return $this->render('admin/contacts/customers/create.html.twig',[
+            'form' => $form->createView()
         ]);
     }
 }
