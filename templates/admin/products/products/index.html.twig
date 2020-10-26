@@ -60,9 +60,21 @@
                                            {% for product in products %}
                                              <tr>
                                                 <td>{{loop.index}}</td>
-                                                <td><img src="{{product['images'][0]['src']}}" class="img-fluid" /></td>
+                                                <td>
+                                                {% if product["images"] is not empty  %}
+                                                <img src="{{product['images'][0]['src']}}" class="img-thumbnail" style="width:100px" />
+                                                {% else %}
+                                                <p>Aucune image</p>
+                                                {% endif %}
+                                                </td>
                                                 <td>{{product['name']}}</td>
-                                                <td>{{product['categories'][0]['name']}}</td>
+                                                <td>
+                                                {% if product['categories'] is not empty %}
+                                                {{product['categories'][0]['name']}}
+                                                 {% else %}
+                                                <p>Aucune catégorie</p>
+                                                {% endif %}
+                                                </td>
                                                 <td>{{product['price']}}</td>
                                                 <td>{{product['sale_price']}}</td>
                                                 <td>

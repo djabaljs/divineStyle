@@ -22,7 +22,7 @@ class ApiService  extends AbstractController
           if(!is_null($body)){
               $response = $this->client->request(
                   $method,
-                  'https://test.btest-ci.com/wp/wp-json/wc/v3/'.$target, [
+                  'https://divinestyleshop.net/wp-json/wc/v3/'.$target, [
                    // use a different HTTP Basic authentication only for this request
                    'auth_basic' => [$this->getParameter('WOOCOMMERCE_AUTH_USERNAME'), $this->getParameter('WOOCOMMERCE_AUTH_PASSWORD')],
                    'body' => $body
@@ -31,7 +31,7 @@ class ApiService  extends AbstractController
           }else{
               $response = $this->client->request(
                   $method,
-                  'https://test.btest-ci.com/wp/wp-json/wc/v3/'.$target, [
+                  'https://divinestyleshop.net/wp-json/wc/v3/'.$target, [
                    // use a different HTTP Basic authentication only for this request
                    'auth_basic' => [$this->getParameter('WOOCOMMERCE_AUTH_USERNAME'), $this->getParameter('WOOCOMMERCE_AUTH_PASSWORD')],
                   ]);

@@ -27,7 +27,6 @@ class AdminController extends AbstractController
      $customers = $apiService->clientRequest('GET', 'customers');
      $products = $apiService->clientRequest('GET', 'products');
      $orders = $apiService->clientRequest('GET', 'orders');
-
       return $this->render('admin/dashboard.html.twig', [
           'sales' => $sales,
           'customers' => $customers,
@@ -44,6 +43,7 @@ class AdminController extends AbstractController
     public function products(ApiService $apiService)
     {
         $products = $apiService->clientRequest('GET', 'products');
+        // dd($products);
         return $this->render('admin/products/products/index.html.twig', [
             'products' => $products 
         ]);
