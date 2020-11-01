@@ -9,9 +9,11 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass=ShopRepository::class)
+ * @ORM\HasLifecycleCallbacks()
  */
 class Shop
 {
+    use Timestamp;
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -30,26 +32,29 @@ class Shop
     private $address;
 
     /**
-     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="shops")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\OneToOne(targetEntity=User::class, inversedBy="shop")
+     * @ORM\JoinColumn(name="manager_id", referencedColumnName="id")
      */
     private $manager;
 
     /**
-     * @ORM\OneToMany(targetEntity=User::class, mappedBy="shop")
+     * @ORM\OneToMany(targetEntity=User::class, mappedBy="shops", cascade={"persist","remove"})
      */
-    private $staff;
+    private $staffs;
 
     /**
-     * @ORM\OneToMany(targetEntity=Customer::class, mappedBy="shop")
+     * @ORM\OneToMany(targetEntity=Customer::class, mappedBy="shops")
      */
-    private $customer;
+    private $customers;
+
 
     public function __construct()
     {
-        $this->staff = new ArrayCollection();
-        $this->customer = new ArrayCollection();
+        $this->staffs = new ArrayCollection();
+        $this->customers = new ArrayCollection();
     }
+
+ 
 
     public function getId(): ?int
     {
@@ -92,18 +97,19 @@ class Shop
         return $this;
     }
 
+
     /**
      * @return Collection|User[]
      */
-    public function getStaff(): Collection
+    public function getStaffs(): Collection
     {
-        return $this->staff;
+        return $this->staffs;
     }
 
     public function addStaff(User $staff): self
     {
-        if (!$this->staff->contains($staff)) {
-            $this->staff[] = $staff;
+        if (!$this->staffs->contains($staff)) {
+            $this->staffs[] = $staff;
             $staff->setShop($this);
         }
 
@@ -112,8 +118,8 @@ class Shop
 
     public function removeStaff(User $staff): self
     {
-        if ($this->staff->contains($staff)) {
-            $this->staff->removeElement($staff);
+        if ($this->staffs->contains($staff)) {
+            $this->staffs->removeElement($staff);
             // set the owning side to null (unless already changed)
             if ($staff->getShop() === $this) {
                 $staff->setShop(null);
@@ -126,16 +132,16 @@ class Shop
     /**
      * @return Collection|Customer[]
      */
-    public function getCustomer(): Collection
+    public function getCustomers(): Collection
     {
-        return $this->customer;
+        return $this->customers;
     }
 
     public function addCustomer(Customer $customer): self
     {
-        if (!$this->customer->contains($customer)) {
-            $this->customer[] = $customer;
-            $customer->setShop($this);
+        if (!$this->customers->contains($customer)) {
+            $this->customers[] = $customer;
+            $customer->setShops($this);
         }
 
         return $this;
@@ -143,14 +149,17 @@ class Shop
 
     public function removeCustomer(Customer $customer): self
     {
-        if ($this->customer->contains($customer)) {
-            $this->customer->removeElement($customer);
+        if ($this->customers->contains($customer)) {
+            $this->customers->removeElement($customer);
             // set the owning side to null (unless already changed)
-            if ($customer->getShop() === $this) {
-                $customer->setShop(null);
+            if ($customer->getShops() === $this) {
+                $customer->setShops(null);
             }
         }
 
         return $this;
     }
+
+
+
 }

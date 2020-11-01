@@ -3,8 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\Shop;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use App\Entity\User;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @method Shop|null find($id, $lockMode = null, $lockVersion = null)
@@ -47,4 +48,30 @@ class ShopRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    public function findStaff($id)
+    {
+        $qb = $this->createQueryBuilder('s');
+        $qb
+            ->where('s.id = :id')
+            ->setParameter('id', $id)
+            ->innerJoin('s.staff', 'ss')
+            ;
+
+    return $qb->getQuery()->getResult();
+        
+    }
+
+    public function findManagerCustomers(User $manager)
+    {
+        $qb = $this->createQueryBuilder('s');
+        $qb 
+            ->select('s, c')
+            ->leftJoin('s.customers', 'c')
+            ->where('s.manager = :manager')
+            ->setParameter('manager', $manager)
+            ;
+
+        return $qb->getQuery()->getOneOrNullResult();
+    }
 }

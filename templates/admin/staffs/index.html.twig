@@ -30,17 +30,45 @@
                         </div>
                     </div>
                 </div>
+
+                 <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                         {% include 'shared/flash_message.html.twig' %}
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <a class="btn btn-success" href="{{path('admin_staff_create')}}" style="color:#fff" ><i class="fas fa-save"></i> Enregistrer un personnel</a>
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
                 <!-- ============================================================== -->
                 <!-- end pageheader -->
                 <!-- ============================================================== -->
                    <div class="row">
+                 
                     <!-- ============================================================== -->
                     <!-- data table  -->
-                    <!-- ============================================================== -->
+                    <!-- ========================= ===================================== -->
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                         <div class="card">
+                            
                             <div class="card-header">
-                                <h5 class="mb-0">Liste des catégories</h5>
+                                <h5 class="mb-0">Liste des magasin</h5>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
@@ -48,42 +76,40 @@
                                         <thead>
                                             <tr>
                                                 <th>N°</th>
-                                                <th>Images</th>
                                                 <th>Nom</th>
-                                                <th>Description</th>
-                                                <th>Quantité en stock</th>
+                                                <th>Prénoms</th>
+                                                <th>Post occupé</th>
+                                                <th>Date enregistrement</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                           {% for category in categories %}
+                                           {% for staff in staffs %}
                                              <tr>
                                                 <td>{{loop.index}}</td>
-                                               <td>
-                                               {% if category['image'] is not empty %}
-                                               <img src="{{category['image']['src']}}" class="img-fluid" /></td>
-                                               {% else %}
-                                               <p>Aucune image</p>
-                                               {% endif %}
-                                                </td>
-                                                <td>{{category['name']}}</td>
-                                                <td>{{category['description']}}</td>
-                                                <td>{{category['count']}}</td>
+                                                <td>{{staff.firstname}}</td>
+                                                <td>{{staff.lastname}}</td>
                                                 <td>
-                                                <a href="{{path('admin_category_show', {id: category['id']})}}" class="btn btn-info"><i class="fas fa-eye"></i></a>
-                                                <a class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                                <a class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                                                {% if 'ROLE_STAFF' in staff.roles  %}
+                                                 <p>Employé magasin</p>
+                                                {% endif %}
+                                                </td>
+                                                <td>{{staff.createdAt|date('d-m-Y H:m:s')}}</td>
+                                                <td>
+                                                {# <a href="{{path('admin_category_show', {id: category['id']})}}" class="btn btn-info"><i class="fas fa-eye"></i></a> #}
+                                                <a href="{{path('admin_staff_update', {id: staff.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
+                                                <a href="{{path('admin_staff_remove', {id: staff.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
                                                 </td>
                                             </tr>
                                            {% endfor %}
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                             <th>N°</th>
-                                                <th>Images</th>
+                                                <th>N°</th>
                                                 <th>Nom</th>
-                                                <th>Description</th>
-                                                <th>Quantité en stock</th>
+                                                <th>Prénoms</th>
+                                                <th>Post occupé</th>
+                                                <th>Date enregistrement</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>

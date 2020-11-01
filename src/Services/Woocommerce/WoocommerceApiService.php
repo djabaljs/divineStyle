@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Woocommerce;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 
-class ApiService  extends AbstractController
+class WoocommerceApiService  extends AbstractController
 {
       //PRODUCTS REQUESTS INSIDE README
 

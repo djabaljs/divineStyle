@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Customer;
+use App\Entity\Shop;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -47,4 +48,14 @@ class CustomerRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    public function findShopCustomers(Shop $shop)
+    {
+        $qb = $this->createQueryBuilder('c');
+        $qb 
+            ->where('c.shop = :shop')
+            ->setParameter('shop', $shop)
+            ;
+        return $qb->getQuery()->getResult();
+    }
 }

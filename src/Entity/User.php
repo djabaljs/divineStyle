@@ -2,17 +2,21 @@
 
 namespace App\Entity;
 
-use App\Repository\UserRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
+use App\Entity\Shop;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\UserRepository;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
+ * @ORM\HasLifecycleCallbacks()
  */
 class User implements UserInterface
 {
+    use Timestamp;
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -21,7 +25,7 @@ class User implements UserInterface
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=180, unique=true)
+     * @ORM\Column(type="string", length=180, unique=true, nullable=true)
      */
     private $email;
 
@@ -36,12 +40,12 @@ class User implements UserInterface
     private $lastname;
 
     /**
-     * @ORM\Column(type="string", unique=true)
+     * @ORM\Column(type="string", unique=true, nullable=true)
      */
     private $phone;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      */
     private $address;
 
@@ -57,19 +61,27 @@ class User implements UserInterface
     private $password;
 
     /**
-     * @ORM\OneToMany(targetEntity=Shop::class, mappedBy="manager")
+     * @ORM\OneToOne(targetEntity=Shop::class, mappedBy="manager")
+     */
+    private $shop;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Shop::class, inversedBy="staffs")
      */
     private $shops;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Shop::class, inversedBy="staff")
+     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="manager", orphanRemoval=true)
      */
-    private $shop;
+    private $orders;
 
     public function __construct()
     {
-        $this->shops = new ArrayCollection();
+        $this->sales = new ArrayCollection();
+        $this->orders = new ArrayCollection();
     }
+
+
 
     public function getId(): ?int
     {
@@ -229,37 +241,6 @@ class User implements UserInterface
         return $this;
     }
 
-    /**
-     * @return Collection|Shop[]
-     */
-    public function getShops(): Collection
-    {
-        return $this->shops;
-    }
-
-    public function addShop(Shop $shop): self
-    {
-        if (!$this->shops->contains($shop)) {
-            $this->shops[] = $shop;
-            $shop->setManager($this);
-        }
-
-        return $this;
-    }
-
-    public function removeShop(Shop $shop): self
-    {
-        if ($this->shops->contains($shop)) {
-            $this->shops->removeElement($shop);
-            // set the owning side to null (unless already changed)
-            if ($shop->getManager() === $this) {
-                $shop->setManager(null);
-            }
-        }
-
-        return $this;
-    }
-
     public function getShop(): ?Shop
     {
         return $this->shop;
@@ -269,6 +250,56 @@ class User implements UserInterface
     {
         $this->shop = $shop;
 
+        // set (or unset) the owning side of the relation if necessary
+        $newManager = null === $shop ? null : $this;
+        if ($shop->getManager() !== $newManager) {
+            $shop->setManager($newManager);
+        }
+
         return $this;
     }
+
+    public function getShops(): ?Shop
+    {
+        return $this->shops;
+    }
+
+    public function setShops(?Shop $shops): self
+    {
+        $this->shops = $shops;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Order[]
+     */
+    public function getOrders(): Collection
+    {
+        return $this->orders;
+    }
+
+    public function addOrder(Order $order): self
+    {
+        if (!$this->orders->contains($order)) {
+            $this->orders[] = $order;
+            $order->setManager($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrder(Order $order): self
+    {
+        if ($this->orders->contains($order)) {
+            $this->orders->removeElement($order);
+            // set the owning side to null (unless already changed)
+            if ($order->getManager() === $this) {
+                $order->setManager(null);
+            }
+        }
+
+        return $this;
+    }
+
 }

@@ -1,0 +1,220 @@
+{% extends 'base.html.twig' %}
+{% block stylesheets %}
+
+{% endblock %}
+{% block body %}
+<div class="container-fluid dashboard-content ">
+      <!-- ============================================================== -->
+                <!-- pageheader -->
+                <!-- ============================================================== -->
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="page-header">
+                            <h2 class="pageheader-title">Data Tables</h2>
+                            <p class="pageheader-text">Proin placerat ante duiullam scelerisque a velit ac porta, fusce sit amet vestibulum mi. Morbi lobortis pulvinar quam.</p>
+                            <div class="page-breadcrumb">
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Tables</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Data Tables</li>
+                                    </ol>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                         {% include 'shared/flash_message.html.twig' %}
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <a class="btn btn-success" href="{{path('manager_sales')}}" style="color:#fff"><i class="fas fa-list"></i> Liste des ventes</a>
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+                
+                <!-- ============================================================== -->
+                <!-- end pageheader -->
+                <!-- ============================================================== -->
+                   <div class="row">
+                 
+                    <!-- ============================================================== -->
+                    <!-- data table  -->
+                    <!-- ============================================================== -->
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Enregistrer une vente</h5>
+                            </div>
+                            <div class="card-body">
+                                {{form_start(form)}}
+                                 <!-- ============================================================== -->
+                    <!-- data table  -->
+                    <!-- ============================================================== -->
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="card">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="staff">Client</label>
+                                        {{form_row(form.customer, {attr:{'class': 'form-control', 'placeholder':'Personnels du magasin'}})}}
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table id="example" class="table table-striped table-bordered second" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>N°</th>
+                                                <th>Produit</th>
+                                                <th>PU</th>
+                                                <th>Quantity</th>
+                                                <th>Total</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="tags" data-prototype="{{ form_widget(form.products.vars.prototype)|e('html_attr')  }}">
+                                          {% for product in form.products %}
+                                              {{product.name}}
+                                              {{form_row(products, {attr:{'class': 'form-control', 'placeholder':'Nom du magasin','id':'name','style':'height:50px'}})}}
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                               <th>N°</th>
+                                                <th>Produit</th>
+                                                <th>PU</th>
+                                                <th>Quantity</th>
+                                                <th>Total</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ============================================================== -->
+                    <!-- end data table  -->
+                    <!-- ============================================================== -->
+                                {# <div class="tags"
+                                    data-prototype="{{ form_widget(form.products.vars.prototype)|e('html_attr')  }}">
+                                    {% for product in form.products %}
+                                    <div class="col-md-8">
+                                            <div class="form-group">
+                                                <label for="name">Nom</label>
+                                                {{form_row(product.children, {attr:{'class': 'form-control', 'placeholder':'Nom du magasin','id':'name','style':'height:50px'}})}}
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %} #}
+                                    <button type="button" class="add_tag_link">Add a tag</button>
+                                    
+                                    <div class="form-group">
+                                      <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
+                                    </div>
+                                {{form_end(form)}}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ============================================================== -->
+                    <!-- end data table  -->
+                    <!-- ============================================================== -->
+                </div>
+
+                     
+</div>
+{% endblock %}
+{% block javascripts %}
+<script>
+
+
+$('.add_tag_link').click(function(){
+    $.get('', function(){});
+})
+
+var $collectionHolder;
+
+// setup an "add a tag" link
+var $addTagButton = $('.add_tag_link');
+var $newLinkLi = $('<tr><td></td></tr>').append($addTagButton);
+//var $addPriceFiled = $('')
+jQuery(document).ready(function() {
+    // Get the ul that holds the collection of tags
+    $collectionHolder = $('tbody.tags');
+
+      // add a delete link to all of the existing tag form li elements
+    $collectionHolder.find('td').each(function() {
+        addTagFormDeleteLink($(this));
+    });
+
+    // add the "add a tag" anchor and li to the tags ul
+    $collectionHolder.append($newLinkLi);
+
+    // count the current form inputs we have (e.g. 2), use that as the new
+    // index when inserting a new item (e.g. 2)
+    $collectionHolder.data('index', $collectionHolder.find('input').length);
+
+    $addTagButton.on('click', function(e) {
+        // add a new tag form (see next code block)
+        addTagForm($collectionHolder, $newLinkLi);
+    });
+
+
+    function addTagForm($collectionHolder, $newLinkLi) {
+    // Get the data-prototype explained earlier
+    var prototype = $collectionHolder.data('prototype');
+
+    // get the new index
+    var index = $collectionHolder.data('index');
+
+    var newForm = prototype;
+    // You need this only if you didn't set 'label' => false in your tags field in TaskType
+    // Replace '__name__label__' in the prototype's HTML to
+    // instead be a number based on how many items we have
+    // newForm = newForm.replace(/__name__label__/g, index);
+
+    // Replace '__name__' in the prototype's HTML to
+    // instead be a number based on how many items we have
+    newForm = newForm.replace(/__name__/g, index);
+
+    // increase the index with one for the next item
+    $collectionHolder.data('index', index + 1);
+
+    // Display the form in the page in an li, before the "Add a tag" link li
+    var $newFormLi = $('<tr><td></td></tr>').append(newForm);
+    $newLinkLi.before($newFormLi);
+    addTagFormDeleteLink($newFormLi);
+}
+
+function addTagFormDeleteLink($tagFormLi) {
+    var $removeFormButton = $('<button type="button">Delete this tag</button>');
+    $tagFormLi.append($removeFormButton);
+
+    $removeFormButton.on('click', function(e) {
+        // remove the li for the tag form
+        $tagFormLi.remove();
+    });
+}
+});
+
+</script>
+{% endblock %}

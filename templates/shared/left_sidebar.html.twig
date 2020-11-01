@@ -71,7 +71,7 @@
                                             <a class="nav-link" href="pages/chart-c3.html">Fournisseurs</a>
                                         </li>
                                            <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Personnel</a>
+                                            <a class="nav-link" href="{{path("admin_staffs")}}">Personnel</a>
                                         </li>
                                     </ul>
                                 </div>
@@ -93,14 +93,7 @@
                                 </div>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-5" aria-controls="submenu-5"><i class="fas fa-fw fa-home"></i>Magasins</a>
-                                <div id="submenu-5" class="collapse submenu" style="">
-                                    <ul class="nav flex-column">
-                                        {# <li class="nav-item">
-                                            <a class="nav-link" href="pages/general-table.html">General Tables</a>
-                                        </li> #}
-                                    </ul>
-                                </div>
+                                <a class="nav-link" href="{{path('admin_shops')}}"><i class="fab fa-fw fas fa-home" aria-hidden="true"></i>Magasins</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="pages/general-table.html"><i class="fab fa-fw fas fa-chart-line" aria-hidden="true"></i>Rapports</a>
@@ -123,10 +116,10 @@
                                 <div id="submenu-1" class="collapse submenu" style="">
                                     <ul class="nav flex-column">
                                         <li class="nav-item">
-                                            <a class="nav-link" href="pages/cards.html">Produits <span class="badge badge-secondary">New</span></a>
+                                            <a class="nav-link" href="{{path("manager_products")}}">Produits <span class="badge badge-secondary">New</span></a>
                                         </li>
                                          <li class="nav-item">
-                                            <a class="nav-link" href="pages/cards.html">Catégories <span class="badge badge-secondary">New</span></a>
+                                            <a class="nav-link" href="{{path("manager_categories")}}">Catégories <span class="badge badge-secondary">New</span></a>
                                         </li>
                                     </ul>
                                 </div>
@@ -136,16 +129,13 @@
                                 <div id="submenu-2" class="collapse submenu" style="">
                                     <ul class="nav flex-column">
                                         <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Ventes</a>
+                                            <a class="nav-link" href="{{path("manager_sales")}}">Ventes</a>
                                         </li>
                                           <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Factures</a>
+                                            <a class="nav-link" href="pages/chart-c3.html">Commandes</a>
                                         </li>
                                           <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Bon de commande</a>
-                                        </li>
-                                          <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Bon de livraison</a>
+                                            <a class="nav-link" href="pages/chart-c3.html">Livraisons</a>
                                         </li>
                                     </ul>
                                 </div>

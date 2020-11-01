@@ -1,0 +1,199 @@
+{% extends 'base.html.twig' %}
+{% block stylesheets %}
+   <link rel="stylesheet" href="{{asset('concept/assets/vendor/multi-select/css/multi-select.css')}}">
+    <link rel="stylesheet" href="{{asset('concept/assets/libs/css/style.css')}}">
+    <link rel="stylesheet" href="{{asset('concept/assets/vendor/fonts/fontawesome/css/fontawesome-all.css')}}">
+    <link rel="stylesheet" href="{{asset('concept/assets/libs/css/style.css')}}">
+    <link href="{{asset('concept/assets/vendor/fonts/circular-std/style.css')}}" rel="stylesheet">
+
+{% endblock %}
+{% block body %}
+<div class="container-fluid dashboard-content ">
+      <!-- ============================================================== -->
+                <!-- pageheader -->
+                <!-- ============================================================== -->
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="page-header">
+                            <h2 class="pageheader-title">Data Tables</h2>
+                            <p class="pageheader-text">Proin placerat ante duiullam scelerisque a velit ac porta, fusce sit amet vestibulum mi. Morbi lobortis pulvinar quam.</p>
+                            <div class="page-breadcrumb">
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Tables</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Data Tables</li>
+                                    </ol>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                         {% include 'shared/flash_message.html.twig' %}
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <a class="btn btn-success" href="{{path('admin_shops')}}" style="color:#fff"><i class="fas fa-list"></i> Liste des magasins</a>
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+                
+                <!-- ============================================================== -->
+                <!-- end pageheader -->
+                <!-- ============================================================== -->
+                   <div class="row">
+                 
+                    <!-- ============================================================== -->
+                    <!-- data table  -->
+                    <!-- ============================================================== -->
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="card">
+                            
+                            <div class="card-header">
+                                <h5 class="mb-0">Enregistrer un magasin</h5>
+                            </div>
+                            <div class="card-body">
+                                {{form_start(form)}}
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="name">Nom</label>
+                                            {{form_row(form.name, {attr:{'class': 'form-control', 'placeholder':'Nom du magasin','id':'name','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                      <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="address">Adresse</label>
+                                            {{form_row(form.address, {attr:{'class': 'form-control', 'placeholder':'Adresse du magasin','id':'address','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="manager">Gestionnaire du magasin</label>
+                                            {{form_row(form.manager, {attr:{'class': 'form-control', 'placeholder':'Gestionnaire du magasin','id':'manager','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="staff">Personnels</label>
+                                                {{form_row(form.staffs, {attr:{'class': 'form-control', 'placeholder':'Personnels du magasin'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                     <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
+                                    </div>
+                                {{form_end(form)}}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ============================================================== -->
+                    <!-- end data table  -->
+                    <!-- ============================================================== -->
+                </div>
+
+                     
+</div>
+{% endblock %}
+{% block javascripts %}
+    <script src="{{asset('concept/assets/vendor/multi-select/js/jquery.multi-select.js')}}"></script>
+    <script src="{{asset('concept/assets/libs/js/main-js.js')}}"></script>
+    <script>
+    $('#shop_staffs, #pre-selected-options').multiSelect()
+    </script>
+    <script>
+    $('#callbacks').multiSelect({
+        afterSelect: function(values) {
+            alert("Select value: " + values);
+        },
+        afterDeselect: function(values) {
+            alert("Deselect value: " + values);
+        }
+    });
+    </script>
+    <script>
+    $('#keep-order').multiSelect({ keepOrder: true });
+    </script>
+    <script>
+    $('#public-methods').multiSelect();
+    $('#select-all').click(function() {
+        $('#public-methods').multiSelect('select_all');
+        return false;
+    });
+    $('#deselect-all').click(function() {
+        $('#public-methods').multiSelect('deselect_all');
+        return false;
+    });
+    $('#select-100').click(function() {
+        $('#public-methods').multiSelect('select', ['elem_0', 'elem_1'..., 'elem_99']);
+        return false;
+    });
+    $('#deselect-100').click(function() {
+        $('#public-methods').multiSelect('deselect', ['elem_0', 'elem_1'..., 'elem_99']);
+        return false;
+    });
+    $('#refresh').on('click', function() {
+        $('#public-methods').multiSelect('refresh');
+        return false;
+    });
+    $('#add-option').on('click', function() {
+        $('#public-methods').multiSelect('addOption', { value: 42, text: 'test 42', index: 0 });
+        return false;
+    });
+    </script>
+    <script>
+    $('#optgroup').multiSelect({ selectableOptgroup: true });
+    </script>
+    <script>
+    $('#disabled-attribute').multiSelect();
+    </script>
+    <script>
+    $('#custom-headers').multiSelect({
+        selectableHeader: "<div class='custom-header'>Selectable items</div>",
+        selectionHeader: "<div class='custom-header'>Selection items</div>",
+        selectableFooter: "<div class='custom-header'>Selectable footer</div>",
+        selectionFooter: "<div class='custom-header'>Selection footer</div>"
+    });
+    </script>
+    <script>
+    var $collectionHolder;
+
+// setup an "add a tag" link
+var $addTagButton = $('<button type="button" class="add_tag_link">Add a tag</button>');
+var $newLinkLi = $('<li></li>').append($addTagButton);
+
+jQuery(document).ready(function() {
+    // Get the ul that holds the collection of tags
+    $collectionHolder = $('ul.tags');
+
+    // add the "add a tag" anchor and li to the tags ul
+    $collectionHolder.append($newLinkLi);
+
+    // count the current form inputs we have (e.g. 2), use that as the new
+    // index when inserting a new item (e.g. 2)
+    $collectionHolder.data('index', $collectionHolder.find('input').length);
+
+    $addTagButton.on('click', function(e) {
+        // add a new tag form (see next code block)
+        addTagForm($collectionHolder, $newLinkLi);
+    });
+});
+
+    </script>
+{% endblock %}
