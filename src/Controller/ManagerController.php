@@ -7,6 +7,9 @@ use App\Entity\Product;
 use App\Form\OrderType;
 use App\Repository\ShopRepository;
 use App\Repository\OrderRepository;
+use App\Services\Category\CategoryService;
+use App\Services\Product\MapProductService;
+use App\Services\Product\ProductService;
 use App\Services\Woocommerce\WoocommerceApiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,6 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * @IsGranted("ROLE_MANAGER")
@@ -45,6 +49,8 @@ class ManagerController extends AbstractController
     foreach($shop->getCustomers() as $key => $customer){
         $customers[$key] = $customer;
     }
+
+    // dd($apiService->clientRequest('GET', 'orders'));
    
     return $this->render('manager/dashboard.html.twig', [
         'sales' => $apiService->clientRequest('GET', 'reports/sales'),
@@ -57,12 +63,13 @@ class ManagerController extends AbstractController
    /**
      * @Route("/products/products", name="manager_products", methods={"GET"})
      * @param WoocommerceApiService $apiService
+     * @param ProductService $productService
      * @return Response
      */
-    public function products(WoocommerceApiService $apiService)
+    public function products(WoocommerceApiService $apiService, ProductService $productService)
     {
         return $this->render('manager/products/products/index.html.twig', [
-            'products' =>  $apiService->clientRequest('GET', 'products')
+            'products' => $productService->map( $apiService->clientRequest('GET', 'products'))
         ]);
     }
 
@@ -122,18 +129,7 @@ class ManagerController extends AbstractController
 
     private function myProductObjects($arrays)
     {
-        foreach($arrays as $key => $value){
-            $this->datas[$key] = new Product(
-                $value['id'], 
-                $value['name'], 
-                $value['price'], 
-                $value['categories'],
-                $value['dimensions'], 
-                $value['stock_quantity'],
-            );
-        }
-
-        return $this->datas;
+       
     }
 
     /**
@@ -141,7 +137,7 @@ class ManagerController extends AbstractController
      * @param Request $request
      * @return Response
      */
-    public function createOrder(Request $request, WoocommerceApiService $apiService)
+    public function createOrder(Request $request, WoocommerceApiService $apiService, SessionInterface $session)
     {
 
         // if($request->getMethod() === 'GET'){
@@ -200,15 +196,18 @@ class ManagerController extends AbstractController
 
       $form = $this->createForm(OrderType::class, $order);
       $form->handleRequest($request);
-    //   dd($request);
 
       if($form->isSubmitted() && $form->isValid()){
+
+        $order = $session->set('order', $order);
         dd($order);
+
       }
+
 
       return $this->render('manager/sales/create.html.twig', [
         'form' => $form->createView(),
-        'order' => $order
+        // 'products' => $this-
       ]);
     }
 }

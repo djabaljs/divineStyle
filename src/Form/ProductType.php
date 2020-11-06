@@ -2,82 +2,98 @@
 
 namespace App\Form;
 
+use App\Entity\Category;
+use App\Entity\Color;
+use App\Entity\Height;
+use App\Entity\Length;
 use App\Entity\Product;
-use App\Repository\ProductRepository;
-use phpDocumentor\Reflection\Types\Integer;
-use Symfony\Component\Form\FormEvent;
-use Symfony\Component\Form\FormEvents;
-use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\FormBuilderInterface;
+use App\Entity\Provider;
+use App\Entity\Shop;
+use App\Entity\Width;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
-use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ProductType extends AbstractType
 {
-    private $productRepository;
-
-    public function __construct(ProductRepository $productRepository)
-    {
-        $this->productRepository = $productRepository;
-    }   
-
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('name', EntityType::class, [
+            ->add('name', TextType::class,  [
                 'label' => false,
-                'class' => Product::class,
-                'choice_label' => 'name',
+            ])
+            ->add('buyingPrice', NumberType::class, [
+                'label' => false, 
+              
+            ])
+            ->add('sellingPrice', NumberType::class, [
+                'label' => false
+            ])
+            ->add('quantity', IntegerType::class, [
+                'label' => false,
                 'attr' => [
-                    'class' => 'form-control'
+                    'min' => 0
                 ]
             ])
+            ->add('category', EntityType::class, [
+                'label' => false,
+                'class' => Category::class, 
+                'placeholder' => 'Selectionner une catégorie'
+            ])
+            ->add('length', EntityType::class, [
+                'label' => false,
+                'class' => Length::class,
+                'required' => false,
+                'placeholder' => 'Selectionner la taille'
+            ])
+            ->add('width', EntityType::class, [
+                'label' => false,
+                'class' => Width::class,
+                'required' => false,
+                'placeholder' => 'Selectionner la largeur'
+
+            ])
+            ->add('height', EntityType::class, [
+                'label' => false,
+                'class' => Height::class,
+                'required' => false,
+                'placeholder' => 'Selectionner la hauteur'
+
+            ])
+            ->add('color', EntityType::class, [
+                'label' => false,
+                'class' => Color::class,
+                'required' => false,
+                'placeholder' => 'Selectionner la coleur'
+            ])
+            ->add('minimumStock', IntegerType::class, [
+                'label' => false,
+                'required' => false,
+                'attr' => [
+                    'min' => 0
+                ]
+            ])
+            ->add('provider', EntityType::class, [
+                'label' => false,
+                'class' => Provider::class,
+                'placeholder' => 'Selectionner un fournisseur'
+            ])
+            ->add('shop', EntityType::class, [
+                'label' => false,
+                'class' => Shop::class,
+                'placeholder' => 'Selectionner un magasin'
+            ])
         ;
-
-        $builder->addEventListener(
-        	FormEvents::PRE_SUBMIT,
-	        function (FormEvent $event) {
-	            $data = $event->getData();
-	            $form = $event->getForm();
-
-                $product = $this->productRepository->find($data['name']);
-                dd($product);
-                // foreach ($event->getForm() as $customField) {
-                    $form
-                        ->get('name')->getParent()
-                        ->add('price', IntegerType::class, [
-                            'label' => false,
-                            'attr' => [
-                                'readonly' => true,
-                                'value' => $product->getPrice()
-                            ]
-                        ])
-                        ->add('quantity', IntegerType::class, [
-                            'label' => false,
-
-                        ])
-                    ;
-                }
-        );
-
     }
 
     public function configureOptions(OptionsResolver $resolver)
     {
-        $defaults = array(
-            'compound' => true,
-            'inherit_data' => true,
-        );
-
         $resolver->setDefaults([
             'data_class' => Product::class,
         ]);
-    }
-
-    public function getBlockPrefix()
-    {
-        return 'ProductType';
     }
 }

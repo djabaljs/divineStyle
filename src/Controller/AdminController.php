@@ -4,18 +4,31 @@ namespace App\Controller;
 
 use App\Entity\Shop;
 use App\Entity\User;
+use App\Entity\Order;
 use App\Form\ShopType;
-use App\Entity\Customer;
-use App\Form\CustomerType;
-use App\Form\ShopUpdateType;
 use App\Form\UserType;
-use App\Services\Woocommerce\WoocommerceApiService;
-use App\Repository\ShopRepository;
+use App\Entity\Product;
+use App\Entity\Category;
+use App\Entity\Color;
+use App\Entity\Customer;
+use App\Entity\Height;
+use App\Entity\Length;
+use App\Entity\Width;
+use App\Form\CategoryType;
+use App\Form\ColorType;
+use App\Form\ProductType;
+use App\Form\CustomerType;
+use App\Form\HeightType;
+use App\Form\LengthType;
+use Cocur\Slugify\Slugify;
+use App\Form\ShopUpdateType;
+use App\Form\WidthType;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Services\Woocommerce\WoocommerceApiService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
@@ -27,11 +40,12 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 class AdminController extends AbstractController
 {
     private $manager;
+    private $api;
 
-
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(EntityManagerInterface $entityManager, WoocommerceApiService $apiService)
     {
         $this->manager = $entityManager;
+        $this->api = $apiService;
     }
 
     /**
@@ -42,251 +56,279 @@ class AdminController extends AbstractController
      */
     public function dashboard(WoocommerceApiService $apiService): Response
     {
-      
-        try{
-
-            return $this->render('admin/dashboard.html.twig', [
-                'sales' => $apiService->clientRequest('GET', 'reports/sales'),
-                'customers' => $apiService->clientRequest('GET', 'customers'),
-                'products' => $apiService->clientRequest('GET', 'products'),
-                'orders' => $apiService->clientRequest('GET', 'orders'),
-            ]);
-       
-        }catch(\Exception $e){
-
-            $this->addFlash("danger", "Erreur: impossible de se connecter au site distant.");
-
-            return $this->render('admin/dashboard.html.twig', [
-                'sales' => [],
-                'customers' => [],
-                'products' => [],
-                'orders' => [],
-            ]);
-        }
+        // dd($apiService->clientRequest('GET', 'products'));
+        return $this->render('admin/dashboard.html.twig', [
+            'orders' => $this->manager->getRepository(Order::class)->findAll(),
+            'customers' => $this->manager->getRepository(Customer::class)->findAll(),
+            'products' => $this->manager->getRepository(Product::class)->findAll(),
+        ]);
 
     }
 
     /**
      * @Route("/products/products", name="admin_products", methods={"GET"})
-     * @param WoocommerceApiService $apiService
-     * @throws Exception $e
-     * @return Response
+     * @method products
      */
     public function products(WoocommerceApiService $apiService)
     {
-        try{
-            return $this->render('admin/products/products/index.html.twig', [
-                'products' =>  $apiService->clientRequest('GET', 'products')
-            ]);
-        }catch(\Exception $e){
-            
-            return $this->render('admin/products/products/index.html.twig', [
-                'products' =>  []
-            ]);
-        }
-     
+        return $this->render('admin/products/products/index.html.twig', [
+            'products' =>  $this->manager->getRepository(Product::class)->findAll()
+        ]);
     }
 
     /**
-     * @Route("/products/create", name="admin_product_create", methods={"GET"})
+     * @Route("/products/create", name="admin_product_create", methods={"POST", "GET"})
      * @param Request $request
-     * @param WoocommerceApiService $apiService
      * @return Response
      */
-    public function createProduct(Request $request, WoocommerceApiService $apiService): Response
+    public function createProduct(Request $request): Response
     {
-        $data = [
-            'name' => 'Nike',
-            'type' => 'simple',
-            'regular_price' => '21.99',
-            'description' => 'Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo.',
-            'short_description' => 'Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.',
-            'categories' => [
-                [
-                    'id' => 9
-                ],
-                [
-                    'id' => 14
-                ]
-            ],
-            'images' => [
-                [
-                    'src' => 'http://demo.woothemes.com/woocommerce/wp-content/uploads/sites/56/2013/06/T_2_front.jpg'
-                ],
-                [
-                    'src' => 'http://demo.woothemes.com/woocommerce/wp-content/uploads/sites/56/2013/06/T_2_back.jpg'
-                ]
-            ]
-        ];
 
-        $products = $apiService->clientRequest('POST', 'products',$data);
-        return $this->render('admin/products/products.html.twig', [
-            'products' => $products 
+        $product = new Product();
+
+        $form = $this->createForm(ProductType::class, $product);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $product->setRegister($this->getUser());
+            $slugify = new Slugify();
+            $product->setSlug($slugify->slugify($product->getName()));
+            $this->manager->persist($product);
+            $this->manager->flush();
+
+            $response =  $this->api->post("products", $product);
+        
+            try{
+                $product = $this->manager->getRepository(Product::class)->findOneBy(['slug' => $response['slug']]);
+                $product->setWcProductId($response['id']);
+                $this->manager->persist($product);
+                $this->manager->flush();
+            }catch(\Exception $e){
+                throw $e;
+            }
+
+            
+            $this->addFlash("success", "Produit créé et envoyé dans le magasin ".$product->getShop()." avec succès!");
+        }
+
+        return $this->render('admin/products/products/create.html.twig', [
+           'form' => $form->createView()
         ]);
     }
 
     /**
      * @Route("/products/show/{id}", name="admin_product_show", methods={"GET"})
      * @param Request $request
-     * @param WoocommerceApiService $apiService
-     * @param $id
+     * @param Product $product
      * @return Response
      */
-    public function showProduct(Request $request, WoocommerceApiService $apiService, $id): Response
+    public function showProduct(Request $request, Product $product): Response
     {
-        try{
-            return $this->render('admin/products/products/show.html.twig', [
-                'product' => $apiService->clientRequest('GET', 'products/'.$id, null),
-            ]);
-        }catch(\Exception $e){
-            return $this->render('admin/products/products/show.html.twig', [
-                'product' => null,
-            ]);
-        }
+        $product = $this->manager->getRepository(Product::class)->findOneBy(['id' => $product->getId()]);
         
-    }
+        if(is_null($product)){
+            throw $this->createNotFoundException("Ce produit n'existe pas!");
+        }
 
-     /**
-     * @Route("/products/update/{io}", name="admin_product_update", methods={"PUT"})
-     * @param Request $request
-     * @param WoocommerceApiService $apiService
-     * @return Response
-     */
-    public function updateProduct(Request $request, WoocommerceApiService $apiService): Response
-    {
-        $data = [
-            'name' => 'Nike',
-            'type' => 'simple',
-            'regular_price' => '21.99',
-            'description' => 'Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo.',
-            'short_description' => 'Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.',
-            'categories' => [
-                [
-                    'id' => 9
-                ],
-                [
-                    'id' => 14
-                ]
-            ],
-            'images' => [
-                [
-                    'src' => 'http://demo.woothemes.com/woocommerce/wp-content/uploads/sites/56/2013/06/T_2_front.jpg'
-                ],
-                [
-                    'src' => 'http://demo.woothemes.com/woocommerce/wp-content/uploads/sites/56/2013/06/T_2_back.jpg'
-                ]
-            ]
-        ];
-
-        $products = $apiService->clientRequest('POST', 'products',$data);
-        return $this->render('admin/products/products.html.twig', [
-            'products' => $products 
+        return $this->render('admin/products/products/show.html.twig', [
+            'product' => $product
         ]);
     }
 
      /**
-     * @Route("/products/delete/{id}", name="admin_product_delete", methods={"DELETE"})
+     * @Route("/products/update/{id}", name="admin_product_update", methods={"POST", "GET"})
      * @param Request $request
-     * @param WoocommerceApiService $apiService
+     * @param Product $product
      * @return Response
      */
-    public function deleteProduct(Request $request, WoocommerceApiService $apiService): Response
-    {
-        $data = [
-            'name' => 'Nike',
-            'type' => 'simple',
-            'regular_price' => '21.99',
-            'description' => 'Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo.',
-            'short_description' => 'Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.',
-            'categories' => [
-                [
-                    'id' => 9
-                ],
-                [
-                    'id' => 14
-                ]
-            ],
-            'images' => [
-                [
-                    'src' => 'http://demo.woothemes.com/woocommerce/wp-content/uploads/sites/56/2013/06/T_2_front.jpg'
-                ],
-                [
-                    'src' => 'http://demo.woothemes.com/woocommerce/wp-content/uploads/sites/56/2013/06/T_2_back.jpg'
-                ]
-            ]
-        ];
+    public function updateProduct(Request $request, Product $product): Response
+    {   
+        $product = $this->manager->getRepository(Product::class)->findOneBy(['id' => $product->getId()]);
+        
+        if(is_null($product))
+            throw $this->createNotFoundException("Ce produit n'existe pas");
+            
+        $form = $this->createForm(ProductType::class, $product);
+        $form->handleRequest($request);
 
-        $products = $apiService->clientRequest('POST', 'products',$data);
-        return $this->render('admin/products/products.html.twig', [
-            'products' => $products 
+        if($form->isSubmitted() && $form->isValid()){
+
+            $slugify = new Slugify();
+
+            $product->setSlug($slugify->slugify($product->getName()));
+            $this->manager->persist($product);
+            $this->manager->flush(); 
+
+            $this->api->put('products', $product->getWcProductId(), $product);
+            $this->addFlash("success", "Produit modifié avec succès!");
+
+        } 
+
+        return $this->render('admin/products/products/update.html.twig', [
+            'form' => $form->createView()
         ]);
+    }
+
+     /**
+     * @Route("/products/delete/{id}", name="admin_product_delete", methods={"GET"})
+     * @param Request $request
+     * @param Product $request
+     * @return Response
+     */
+    public function deleteProduct(Request $request, Product $product): Response
+    {
+        $product = $this->manager->getRepository(Product::class)->findOneBy(['id' => $product->getId()]);
+
+        $productCopy = $product;
+        if(is_null($product))
+            throw $this->createNotFoundException("Ce produit n'existe pas!");
+
+        $this->api->delete('products', $product->getWcProductId());
+
+        $this->manager->remove($product);
+        $this->manager->flush();
+
+
+        $this->addFlash("success", "Produit supprimé du magasin ".$productCopy->getShop()." !");
+
+        return  $this->redirectToRoute("admin_products");
     }
 
     /**
      * @Route("/products/categories", name="admin_categories", methods={"GET"})
-     * @param WoocommerceApiService $apiService
-     * @throws Exception $e
      * @return Response
      */
-    public function categories(WoocommerceApiService $apiService): Response
+    public function categories(): Response
     {
-        try{
-            $categories = $apiService->clientRequest('GET', 'products/categories');
-        }catch(\Exception $e){
-            $categories = [];
-        }
-
-        return $this->render('admin/products/categories/index.html.twig', [
-            'categories' => $categories 
+      return  $this->render('admin/products/categories/index.html.twig', [
+            'categories' => $this->manager->getRepository(Category::class)->findAll()
         ]);
     }
 
 
     /**
-     * @Route("/products/categories", name="admin_category_create", methods={"POST"})
+     * @Route("/products/categories/create", name="admin_category_create", methods={"POST", "GET"})
      * @param Request $request
-     * @param WoocommerceApiService $apiService
      * @return Response
      */
-    public function createCategories(Request $request, WoocommerceApiService $apiService): Response
+    public function createCategories(Request $request): Response
     {
-        $categories = $apiService->clientRequest('GET', 'products/categories');
+        $category = new Category();
+        
+        $form = $this->createForm(CategoryType::class, $category);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $slugify = new Slugify();
+            $category->setSlug($slugify->slugify($category->getName()));
+            $category->setRegister($this->getUser());
+            $response = $this->api->post("categories", $category);
+         
+            try{
+                $category->setWcCategoryId($response['id']);
+                $this->manager->persist($category);
+                $this->manager->flush();
+
+                $this->addFlash("success", "Catégorie enregistrée avec succeès!");
+                
+            }catch(\Exception $e){
+                $this->manager->persist($category);
+                $this->manager->flush();
+
+                $this->addFlash("success", "Catégorie enregistrée avec succeès!");
+
+            }
+          
+
+        }
+
         return $this->render('admin/products/categories/create.html.twig', [
-            'categories' => $categories 
+            'form' => $form->createView() 
         ]);
     }
 
      /**
      * @Route("/products/categories/{id}", name="admin_category_show", methods={"GET"})
      * @param Request $request
-     * @param WoocommerceApiService $apiService
-     * @param $id
      * @return Response
      */
-    public function showCategory(Request $request, WoocommerceApiService $apiService, $id): Response
+    public function showCategory(Product $product): Response
     {
-        $categories = $apiService->clientRequest('GET', 'products/categories/'.$id);
+        dd($product);
         return $this->render('admin/products/categories/show.html.twig', [
-            'categories' => $categories 
         ]);
+    }
+
+    /**
+     * @Route("/products/categories/update/{id}", name="admin_category_update", methods={"GET", "POST"})
+     * @param Request $request
+     * @param Category $category
+     * @return Response
+     */
+    public function updateCategory(Request $request, Category $category): Response
+    {
+        $category = $this->manager->getRepository(Category::class)->find($category->getId());
+
+        if(is_null($category))
+            throw $this->createNotFoundException("Cette catégorie de produit n'existe pas!");
+        
+        $form = $this->createForm(CategoryType::class, $category);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $slugify = new Slugify();
+            $category->setSlug($slugify->slugify($category->getName()));
+            $this->manager->persist($category);
+            $this->manager->flush();
+
+            $this->api->put("categories", $category->getWcCategoryId(), $category);
+
+            $this->addFlash("success", "Catégorie modifiée avec succès!");
+        }
+
+        return $this->render('admin/products/categories/update.html.twig', [
+            'form' => $form->createView()
+        ]);
+    }
+
+    /**
+     * @Route("/products/categories/delete/{id}", name="admin_category_delete", methods={"GET"})
+     * @param Category $categoryCopy
+     * @throws CreateNotFoundException
+     * @return Response
+     */
+    public function deleteCategory(Category $category): Response
+    {
+        $category = $this->manager->getRepository(Category::class)->find($category->getId());
+
+        $categoryCopy = $category;
+
+        if(is_null($category))
+            throw $this->createNotFoundException("Cette catégorie n'existe pas!");
+        
+        $this->manager->remove($category);
+        $this->manager->flush();
+
+        $this->api->delete("categories", $categoryCopy->getWcCategoryId());
+
+        $this->addFlash("success","Catégorie supprimée avec succès!");
+
+        return $this->redirectToRoute("admin_categories");
     }
 
 
     /**
      * @Route("/customers", name="admin_customers", methods={"GET"})
-     * @param WoocommerceApiService $apiService
      * @param Exception $e
      * @return Response
      */
-    public function customers(WoocommerceApiService $apiService)
+    public function customers()
     {
-        try{
-            $customers = $apiService->clientRequest('GET', 'customers');
-        }catch(\Exception $e){
-            $customers = [];
-        }
-        return $this->render('admin/contacts/customers/index.html.twig',[
-            'customers' => $customers
+        return $this->render("admin/contacts/customers/index.html.twig", [
+            'customers' => $this->manager->getRepository(Customer::class)->findAll()
         ]);
     }
 
@@ -320,13 +362,15 @@ class AdminController extends AbstractController
      /**
      * @Route("/customers/update", name="admin_customer_create", methods={"PUT", "GET"})
      * @param Request
-     * @param WoocommerceApiService $apiService
-     * @param $id
+     * @param Customer $customer
      * @return Response
      */
-    public function updateCustomer(Request $request, WoocommerceApiService $apiService, $id)
+    public function updateCustomer(Request $request, Customer $customer)
     {
-        $customer = $this->getDoctrine()->getRepository(Customer::class)->find($id);
+        $customer = $this->getDoctrine()->getRepository(Customer::class)->find($customer->getId());
+
+        if(is_null($customer))
+            throw $this->createNotFoundException("Ce client n'existe pas!");
 
         $form = $this->createForm(CustomerType::class, $customer);
         $form->handleRequest($request);
@@ -350,15 +394,12 @@ class AdminController extends AbstractController
 
      /**
      * @Route("/shops", name="admin_shops", methods={"GET"})
-     * @param ShopRepository $shopRepository
      * @return Response
      */
-    public function shops(ShopRepository $shopRepository)
+    public function shops()
     {
-        $shops = $shopRepository->findAll();
-
         return $this->render('admin/shops/index.html.twig',[
-            'shops' => $shops
+            'shops' => $this->manager->getRepository(Shop::class)->findAll()
         ]);
     }
 
@@ -614,5 +655,359 @@ class AdminController extends AbstractController
         $this->addFlash("success", "Personnel supprimé");
 
         return $this->redirectToRoute('admin_staffs');
+    }
+
+    /**
+     * @Route("products/options/colors", name="admin_products_colors", methods={"GET"})
+     * @method productsColors
+     * @return Response
+     */
+    public function productsColors()
+    {
+        return $this->render("admin/options/colors/index.html.twig", [
+            'colors' => $this->manager->getRepository(Color::class)->findAll()
+        ]);
+    }
+
+    /**
+     * @Route("products/options/colors/create", name="admin_products_colors_create", methods={"GET", "POST"})
+     * @method productsColorsCreate
+     * @param Request $request
+     * @return Response
+     */
+    public function productsColorsCreate(Request $request)
+    {
+        $color = new Color();
+
+        $form = $this->createForm(ColorType::class, $color);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            
+            $color->setRegister($this->getUser());
+            $this->manager->persist($color);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Coleur de produit crée avec succès!");
+            return $this->redirectToRoute("admin_products_colors_create");
+        }
+        return $this->render("admin/options/colors/create.html.twig", [
+            'form' => $form->createView()
+        ]);
+    }
+
+     /**
+     * @Route("products/options/colors/update/{id}", name="admin_products_colors_update", methods={"GET", "POST"})
+     * @method productsColorsCreate
+     * @param Request $request
+     * @param Color $color
+     * @return Response
+     */
+    public function productsColorsUpdate(Request $request, Color $color)
+    {
+        $color = $this->manager->getRepository(Color::class)->find($color->getId());
+
+        $form = $this->createForm(ColorType::class, $color);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $this->manager->persist($color);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Coleur de produit modifiée avec succès!");
+            return $this->redirectToRoute("admin_products_colors_update", ['id' => $color->getId()]);
+        }
+        return $this->render("admin/options/colors/update.html.twig", [
+            'form' => $form->createView()
+        ]);
+    }
+
+     /**
+     * @Route("products/options/colors/delete/{id}", name="admin_products_colors_delete", methods={"GET"})
+     * @method productsColorsDelete
+     * @param Color $color
+     * @return Response
+     */
+    public function productsColorsDelete(Color $color): Response
+    {
+        $color = $this->manager->getRepository(Color::class)->find($color->getId());
+
+        if(is_null($color))
+            throw $this->createNotFoundException("Cette coleur de produit n'existe pas!");
+        
+        $this->manager->remove($color);
+        $this->manager->flush();
+
+        $this->addFlash("success", "Couleur de produit supprimée avec succès!");
+
+        return $this->redirectToRoute("admin_products_colors");
+       
+    }
+
+
+
+
+    /**
+     * @Route("products/options/lengths", name="admin_products_lengths", methods={"GET"})
+     * @method productsLenghts
+     * @return Response
+     */
+    public function productsLenghts()
+    {
+        return $this->render("admin/options/lengths/index.html.twig", [
+            'lengths' => $this->manager->getRepository(Length::class)->findAll()
+        ]);
+    }
+
+    /**
+     * @Route("products/options/lengths/create", name="admin_products_lengths_create", methods={"GET", "POST"})
+     * @method productsLenghtsCreate
+     * @param Request $request
+     * @return Response
+     */
+    public function productsLenghtsCreate(Request $request)
+    {
+        $length = new Length();
+
+        $form = $this->createForm(LengthType::class, $length);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            
+            $length->setRegister($this->getUser());
+            $this->manager->persist($length);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Taille de produit crée avec succès!");
+            return $this->redirectToRoute("admin_products_lengths_create");
+        }
+        return $this->render("admin/options/lengths/create.html.twig", [
+            'form' => $form->createView()
+        ]);
+    }
+
+     /**
+     * @Route("products/options/lengths/update/{id}", name="admin_products_lengths_update", methods={"GET", "POST"})
+     * @method productsLenghtsUpdate
+     * @param Request $request
+     * @param Length $length
+     * @return Response
+     */
+    public function productsLenghtsUpdate(Request $request, Length $length)
+    {
+        $length = $this->manager->getRepository(Length::class)->find($length->getId());
+
+        $form = $this->createForm(LengthType::class, $length);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $this->manager->persist($length);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Taille de produit modifiée avec succès!");
+            return $this->redirectToRoute("admin_products_lengths_update", ['id' => $length->getId()]);
+        }
+        return $this->render("admin/options/lengths/update.html.twig", [
+            'form' => $form->createView()
+        ]);
+    }
+
+     /**
+     * @Route("products/options/lengths/delete/{id}", name="admin_products_lengths_delete", methods={"GET"})
+     * @method productsLengthsDelete
+     * @param Length $length
+     * @return Response
+     */
+    public function productsLengthsDelete(Length $length): Response
+    {
+        $length = $this->manager->getRepository(Length::class)->find($length->getId());
+
+        if(is_null($length))
+            throw $this->createNotFoundException("Cette taille de produit n'existe pas!");
+        
+        $this->manager->remove($length);
+        $this->manager->flush();
+
+        $this->addFlash("success", "Taille de produit supprimée avec succès!");
+
+        return $this->redirectToRoute("admin_products_lengths");
+       
+    }
+
+
+        /**
+     * @Route("products/options/widths", name="admin_products_widths", methods={"GET"})
+     * @method productsWidths
+     * @return Response
+     */
+    public function productsWidths()
+    {
+        return $this->render("admin/options/widths/index.html.twig", [
+            'widths' => $this->manager->getRepository(Width::class)->findAll()
+        ]);
+    }
+
+    /**
+     * @Route("products/options/widths/create", name="admin_products_widths_create", methods={"GET", "POST"})
+     * @method productsWidthsCreate
+     * @param Request $request
+     * @return Response
+     */
+    public function productsWidthsCreate(Request $request)
+    {
+        $width = new Width();
+
+        $form = $this->createForm(WidthType::class, $width);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            
+            $width->setRegister($this->getUser());
+            $this->manager->persist($width);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Largeur de produit crée avec succès!");
+            return $this->redirectToRoute("admin_products_widths_create");
+        }
+        return $this->render("admin/options/widths/create.html.twig", [
+            'form' => $form->createView()
+        ]);
+    }
+
+     /**
+     * @Route("products/options/widths/update/{id}", name="admin_products_widths_update", methods={"GET", "POST"})
+     * @method productsLenghtsUpdate
+     * @param Request $request
+     * @param Width $width
+     * @return Response
+     */
+    public function productsWidthsUpdate(Request $request, Width $width)
+    {
+        $width = $this->manager->getRepository(Width::class)->find($width->getId());
+
+        $form = $this->createForm(WidthType::class, $width);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $this->manager->persist($width);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Largeur de produit modifiée avec succès!");
+            return $this->redirectToRoute("admin_products_widths_update", ['id' => $width->getId()]);
+        }
+        return $this->render("admin/options/widths/update.html.twig", [
+            'form' => $form->createView()
+        ]);
+    }
+
+     /**
+     * @Route("products/options/widths/delete/{id}", name="admin_products_widths_delete", methods={"GET"})
+     * @method productsLengthsDelete
+     * @param Width $width
+     * @return Response
+     */
+    public function productsWidthsDelete(Width $width): Response
+    {
+        $width = $this->manager->getRepository(Width::class)->find($width->getId());
+
+        if(is_null($width))
+            throw $this->createNotFoundException("Cette largeur de produit n'existe pas!");
+        
+        $this->manager->remove($width);
+        $this->manager->flush();
+
+        $this->addFlash("success", "Largeur de produit supprimée avec succès!");
+
+        return $this->redirectToRoute("admin_products_widths");
+       
+    }
+
+
+
+            /**
+     * @Route("products/options/heights", name="admin_products_heights", methods={"GET"})
+     * @method productsHeights
+     * @return Response
+     */
+    public function productsHeights()
+    {
+        return $this->render("admin/options/heights/index.html.twig", [
+            'heights' => $this->manager->getRepository(Height::class)->findAll()
+        ]);
+    }
+
+    /**
+     * @Route("products/options/heights/create", name="admin_products_heights_create", methods={"GET", "POST"})
+     * @method productsHeightsCreate
+     * @param Request $request
+     * @return Response
+     */
+    public function productsHeightsCreate(Request $request)
+    {
+        $height = new Height();
+
+        $form = $this->createForm(HeightType::class, $height);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            
+            $height->setRegister($this->getUser());
+            $this->manager->persist($height);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Hauteur de produit crée avec succès!");
+            return $this->redirectToRoute("admin_products_heights_create");
+        }
+        return $this->render("admin/options/heights/create.html.twig", [
+            'form' => $form->createView()
+        ]);
+    }
+
+     /**
+     * @Route("/products/options/heights/update/{id}", name="admin_products_heights_update", methods={"GET", "POST"})
+     * @method productsHeightsUpdate
+     * @param Request $request
+     * @param Height $height
+     * @return Response
+     */
+    public function productsHeightsUpdate(Request $request, Height $height)
+    {
+        $height = $this->manager->getRepository(Height::class)->find($height->getId());
+
+        $form = $this->createForm(HeightType::class, $height);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $this->manager->persist($height);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Largeur de produit modifiée avec succès!");
+            return $this->redirectToRoute("admin_products_heights_update", ['id' => $height->getId()]);
+        }
+        return $this->render("admin/options/heights/update.html.twig", [
+            'form' => $form->createView()
+        ]);
+    }
+
+     /**
+     * @Route("/products/options/heights/delete/{id}", name="admin_products_heights_delete", methods={"GET"})
+     * @method productsHeightssDelete
+     * @param Height $height
+     * @return Response
+     */
+    public function productsHeightsDelete(Height $height): Response
+    {
+        $height = $this->manager->getRepository(Width::class)->find($height->getId());
+
+        if(is_null($height))
+            throw $this->createNotFoundException("Cette Hauteur de produit n'existe pas!");
+        
+        $this->manager->remove($height);
+        $this->manager->flush();
+
+        $this->addFlash("success", "Hauteur de produit supprimée avec succès!");
+
+        return $this->redirectToRoute("admin_products_heights");
+       
     }
 }

@@ -49,10 +49,11 @@
                                     <div class="card-body">
                                         <h5 class="text-muted">Ventes</h5>
                                         <div class="metric-value d-inline-block">
-                                        {% if sales is not empty %}
+                                        {# {% if sales is not empty %}
                                             <h1 class="mb-1">{{sales[0]["total_sales"]}} FCFA</h1>
-                                        {% endif %}
+                                        {% else %} #}
                                             <h1 class="mb-1">0 FCFA</h1>
+                                        {# {% endif %} #}
                                         </div>
                                         <div class="metric-label d-inline-block float-right text-success font-weight-bold">
                                             {# <span class="icon-circle-small icon-box-xs text-success bg-success-light"><i class="fa fa-fw fa-arrow-up"></i></span><span class="ml-1">${{sales[0]["total_sales"] * 10}}%</span> #}

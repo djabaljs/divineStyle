@@ -34,16 +34,16 @@ class Order
     private $saleTotal;
 
     /**
-     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="sales")
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="orders")
      * @ORM\JoinColumn(nullable=false)
      */
     private $manager;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Customer::class, inversedBy="sales")
+     * @ORM\ManyToOne(targetEntity=Shop::class, inversedBy="orders")
      * @ORM\JoinColumn(nullable=false)
      */
-    private $customer;
+    private $shop;
 
     /**
      * @ORM\Column(type="integer")
@@ -51,10 +51,25 @@ class Order
     private $quantity;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Product::class, inversedBy="sales", cascade={"persist"})
+     * @ORM\ManyToMany(targetEntity=Product::class, inversedBy="orders", cascade={"persist"})
      */
     private $products;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="Customer", inversedBy="orders")
+     */
+    private $customer;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $orderNumber;
+    
+    /**
+     * @ORM\OneToOne(targetEntity="Delivery", mappedBy="order")
+     */
+    private $deliveries;
+    
     public function __construct()
     {
         $this->products = new ArrayCollection();
@@ -98,19 +113,6 @@ class Order
         return $this;
     }
 
-    public function getCustomer(): ?Customer
-    {
-        return $this->customer;
-    }
-
-    public function setCustomer(?Customer $customer): self
-    {
-        $this->customer = $customer;
-
-        return $this;
-    }
-
-
     /**
      * @return Collection|Product[]
      */
@@ -150,6 +152,60 @@ class Order
     public function setQuantity(int $quantity): self
     {
         $this->quantity = $quantity;
+
+        return $this;
+    }
+
+    public function getShop(): ?Shop
+    {
+        return $this->shop;
+    }
+
+    public function setShop(?Shop $shop): self
+    {
+        $this->shop = $shop;
+
+        return $this;
+    }
+
+    public function getCustomer(): ?Customer
+    {
+        return $this->customer;
+    }
+
+    public function setCustomer(?Customer $customer): self
+    {
+        $this->customer = $customer;
+
+        return $this;
+    }
+
+    public function getOrderNumber(): ?string
+    {
+        return $this->orderNumber;
+    }
+
+    public function setOrderNumber(string $orderNumber): self
+    {
+        $this->orderNumber = $orderNumber;
+
+        return $this;
+    }
+
+    public function getDeliveries(): ?Delivery
+    {
+        return $this->deliveries;
+    }
+
+    public function setDeliveries(?Delivery $deliveries): self
+    {
+        $this->deliveries = $deliveries;
+
+        // set (or unset) the owning side of the relation if necessary
+        $newOrder = null === $deliveries ? null : $this;
+        if ($deliveries->getOrder() !== $newOrder) {
+            $deliveries->setOrder($newOrder);
+        }
 
         return $this;
     }

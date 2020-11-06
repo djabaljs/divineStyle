@@ -4,8 +4,14 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
-    WOOCOMMERCE_AUTH_USERNAME: '%env(WOOCOMMERCE_AUTH_USERNAME)%'
-    WOOCOMMERCE_AUTH_PASSWORD: '%env(WOOCOMMERCE_AUTH_PASSWORD)%'
+    #divine styles
+    DIVINE_STYLES_API_ENDPOINT: '%env(DIVINE_STYLES_API_ENDPOINT)%'
+    DIVINE_STYLES_USERNAME: '%env(DIVINE_STYLES_USERNAME)%'
+    DIVINE_STYLES_PASSWORD: '%env(DIVINE_STYLES_PASSWORD)%'
+    #test
+    TEST_API_ENDPOINT: '%env(TEST_API_ENDPOINT)%'
+    TEST_USERNAME: '%env(TEST_USERNAME)%'
+    TEST_PASSWORD: '%env(TEST_PASSWORD)%'
 
 
 services:

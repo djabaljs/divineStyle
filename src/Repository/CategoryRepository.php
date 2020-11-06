@@ -47,4 +47,14 @@ class CategoryRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    public function getProductsQuantity()
+    {
+        $qb = $this->createQueryBuilder('c');
+        $qb
+            ->leftJoin('c.product', 'p')
+        ;
+        
+        return $qb->getQuery()->getResult();
+    }
 }

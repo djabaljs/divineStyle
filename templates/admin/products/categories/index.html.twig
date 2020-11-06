@@ -30,6 +30,31 @@
                         </div>
                     </div>
                 </div>
+                  <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                         {% include 'shared/flash_message.html.twig' %}
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+                  <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            
+                            <a href="{{path('admin_category_create')}}" class="btn btn-success" style="color:#fff" ><i class="fas fa-save"></i> Enregistrer une catégorie</a>
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
                 <!-- ============================================================== -->
                 <!-- end pageheader -->
                 <!-- ============================================================== -->
@@ -60,19 +85,19 @@
                                              <tr>
                                                 <td>{{loop.index}}</td>
                                                <td>
-                                               {% if category['image'] is not empty %}
-                                               <img src="{{category['image']['src']}}" class="img-fluid" /></td>
+                                               {% if category.imageUrls is not empty %}
+                                               <img src="{{category.imageUrls[0]}}" class="img-fluid" /></td>
                                                {% else %}
                                                <p>Aucune image</p>
                                                {% endif %}
                                                 </td>
-                                                <td>{{category['name']}}</td>
-                                                <td>{{category['description']}}</td>
-                                                <td>{{category['count']}}</td>
+                                                <td>{{category.name}}</td>
+                                                <td>{{category.description}}</td>
+                                                <td>{{category.products|length}}</td>
                                                 <td>
-                                                <a href="{{path('admin_category_show', {id: category['id']})}}" class="btn btn-info"><i class="fas fa-eye"></i></a>
-                                                <a class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                                <a class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                                                <a href="{{path('admin_category_show', {id: category.id})}}" class="btn btn-info"><i class="fas fa-eye"></i></a>
+                                                <a href="{{path('admin_category_update', {id: category.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
+                                                <a href="{{path('admin_category_delete', {id: category.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
                                                 </td>
                                             </tr>
                                            {% endfor %}

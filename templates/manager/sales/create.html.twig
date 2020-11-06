@@ -38,16 +38,37 @@
                     <!-- ============================================================== -->
                 </div>
                 <br/>
-                <div class="row">
-                    <!-- ============================================================== -->
-                    <!-- button  -->
-                    <!-- ============================================================== -->
-                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                            <a class="btn btn-success" href="{{path('manager_sales')}}" style="color:#fff"><i class="fas fa-list"></i> Liste des ventes</a>
+               
+
+                {{form_start(form)}}
+
+                   <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Enregistrer une commande de vente</h5>
+                                </div>
+                                    <div class="card-body">
+                                               <div class="row">
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="staff">Client</label>
+                                                                {{form_row(form.customer, {attr:{'class': 'form-control', 'placeholder':'Personnels du magasin'}})}}
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="staff">Date de la commande</label>
+                                                                {{form_row(form.createdAt, {attr:{'class': 'form-control'}})}}
+                                                        </div>
+                                                    </div>
+                                            </div>
+                                    </div>
+                                </div>
+                        </div>
                    </div>
-                    <!-- ============================================================== -->
-                    <!-- button  -->
-                    <!-- ============================================================== -->
+
+                     <div class="row">
                 </div>
                 <br/>
                 
@@ -55,82 +76,57 @@
                 <!-- end pageheader -->
                 <!-- ============================================================== -->
                    <div class="row">
-                 
+                   
                     <!-- ============================================================== -->
                     <!-- data table  -->
                     <!-- ============================================================== -->
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                         <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">Enregistrer une vente</h5>
-                            </div>
                             <div class="card-body">
-                                {{form_start(form)}}
-                                 <!-- ============================================================== -->
-                    <!-- data table  -->
-                    <!-- ============================================================== -->
-                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                        <div class="card">
-                            <div class="col-md-8">
-                                <div class="form-group">
-                                    <label for="staff">Client</label>
-                                        {{form_row(form.customer, {attr:{'class': 'form-control', 'placeholder':'Personnels du magasin'}})}}
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table id="example" class="table table-striped table-bordered second" style="width:100%">
+                                <table id="example" class="table table-striped table-bordered second" style="width:100%">
                                         <thead>
                                             <tr>
                                                 <th>N°</th>
+                                                <th>Image</th>
                                                 <th>Produit</th>
                                                 <th>PU</th>
-                                                <th>Quantity</th>
-                                                <th>Total</th>
+                                                <th>Quantité</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="tags" data-prototype="{{ form_widget(form.products.vars.prototype)|e('html_attr')  }}">
-                                          {% for product in form.products %}
-                                              {{product.name}}
-                                              {{form_row(products, {attr:{'class': 'form-control', 'placeholder':'Nom du magasin','id':'name','style':'height:50px'}})}}
-                                            {% endfor %}
+                                        <tbody>
+                                           {# {% for category in categories %}
+                                             <tr>
+                                                <td>{{loop.index}}</td>
+                                               <td>
+                                               {% if category['image'] is not empty %}
+                                               <img src="{{category['image']['src']}}" class="img-fluid" /></td>
+                                               {% else %}
+                                               <p>Aucune image</p>
+                                               {% endif %}
+                                                </td>
+                                                <td>{{category['name']}}</td>
+                                                <td>{{category['description']}}</td>
+                                                <td>{{category['count']}}</td>
+                                                <td>
+                                                <a href="{{path('manager_category_show', {id: category['id']})}}" class="btn btn-info"><i class="fas fa-eye"></i></a>
+                                                <a class="btn btn-warning"><i class="fas fa-edit"></i></a>
+                                                <a class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                                                </td>
+                                            </tr>
+                                           {% endfor %} #}
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                               <th>N°</th>
+                                             <th>N°</th>
+                                                <th>Image</th>
                                                 <th>Produit</th>
                                                 <th>PU</th>
-                                                <th>Quantity</th>
-                                                <th>Total</th>
+                                                <th>Quantité</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>
                                     </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- ============================================================== -->
-                    <!-- end data table  -->
-                    <!-- ============================================================== -->
-                                {# <div class="tags"
-                                    data-prototype="{{ form_widget(form.products.vars.prototype)|e('html_attr')  }}">
-                                    {% for product in form.products %}
-                                    <div class="col-md-8">
-                                            <div class="form-group">
-                                                <label for="name">Nom</label>
-                                                {{form_row(product.children, {attr:{'class': 'form-control', 'placeholder':'Nom du magasin','id':'name','style':'height:50px'}})}}
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endfor %} #}
-                                    <button type="button" class="add_tag_link">Add a tag</button>
-                                    
-                                    <div class="form-group">
-                                      <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
-                                    </div>
                                 {{form_end(form)}}
                             </div>
                         </div>
@@ -146,23 +142,18 @@
 {% block javascripts %}
 <script>
 
-
-$('.add_tag_link').click(function(){
-    $.get('', function(){});
-})
-
 var $collectionHolder;
 
 // setup an "add a tag" link
 var $addTagButton = $('.add_tag_link');
-var $newLinkLi = $('<tr><td></td></tr>').append($addTagButton);
-//var $addPriceFiled = $('')
+var $newLinkLi = $('<div></div>').append($addTagButton);
+
 jQuery(document).ready(function() {
     // Get the ul that holds the collection of tags
-    $collectionHolder = $('tbody.tags');
+    $collectionHolder = $('tr.tags');
 
       // add a delete link to all of the existing tag form li elements
-    $collectionHolder.find('td').each(function() {
+    $collectionHolder.find('tr').each(function() {
         addTagFormDeleteLink($(this));
     });
 
@@ -200,13 +191,14 @@ jQuery(document).ready(function() {
     $collectionHolder.data('index', index + 1);
 
     // Display the form in the page in an li, before the "Add a tag" link li
-    var $newFormLi = $('<tr><td></td></tr>').append(newForm);
+    var $newFormLi = $('<td></td>').append(newForm);
     $newLinkLi.before($newFormLi);
     addTagFormDeleteLink($newFormLi);
 }
 
 function addTagFormDeleteLink($tagFormLi) {
-    var $removeFormButton = $('<button type="button">Delete this tag</button>');
+    var $btnRemove = $('.btn-remove');
+    var $removeFormButton = $('');
     $tagFormLi.append($removeFormButton);
 
     $removeFormButton.on('click', function(e) {

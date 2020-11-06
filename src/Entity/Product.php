@@ -2,16 +2,23 @@
 
 namespace App\Entity;
 
-use App\Repository\ProductRepository;
+use App\Entity\Category;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\ProductRepository;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * @ORM\Entity(repositoryClass=ProductRepository::class)
+ * @ORM\HasLifecycleCallbacks()
+ * @UniqueEntity("name")
  */
 class Product
 {
+    use Timestamp;
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -20,57 +27,99 @@ class Product
     private $id;
 
     /**
-     * @ORM\Column(type="integer")
-     */
-    private $woocommerceId;
-
-
-    /**
      * @ORM\Column(type="string", length=255)
      */
     private $name;
 
-
     /**
      * @ORM\Column(type="float")
      */
-    private $price;
+    private $buyingPrice;
+
+      /**
+     * @ORM\Column(type="float")
+     */
+    private $sellingPrice;
 
     /**
-     * @ORM\Column(type="array", nullable=true)
+     * @ORM\Column(type="integer")
      */
-    private $categories = [];
+    private $quantity;
 
     /**
-     * @ORM\Column(type="array", nullable=true)
+     * @ORM\ManyToOne(targetEntity="Category", inversedBy="products")
      */
-    private $dimensions = [];
+    private $category;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="products")
+     */
+    private $register;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Provider::class, inversedBy="products")
+     */
+    private $provider;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Shop::class, inversedBy="products")
+     */
+    private $shop;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Length", inversedBy="products")
+     * @ORM\JoinColumn(nullable=true)
+     * 
+     */
+    private $length;
+
+     /**
+     * @ORM\ManyToOne(targetEntity="Width", inversedBy="products")
+     * @ORM\JoinColumn(nullable=true)
+     */
+    private $width;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Height", inversedBy="products")
+     * @ORM\JoinColumn(nullable=true)
+     */
+    private $height;
+
+    /**
+     * @ORM\Column(type="string", length=255, unique=true)
+     */
+    private $slug;
 
     /**
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $stockQuantity;
+    private $wcProductId;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Order::class, mappedBy="products")
+     * @ORM\ManyToMany(targetEntity="Order", mappedBy="products")
      */
     private $orders;
 
-    public $quantity;
+    /**
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $imageUrls = [];
 
-    public function __construct($id = null, $name =null, $price =null, $categories =null, $dimensions =null, $stockQuantity =null)
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $minimumStock;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Color", inversedBy="products")
+     */
+    private $color;
+
+    public function __construct()
     {
-        $this->woocommerceId = $id;
-        $this->name = $name;
-        $this->price = $price;
-        $this->categories = $categories;
-        $this->dimensions = $dimensions;
-        $this->getStockQuantity = $stockQuantity;
-        $this->sales = new ArrayCollection();
         $this->orders = new ArrayCollection();
-
     }
-  
+
     public function getId(): ?int
     {
         return $this->id;
@@ -88,70 +137,151 @@ class Product
         return $this;
     }
 
- 
-    public function getPrice(): ?float
+    public function getQuantity(): ?int
     {
-        return $this->price;
+        return $this->quantity;
     }
 
-    public function setPrice(float $price): self
+    public function setQuantity(int $quantity): self
     {
-        $this->price = $price;
+        $this->quantity = $quantity;
 
         return $this;
     }
 
-    public function getCategories(): ?array
+    public function getCategory(): ?Category
     {
-        return $this->categories;
+        return $this->category;
     }
 
-    public function setCategories(?array $categories): self
+    public function setCategory(?Category $category): self
     {
-        $this->categories = $categories;
+        $this->category = $category;
 
         return $this;
     }
 
-    public function getDimensions(): ?array
+    public function getShop(): ?Shop
     {
-        return $this->dimensions;
+        return $this->shop;
     }
 
-    public function setDimensions(?array $dimensions): self
+    public function setShop(?Shop $shop): self
     {
-        $this->dimensions = $dimensions;
+        $this->shop = $shop;
 
         return $this;
     }
 
-    public function getStockQuantity(): ?int
+
+    public function getRegister(): ?User
     {
-        return $this->stockQuantity;
+        return $this->register;
     }
 
-    public function setStockQuantity(?int $stockQuantity): self
+    public function setRegister(?User $register): self
     {
-        $this->stockQuantity = $stockQuantity;
+        $this->register = $register;
 
         return $this;
     }
 
-    public function getWoocommerceId(): ?int
+
+    public function getSlug(): ?string
     {
-        return $this->woocommerceId;
+        return $this->slug;
     }
 
-    public function setWoocommerceId(int $woocommerceId): self
+    public function setSlug(string $slug): self
     {
-        $this->woocommerceId = $woocommerceId;
+        $this->slug = $slug;
 
         return $this;
     }
 
-    public function __toString()
+    public function getWcProductId(): ?int
     {
-        return $this->getName();
+        return $this->wcProductId;
+    }
+
+    public function setWcProductId(?int $wc_productId): self
+    {
+        $this->wcProductId = $wc_productId;
+
+        return $this;
+    }
+
+
+    public function getProvider(): ?Provider
+    {
+        return $this->provider;
+    }
+
+    public function setProvider(?Provider $provider): self
+    {
+        $this->provider = $provider;
+
+        return $this;
+    }
+
+    public function getLength(): ?Length
+    {
+        return $this->length;
+    }
+
+    public function setLength(?Length $length): self
+    {
+        $this->length = $length;
+
+        return $this;
+    }
+
+    public function getWidth(): ?Width
+    {
+        return $this->width;
+    }
+
+    public function setWidth(?Width $width): self
+    {
+        $this->width = $width;
+
+        return $this;
+    }
+
+    public function getHeight(): ?Height
+    {
+        return $this->height;
+    }
+
+    public function setHeight(?Height $height): self
+    {
+        $this->height = $height;
+
+        return $this;
+    }
+
+    public function getBuyingPrice(): ?float
+    {
+        return $this->buyingPrice;
+    }
+
+    public function setBuyingPrice(float $buyingPrice): self
+    {
+        $this->buyingPrice = $buyingPrice;
+
+        return $this;
+    }
+
+    public function getSellingPrice(): ?float
+    {
+        return $this->sellingPrice;
+    }
+
+    public function setSellingPrice(float $sellingPrice): self
+    {
+        $this->sellingPrice = $sellingPrice;
+
+        return $this;
     }
 
     /**
@@ -182,5 +312,40 @@ class Product
         return $this;
     }
 
+    public function getImageUrls(): ?array
+    {
+        return $this->imageUrls;
+    }
+
+    public function setImageUrls(?array $imageUrls): self
+    {
+        $this->imageUrls = $imageUrls;
+
+        return $this;
+    }
+
+    public function getMinimumStock(): ?int
+    {
+        return $this->minimumStock;
+    }
+
+    public function setMinimumStock(int $minimumStock): self
+    {
+        $this->minimumStock = $minimumStock;
+
+        return $this;
+    }
+
+    public function getColor(): ?Color
+    {
+        return $this->color;
+    }
+
+    public function setColor(?Color $color): self
+    {
+        $this->color = $color;
+
+        return $this;
+    }
 
 }

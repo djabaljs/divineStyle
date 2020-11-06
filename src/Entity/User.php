@@ -8,10 +8,13 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
  * @ORM\HasLifecycleCallbacks()
+ * @UniqueEntity("phone")
  */
 class User implements UserInterface
 {
@@ -70,15 +73,54 @@ class User implements UserInterface
      */
     private $shops;
 
+
     /**
-     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="manager", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=Product::class, mappedBy="register")
+     */
+    private $products;
+
+      /**
+     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="manager")
      */
     private $orders;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Category::class, mappedBy="register")
+     */
+    private $categories;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Color::class, mappedBy="register")
+     */
+    private $colors;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Length::class, mappedBy="register")
+     */
+    private $lengths;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Width::class, mappedBy="register")
+     */
+    private $widths;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Height::class, mappedBy="register")
+     */
+    private $heights;
+    
+
 
     public function __construct()
     {
         $this->sales = new ArrayCollection();
         $this->orders = new ArrayCollection();
+        $this->products = new ArrayCollection();
+        $this->categories = new ArrayCollection();
+        $this->colors = new ArrayCollection();
+        $this->lengths = new ArrayCollection();
+        $this->widths = new ArrayCollection();
+        $this->heights = new ArrayCollection();
     }
 
 
@@ -271,6 +313,43 @@ class User implements UserInterface
         return $this;
     }
 
+
+    public function __toString()
+    {
+        return $this->getFirstname().' '.$this->getLastname();
+    }
+
+    /**
+     * @return Collection|Product[]
+     */
+    public function getProducts(): Collection
+    {
+        return $this->products;
+    }
+
+    public function addProduct(Product $product): self
+    {
+        if (!$this->products->contains($product)) {
+            $this->products[] = $product;
+            $product->setRegister($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProduct(Product $product): self
+    {
+        if ($this->products->contains($product)) {
+            $this->products->removeElement($product);
+            // set the owning side to null (unless already changed)
+            if ($product->getRegister() === $this) {
+                $product->setRegister(null);
+            }
+        }
+
+        return $this;
+    }
+
     /**
      * @return Collection|Order[]
      */
@@ -301,5 +380,161 @@ class User implements UserInterface
 
         return $this;
     }
+
+    /**
+     * @return Collection|Category[]
+     */
+    public function getCategories(): Collection
+    {
+        return $this->categories;
+    }
+
+    public function addCategory(Category $category): self
+    {
+        if (!$this->categories->contains($category)) {
+            $this->categories[] = $category;
+            $category->setRegister($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCategory(Category $category): self
+    {
+        if ($this->categories->contains($category)) {
+            $this->categories->removeElement($category);
+            // set the owning side to null (unless already changed)
+            if ($category->getRegister() === $this) {
+                $category->setRegister(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Color[]
+     */
+    public function getColors(): Collection
+    {
+        return $this->colors;
+    }
+
+    public function addColor(Color $color): self
+    {
+        if (!$this->colors->contains($color)) {
+            $this->colors[] = $color;
+            $color->setRegister($this);
+        }
+
+        return $this;
+    }
+
+    public function removeColor(Color $color): self
+    {
+        if ($this->colors->contains($color)) {
+            $this->colors->removeElement($color);
+            // set the owning side to null (unless already changed)
+            if ($color->getRegister() === $this) {
+                $color->setRegister(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Length[]
+     */
+    public function getLengths(): Collection
+    {
+        return $this->lengths;
+    }
+
+    public function addLength(Length $length): self
+    {
+        if (!$this->lengths->contains($length)) {
+            $this->lengths[] = $length;
+            $length->setRegister($this);
+        }
+
+        return $this;
+    }
+
+    public function removeLength(Length $length): self
+    {
+        if ($this->lengths->contains($length)) {
+            $this->lengths->removeElement($length);
+            // set the owning side to null (unless already changed)
+            if ($length->getRegister() === $this) {
+                $length->setRegister(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Width[]
+     */
+    public function getWidths(): Collection
+    {
+        return $this->widths;
+    }
+
+    public function addWidth(Width $width): self
+    {
+        if (!$this->widths->contains($width)) {
+            $this->widths[] = $width;
+            $width->setRegister($this);
+        }
+
+        return $this;
+    }
+
+    public function removeWidth(Width $width): self
+    {
+        if ($this->widths->contains($width)) {
+            $this->widths->removeElement($width);
+            // set the owning side to null (unless already changed)
+            if ($width->getRegister() === $this) {
+                $width->setRegister(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Height[]
+     */
+    public function getHeights(): Collection
+    {
+        return $this->heights;
+    }
+
+    public function addHeight(Height $height): self
+    {
+        if (!$this->heights->contains($height)) {
+            $this->heights[] = $height;
+            $height->setRegister($this);
+        }
+
+        return $this;
+    }
+
+    public function removeHeight(Height $height): self
+    {
+        if ($this->heights->contains($height)) {
+            $this->heights->removeElement($height);
+            // set the owning side to null (unless already changed)
+            if ($height->getRegister() === $this) {
+                $height->setRegister(null);
+            }
+        }
+
+        return $this;
+    }
+
 
 }

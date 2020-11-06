@@ -13,8 +13,10 @@ use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 
 class OrderType extends AbstractType
 {
@@ -51,6 +53,12 @@ class OrderType extends AbstractType
             ->add('customer', EntityType::class, [
                 'label' => false,
                 'class' => Customer::class,
+                'placeholder' => 'Selectionner...'
+            ])
+            ->add('createdAt', DateType::class, [
+                'label' => false,
+                'widget' => 'single_text',
+                'input'  => 'datetime_immutable'
             ])
         ;
 
