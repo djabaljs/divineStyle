@@ -28,7 +28,7 @@ class Length
     private $name;
 
     /**
-     * @ORM\OneToMany(targetEntity="Product", mappedBy="length")
+     * @ORM\ManyToMany(targetEntity="Product", inversedBy="lengths", cascade={"persist", "remove"}))
      */
     private $products;
 
@@ -59,36 +59,6 @@ class Length
         return $this;
     }
 
-    /**
-     * @return Collection|Product[]
-     */
-    public function getProducts(): Collection
-    {
-        return $this->products;
-    }
-
-    public function addProduct(Product $product): self
-    {
-        if (!$this->products->contains($product)) {
-            $this->products[] = $product;
-            $product->setLength($this);
-        }
-
-        return $this;
-    }
-
-    public function removeProduct(Product $product): self
-    {
-        if ($this->products->contains($product)) {
-            $this->products->removeElement($product);
-            // set the owning side to null (unless already changed)
-            if ($product->getLength() === $this) {
-                $product->setLength(null);
-            }
-        }
-
-        return $this;
-    }
 
     public function getRegister(): ?User
     {
@@ -106,4 +76,31 @@ class Length
     {
         return $this->getName();
     }
+
+    /**
+     * @return Collection|Product[]
+     */
+    public function getProducts(): Collection
+    {
+        return $this->products;
+    }
+
+    public function addProduct(Product $product): self
+    {
+        if (!$this->products->contains($product)) {
+            $this->products[] = $product;
+        }
+
+        return $this;
+    }
+
+    public function removeProduct(Product $product): self
+    {
+        if ($this->products->contains($product)) {
+            $this->products->removeElement($product);
+        }
+
+        return $this;
+    }
+
 }

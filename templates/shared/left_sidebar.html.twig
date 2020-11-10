@@ -46,7 +46,7 @@
                                 <div id="submenu-2" class="collapse submenu" style="">
                                     <ul class="nav flex-column">
                                         <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Ventes</a>
+                                            <a class="nav-link" href="{{path("admin_products_orders")}}">Ventes</a>
                                         </li>
                                           <li class="nav-item">
                                             <a class="nav-link" href="pages/chart-c3.html">Factures</a>
@@ -66,6 +66,9 @@
                                     <ul class="nav flex-column">
                                         <li class="nav-item">
                                             <a class="nav-link" href="{{path('admin_customers')}}">Clients</a>
+                                        </li>
+                                         <li class="nav-item">
+                                            <a class="nav-link" href="{{path('admin_delivery_mans')}}">Livreurs</a>
                                         </li>
                                          <li class="nav-item">
                                             <a class="nav-link" href="pages/chart-c3.html">Fournisseurs</a>
@@ -103,7 +106,8 @@
                                 <div id="submenu-6" class="collapse submenu" style="">
                                     <ul class="nav flex-column">
                                         <li class="nav-item">
-                                            <a class="nav-link" href="{{path("admin_products_lengths")}}">Tailles des produits</a>
+                                            <a class="nav-link" href="{{path("admin_products_attributes")}}">Attributs de produit</a>
+                                            <a class="nav-link" href="{{path("admin_payment_types")}}">Types de paiement</a>
                                             <a class="nav-link" href="{{path("admin_products_widths")}}">Largeurs des produits</a>
                                             <a class="nav-link" href="{{path("admin_products_heights")}}">Hauteurs des produits</a>
                                             <a class="nav-link" href="{{path("admin_products_colors")}}">Couleurs des produits</a>

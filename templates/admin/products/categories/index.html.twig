@@ -93,11 +93,17 @@
                                                 </td>
                                                 <td>{{category.name}}</td>
                                                 <td>{{category.description}}</td>
-                                                <td>{{category.products|length}}</td>
                                                 <td>
-                                                <a href="{{path('admin_category_show', {id: category.id})}}" class="btn btn-info"><i class="fas fa-eye"></i></a>
-                                                <a href="{{path('admin_category_update', {id: category.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                                <a href="{{path('admin_category_delete', {id: category.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                                                {% set total = 0 %}
+                                                {% for product in category.products %}
+                                                    {% set total = total + product.quantity %}
+                                                {% endfor  %}
+                                                {{total}}
+                                                </td>
+                                                <td>
+                                                <a href="{{path('admin_category_show', {slug: category.slug})}}" class="btn btn-info"><i class="fas fa-eye"></i></a>
+                                                <a href="{{path('admin_category_update', {slug: category.slug})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
+                                                <a href="{{path('admin_category_delete', {slug: category.slug})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
                                                 </td>
                                             </tr>
                                            {% endfor %}

@@ -4,14 +4,15 @@ namespace App\Form;
 
 use App\Entity\Category;
 use App\Entity\Color;
-use App\Entity\Height;
 use App\Entity\Length;
 use App\Entity\Product;
+use App\Entity\ProductOptionType;
 use App\Entity\Provider;
 use App\Entity\Shop;
-use App\Entity\Width;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -27,7 +28,7 @@ class ProductType extends AbstractType
                 'label' => false,
             ])
             ->add('buyingPrice', NumberType::class, [
-                'label' => false, 
+                'label' => false,
               
             ])
             ->add('sellingPrice', NumberType::class, [
@@ -36,46 +37,60 @@ class ProductType extends AbstractType
             ->add('quantity', IntegerType::class, [
                 'label' => false,
                 'attr' => [
-                    'min' => 0
-                ]
+                    'min' => 0,
+                    'value' => 1
+                ],
+                'required' => true
             ])
             ->add('category', EntityType::class, [
                 'label' => false,
+                'required' => true,
                 'class' => Category::class, 
                 'placeholder' => 'Selectionner une catégorie'
             ])
-            ->add('length', EntityType::class, [
+            ->add('lengths', EntityType::class, [
                 'label' => false,
                 'class' => Length::class,
-                'required' => false,
-                'placeholder' => 'Selectionner la taille'
-            ])
-            ->add('width', EntityType::class, [
-                'label' => false,
-                'class' => Width::class,
-                'required' => false,
-                'placeholder' => 'Selectionner la largeur'
+                'multiple' => true,
+                'required'=>false,
+                'mapped'=>true,
 
             ])
-            ->add('height', EntityType::class, [
-                'label' => false,
-                'class' => Height::class,
-                'required' => false,
-                'placeholder' => 'Selectionner la hauteur'
+            // ->add('width', EntityType::class, [
+            //     'label' => false,
+            //     'class' => Width::class,
+            //     'required' => false,
+            //     'placeholder' => 'Selectionner la largeur'
 
-            ])
-            ->add('color', EntityType::class, [
+            // ])
+            // ->add('height', EntityType::class, [
+            //     'label' => false,
+            //     'class' => Height::class,
+            //     'required' => false,
+            //     'placeholder' => 'Selectionner la hauteur'
+
+            // ])
+            ->add('colors', EntityType::class, [
                 'label' => false,
                 'class' => Color::class,
-                'required' => false,
-                'placeholder' => 'Selectionner la coleur'
+                'required'=>false,
+                'multiple' => true,
+
             ])
             ->add('minimumStock', IntegerType::class, [
                 'label' => false,
-                'required' => false,
+                'required' => true,
                 'attr' => [
-                    'min' => 0
+                    'min' => 0,
+                    'value' => 2
                 ]
+            ])
+            ->add('isVariable', ChoiceType::class, [
+                'label' => false,
+                'choices'  => [
+                    'Simple' => 0,
+                    'Variable' => 1,
+                ],
             ])
             ->add('provider', EntityType::class, [
                 'label' => false,

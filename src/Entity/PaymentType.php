@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\PaymentTypeRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -25,6 +27,17 @@ class PaymentType
      */
     private $name;
 
+        /**
+     * @ORM\OneToMany(targetEntity=Invoice::class, mappedBy="paymentType")
+     */
+    private $invoices;
+
+    public function __construct()
+    {
+        $this->invoices = new ArrayCollection();
+    }
+
+
     public function getId(): ?int
     {
         return $this->id;
@@ -41,4 +54,36 @@ class PaymentType
 
         return $this;
     }
+
+    /**
+     * @return Collection|Invoice[]
+     */
+    public function getInvoices(): Collection
+    {
+        return $this->invoices;
+    }
+
+    public function addInvoice(Invoice $invoice): self
+    {
+        if (!$this->invoices->contains($invoice)) {
+            $this->invoices[] = $invoice;
+            $invoice->setPaymentType($this);
+        }
+
+        return $this;
+    }
+
+    public function removeInvoice(Invoice $invoice): self
+    {
+        if ($this->invoices->contains($invoice)) {
+            $this->invoices->removeElement($invoice);
+            // set the owning side to null (unless already changed)
+            if ($invoice->getPaymentType() === $this) {
+                $invoice->setPaymentType(null);
+            }
+        }
+
+        return $this;
+    }
+
 }

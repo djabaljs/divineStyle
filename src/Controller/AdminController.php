@@ -2,33 +2,48 @@
 
 namespace App\Controller;
 
+use Mpdf\Mpdf;
 use App\Entity\Shop;
 use App\Entity\User;
-use App\Entity\Order;
-use App\Form\ShopType;
-use App\Form\UserType;
-use App\Entity\Product;
-use App\Entity\Category;
 use App\Entity\Color;
-use App\Entity\Customer;
+use App\Entity\Order;
+use App\Entity\Width;
 use App\Entity\Height;
 use App\Entity\Length;
-use App\Entity\Width;
-use App\Form\CategoryType;
+use App\Form\ShopType;
+use App\Form\UserType;
+use App\Entity\Billing;
+use App\Entity\Invoice;
+use App\Entity\Product;
 use App\Form\ColorType;
-use App\Form\ProductType;
-use App\Form\CustomerType;
+use App\Form\WidthType;
+use App\Entity\Category;
+use App\Entity\Customer;
+use App\Entity\Delivery;
 use App\Form\HeightType;
 use App\Form\LengthType;
+use App\Entity\Attribute;
+use App\Form\BillingType;
+use App\Form\ProductType;
+use App\Form\CategoryType;
+use App\Form\CustomerType;
 use Cocur\Slugify\Slugify;
+use App\Entity\DeliveryMan;
+use App\Entity\PaymentType;
+use App\Form\AttributeType;
+use App\Entity\OrderProduct;
 use App\Form\ShopUpdateType;
-use App\Form\WidthType;
+use App\Form\DeliveryManType;
+use App\Form\PaymentTypeType;
 use App\Repository\UserRepository;
+use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Services\Woocommerce\WoocommerceApiService;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
@@ -56,11 +71,16 @@ class AdminController extends AbstractController
      */
     public function dashboard(WoocommerceApiService $apiService): Response
     {
-        // dd($apiService->clientRequest('GET', 'products'));
+        $invoices = $this->manager->getRepository(Invoice::class)->findAll();
+        $total = 0;
+        foreach($invoices as $invoice){
+            $total += $invoice->getAmount();
+        }
         return $this->render('admin/dashboard.html.twig', [
             'orders' => $this->manager->getRepository(Order::class)->findAll(),
             'customers' => $this->manager->getRepository(Customer::class)->findAll(),
             'products' => $this->manager->getRepository(Product::class)->findAll(),
+            "amount" => $total
         ]);
 
     }
@@ -77,7 +97,7 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("/products/create", name="admin_product_create", methods={"POST", "GET"})
+     * @Route("/products/create", name="admin_products_create", methods={"POST", "GET"})
      * @param Request $request
      * @return Response
      */
@@ -85,6 +105,8 @@ class AdminController extends AbstractController
     {
 
         $product = new Product();
+        $color = new Color();
+        $length = new Length();
 
         $form = $this->createForm(ProductType::class, $product);
         $form->handleRequest($request);
@@ -94,22 +116,42 @@ class AdminController extends AbstractController
             $product->setRegister($this->getUser());
             $slugify = new Slugify();
             $product->setSlug($slugify->slugify($product->getName()));
-            $this->manager->persist($product);
-            $this->manager->flush();
+            
+            $colorArrays = [];
+            $lengthArrays = [];
 
-            $response =  $this->api->post("products", $product);
-        
-            try{
-                $product = $this->manager->getRepository(Product::class)->findOneBy(['slug' => $response['slug']]);
-                $product->setWcProductId($response['id']);
-                $this->manager->persist($product);
-                $this->manager->flush();
-            }catch(\Exception $e){
-                throw $e;
+            foreach($product->getColors() as  $color){
+                $colorArrays[] = $color->getName();
+            }
+            foreach($product->getLengths() as $key => $length){
+                $lengthArrays[$key] = $length->getName();
             }
 
-            
+            $product->colorArrays = $colorArrays;
+            $product->lengthArrays = $lengthArrays;
+
+            $response =  $this->api->post("products", $product);
+
+            $product->setWcProductId($response['id']);
+            if($product->getIsVariable()){
+                $color->addProduct($product);
+                $length->addProduct($product);
+            }
+       
+
+            $this->manager->persist($product);
+
+            if($product->getIsVariable()){
+                $this->manager->persist($color);
+                $this->manager->persist($length);
+            }
+        
+            $this->manager->flush();
+
             $this->addFlash("success", "Produit créé et envoyé dans le magasin ".$product->getShop()." avec succès!");
+
+            return $this->redirectToRoute("admin_products_create");
+
         }
 
         return $this->render('admin/products/products/create.html.twig', [
@@ -118,73 +160,91 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("/products/show/{id}", name="admin_product_show", methods={"GET"})
+     * @Route("/products/show/{slug}", name="admin_products_show", methods={"GET"})
      * @param Request $request
      * @param Product $product
      * @return Response
      */
     public function showProduct(Request $request, Product $product): Response
     {
-        $product = $this->manager->getRepository(Product::class)->findOneBy(['id' => $product->getId()]);
+        $product = $this->manager->getRepository(Product::class)->findOneBy(['slug' => $product->getSlug()]);
         
         if(is_null($product)){
             throw $this->createNotFoundException("Ce produit n'existe pas!");
         }
 
         return $this->render('admin/products/products/show.html.twig', [
-            'product' => $product
+            'product' => $product,
         ]);
     }
 
      /**
-     * @Route("/products/update/{id}", name="admin_product_update", methods={"POST", "GET"})
+     * @Route("/products/update/{slug}", name="admin_products_update", methods={"POST", "GET"})
      * @param Request $request
      * @param Product $product
      * @return Response
      */
     public function updateProduct(Request $request, Product $product): Response
     {   
-        $product = $this->manager->getRepository(Product::class)->findOneBy(['id' => $product->getId()]);
+        $color = new Color();
+        $length = new Length();
+
+        $product = $this->manager->getRepository(Product::class)->findOneBy(['slug' => $product->getSlug()]);
         
         if(is_null($product))
             throw $this->createNotFoundException("Ce produit n'existe pas");
-            
+        
         $form = $this->createForm(ProductType::class, $product);
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
+            
+            $category = $this->manager->getRepository(Category::class)->find($request->get('category'));
+
 
             $slugify = new Slugify();
 
             $product->setSlug($slugify->slugify($product->getName()));
+            $product->setCategory($category);
+            
+            foreach($product->getColors() as $color){
+                dd($color);
+            }
+         
+            $this->api->put('products',$product);
+
             $this->manager->persist($product);
             $this->manager->flush(); 
 
-            $this->api->put('products', $product->getWcProductId(), $product);
             $this->addFlash("success", "Produit modifié avec succès!");
+
+            return $this->redirectToRoute("admin_products_update", [
+                "slug" => $product->getSlug(), 
+            ]);
 
         } 
 
         return $this->render('admin/products/products/update.html.twig', [
-            'form' => $form->createView()
+            'form' => $form->createView(),
+            "update" => $product->getCategory()->getId()
         ]);
     }
 
      /**
-     * @Route("/products/delete/{id}", name="admin_product_delete", methods={"GET"})
+     * @Route("/products/delete/{slug}", name="admin_products_delete", methods={"GET"})
      * @param Request $request
      * @param Product $request
      * @return Response
      */
     public function deleteProduct(Request $request, Product $product): Response
     {
-        $product = $this->manager->getRepository(Product::class)->findOneBy(['id' => $product->getId()]);
+        $product = $this->manager->getRepository(Product::class)->findOneBy(['slug' => $product->getSlug()]);
 
         $productCopy = $product;
         if(is_null($product))
             throw $this->createNotFoundException("Ce produit n'existe pas!");
 
-        $this->api->delete('products', $product->getWcProductId());
+        $this->api->delete('products', $product);
 
         $this->manager->remove($product);
         $this->manager->flush();
@@ -250,7 +310,7 @@ class AdminController extends AbstractController
     }
 
      /**
-     * @Route("/products/categories/{id}", name="admin_category_show", methods={"GET"})
+     * @Route("/products/categories/{slug}", name="admin_category_show", methods={"GET"})
      * @param Request $request
      * @return Response
      */
@@ -262,7 +322,7 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("/products/categories/update/{id}", name="admin_category_update", methods={"GET", "POST"})
+     * @Route("/products/categories/update/{slug}", name="admin_category_update", methods={"GET", "POST"})
      * @param Request $request
      * @param Category $category
      * @return Response
@@ -284,9 +344,11 @@ class AdminController extends AbstractController
             $this->manager->persist($category);
             $this->manager->flush();
 
-            $this->api->put("categories", $category->getWcCategoryId(), $category);
+            $this->api->put("categories", $category);
 
             $this->addFlash("success", "Catégorie modifiée avec succès!");
+
+            return $this->redirectToRoute("admin_category_update", ['slug' => $category->getSlug()]);
         }
 
         return $this->render('admin/products/categories/update.html.twig', [
@@ -295,24 +357,24 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("/products/categories/delete/{id}", name="admin_category_delete", methods={"GET"})
+     * @Route("/products/categories/delete/{slug}", name="admin_category_delete", methods={"GET"})
      * @param Category $categoryCopy
      * @throws CreateNotFoundException
      * @return Response
      */
     public function deleteCategory(Category $category): Response
     {
-        $category = $this->manager->getRepository(Category::class)->find($category->getId());
+        $category = $this->manager->getRepository(Category::class)->findOneBy(['slug' => $category->getSlug()]);
 
-        $categoryCopy = $category;
 
         if(is_null($category))
             throw $this->createNotFoundException("Cette catégorie n'existe pas!");
         
+        $this->api->delete("categories", $category);
+        
         $this->manager->remove($category);
         $this->manager->flush();
 
-        $this->api->delete("categories", $categoryCopy->getWcCategoryId());
 
         $this->addFlash("success","Catégorie supprimée avec succès!");
 
@@ -658,7 +720,7 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("products/options/colors", name="admin_products_colors", methods={"GET"})
+     * @Route("/products/options/colors", name="admin_products_colors", methods={"GET"})
      * @method productsColors
      * @return Response
      */
@@ -670,7 +732,7 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("products/options/colors/create", name="admin_products_colors_create", methods={"GET", "POST"})
+     * @Route("/products/options/colors/create", name="admin_products_colors_create", methods={"GET", "POST"})
      * @method productsColorsCreate
      * @param Request $request
      * @return Response
@@ -697,7 +759,7 @@ class AdminController extends AbstractController
     }
 
      /**
-     * @Route("products/options/colors/update/{id}", name="admin_products_colors_update", methods={"GET", "POST"})
+     * @Route("/products/options/colors/update/{id}", name="admin_products_colors_update", methods={"GET", "POST"})
      * @method productsColorsCreate
      * @param Request $request
      * @param Color $color
@@ -723,7 +785,7 @@ class AdminController extends AbstractController
     }
 
      /**
-     * @Route("products/options/colors/delete/{id}", name="admin_products_colors_delete", methods={"GET"})
+     * @Route("/products/options/colors/delete/{id}", name="admin_products_colors_delete", methods={"GET"})
      * @method productsColorsDelete
      * @param Color $color
      * @return Response
@@ -748,7 +810,7 @@ class AdminController extends AbstractController
 
 
     /**
-     * @Route("products/options/lengths", name="admin_products_lengths", methods={"GET"})
+     * @Route("/products/options/lengths", name="admin_products_lengths", methods={"GET"})
      * @method productsLenghts
      * @return Response
      */
@@ -760,7 +822,7 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("products/options/lengths/create", name="admin_products_lengths_create", methods={"GET", "POST"})
+     * @Route("/products/options/lengths/create", name="admin_products_lengths_create", methods={"GET", "POST"})
      * @method productsLenghtsCreate
      * @param Request $request
      * @return Response
@@ -787,7 +849,7 @@ class AdminController extends AbstractController
     }
 
      /**
-     * @Route("products/options/lengths/update/{id}", name="admin_products_lengths_update", methods={"GET", "POST"})
+     * @Route("/products/options/lengths/update/{id}", name="admin_products_lengths_update", methods={"GET", "POST"})
      * @method productsLenghtsUpdate
      * @param Request $request
      * @param Length $length
@@ -813,7 +875,7 @@ class AdminController extends AbstractController
     }
 
      /**
-     * @Route("products/options/lengths/delete/{id}", name="admin_products_lengths_delete", methods={"GET"})
+     * @Route("/products/options/lengths/delete/{id}", name="admin_products_lengths_delete", methods={"GET"})
      * @method productsLengthsDelete
      * @param Length $length
      * @return Response
@@ -835,8 +897,184 @@ class AdminController extends AbstractController
     }
 
 
+           
+    /**
+     * @Route("/payment-types", name="admin_payment_types", methods={"GET"})
+     * @method paymentTypes
+     * @return Response
+     */
+    public function paymentTypes()
+    {
+        return $this->render('admin/payment_types/index.html.twig', [
+            'paymentTypes' => $this->manager->getRepository(PaymentType::class)->findAll()
+        ]);
+    }
+
+       
+    /**
+     * @Route("/payment-types/create", name="admin_payment_types_create", methods={"GET", "POST"})
+     * @method paymentTypesCreate
+     * @return Response
+     */
+    public function paymentTypesCreate(Request $request)
+    {
+        $paymentType = new PaymentType();
+
+        $form = $this->createForm(PaymentTypeType::class, $paymentType);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $this->manager->persist($paymentType);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Méthode de paiement crée avec succès:!");
+
+            return $this->redirectToRoute('admin_payment_types_create');
+        }
+        return $this->render('admin/options/payment_types/create.html.twig', [
+            'form' => $form->createView()
+        ]);
+    }
+
         /**
-     * @Route("products/options/widths", name="admin_products_widths", methods={"GET"})
+     * @Route("/payment-types/update/{id}", name="admin_payment_types_update", methods={"GET", "POST"})
+     * @method paymentTypesUpdate
+     * @return Response
+     */
+    public function paymentTypesUpdate(Request $request, PaymentType $paymentType)
+    {
+       $paymentType = $this->manager->getRepository(PaymentType::class)->find($paymentType->getId());
+
+       if(is_null($paymentType))
+            throw $this->createNotFoundException('Ce type de paiement n\'existe pas!');
+
+        $form = $this->createForm(PaymentTypeType::class, $paymentType);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $this->manager->persist($paymentType);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Méthode de paiement modifiée avec succès!");
+
+        }
+        return $this->render('admin/options/payment_types/update.html.twig', [
+            'form' => $form->createView()
+        ]);
+    }
+
+       /**
+     * @Route("/payment-types/delete/{id}", name="admin_payment_types_delete", methods={"GET"})
+     * @method paymentTypesDelete
+     * @return Response
+     */
+    public function paymentTypesDelete(Request $request, PaymentType $paymentType)
+    {
+        $paymentType = $this->manager->getRepository(PaymentType::class)->find($paymentType->getId());
+
+        if(is_null($paymentType))
+             throw $this->createNotFoundException('Ce type de paiement n\'existe pas!');
+
+        $this->manager->remove($paymentType);
+        $this->manager->flush();
+
+        $this->addFlash("success", "Méthode de paiement supprimé avec succès");
+
+        return $this->redirectToRoute("admin_payment_types");
+    }
+
+
+
+               
+    /**
+     * @Route("/delivery-mans", name="admin_delivery_mans", methods={"GET"})
+     * @method deliveryMans
+     * @return Response
+     */
+    public function deliveryMans()
+    {
+        return $this->render('admin/contacts/delivery_mans/index.html.twig', [
+            'mans' => $this->manager->getRepository(DeliveryMan::class)->findAll()
+        ]);
+    }
+
+       
+    /**
+     * @Route("/delivery-mans/create", name="admin_delivery_mans_create", methods={"GET", "POST"})
+     * @method paymentTypesCreate
+     * @return Response
+     */
+    public function deliveryMansCreate(Request $request)
+    {
+        $man = new DeliveryMan();
+
+        $form = $this->createForm(DeliveryManType::class, $man);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $this->manager->persist($man);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Livreur  crée avec succès!");
+
+            return $this->redirectToRoute('admin_delivery_mans_create');
+        }
+        return $this->render('admin/contacts/delivery_mans/create.html.twig', [
+            'form' => $form->createView()
+        ]);
+    }
+
+        /**
+     * @Route("/delivery_mans/update/{id}", name="admin_delivery_mans_update", methods={"GET", "POST"})
+     * @method deliveryMansUpdate
+     * @return Response
+     */
+    public function deliveryMansUpdate(Request $request, DeliveryMan $man)
+    {
+       $man = $this->manager->getRepository(DeliveryMan::class)->find($man->getId());
+
+       if(is_null($man))
+            throw $this->createNotFoundException('Ce livreur n\'existe pas!');
+
+        $form = $this->createForm(DeliveryManType::class, $man);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $this->manager->persist($man);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Livreur modifié avec succès!");
+
+        }
+        return $this->render('admin/contacts/delivery_mans/update.html.twig', [
+            'form' => $form->createView()
+        ]);
+    }
+
+       /**
+     * @Route("/delivery-mans/delete/{id}", name="admin_delivery_mans_delete", methods={"GET"})
+     * @method deliveryManDelete
+     * @return Response
+     */
+    public function deliveryManDelete(Request $request, DeliveryMan $man)
+    {
+        $man = $this->manager->getRepository(DeliveryMan::class)->find($man->getId());
+
+        if(is_null($man))
+             throw $this->createNotFoundException('Ce livreur  n\'existe pas!');
+
+        $this->manager->remove($man);
+        $this->manager->flush();
+
+        $this->addFlash("success", "Livreur supprimé avec succès");
+
+        return $this->redirectToRoute("admin_delivery_mans");
+    }
+
+
+
+    /**
+     * @Route("/products/options/widths", name="admin_products_widths", methods={"GET"})
      * @method productsWidths
      * @return Response
      */
@@ -848,7 +1086,7 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("products/options/widths/create", name="admin_products_widths_create", methods={"GET", "POST"})
+     * @Route("/products/options/widths/create", name="admin_products_widths_create", methods={"GET", "POST"})
      * @method productsWidthsCreate
      * @param Request $request
      * @return Response
@@ -875,7 +1113,7 @@ class AdminController extends AbstractController
     }
 
      /**
-     * @Route("products/options/widths/update/{id}", name="admin_products_widths_update", methods={"GET", "POST"})
+     * @Route("/products/options/widths/update/{id}", name="admin_products_widths_update", methods={"GET", "POST"})
      * @method productsLenghtsUpdate
      * @param Request $request
      * @param Width $width
@@ -901,7 +1139,7 @@ class AdminController extends AbstractController
     }
 
      /**
-     * @Route("products/options/widths/delete/{id}", name="admin_products_widths_delete", methods={"GET"})
+     * @Route("/products/options/widths/delete/{id}", name="admin_products_widths_delete", methods={"GET"})
      * @method productsLengthsDelete
      * @param Width $width
      * @return Response
@@ -924,8 +1162,8 @@ class AdminController extends AbstractController
 
 
 
-            /**
-     * @Route("products/options/heights", name="admin_products_heights", methods={"GET"})
+    /**
+     * @Route("/products/options/heights", name="admin_products_heights", methods={"GET"})
      * @method productsHeights
      * @return Response
      */
@@ -937,7 +1175,7 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("products/options/heights/create", name="admin_products_heights_create", methods={"GET", "POST"})
+     * @Route("/products/options/heights/create", name="admin_products_heights_create", methods={"GET", "POST"})
      * @method productsHeightsCreate
      * @param Request $request
      * @return Response
@@ -1009,5 +1247,365 @@ class AdminController extends AbstractController
 
         return $this->redirectToRoute("admin_products_heights");
        
+    }
+
+      /**
+     * @Route("/products/attributes", name="admin_products_attributes", methods={"GET"})
+     * @method productsAttributes
+     * @return Response
+     */
+    public function productsAttributes()
+    {
+        return $this->render("admin/products/attributes/index.html.twig", [
+            'attributes' => $this->manager->getRepository(Attribute::class)->findAll()
+        ]);
+    }
+
+    /**
+     * @Route("/products/attributes/create", name="admin_products_attributes_create", methods={"GET", "POST"})
+     * @method productsAttributesCreate
+     * @param Request $request
+     * @return Response
+     */
+    public function productsAttributesCreate(Request $request)
+    {
+        $attribute = new Attribute();
+
+        $form = $this->createForm(AttributeType::class, $attribute);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $attribute->setRegister($this->getUser());
+           
+            $options = explode('|',$attribute->getText());
+            $attribute->setOptions($options);
+            
+            $slugify = new Slugify([ 'separator' => '_' ]);
+            $attribute->setSlug($slugify->slugify('pa'.$attribute->getName()));
+            $this->manager->persist($attribute);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Attribut de produit crée avec succès!");
+            return $this->redirectToRoute("admin_products_attributes_create");
+        }
+        return $this->render("admin/products/attributes/create.html.twig", [
+            'form' => $form->createView()
+        ]);
+    }
+
+     /**
+     * @Route("/products/attributes/update/{id}", name="admin_products_attributes_update", methods={"GET", "POST"})
+     * @method productsAttributesUpdate
+     * @param Request $request
+     * @param Attribute $attribute
+     * @return Response
+     */
+    public function productsAttributesUpdate(Request $request, Attribute $attribute)
+    {
+        $attribute = $this->manager->getRepository(Attribute::class)->find($attribute->getId());
+
+        $text = '';
+
+        for($i = 0; $i <= count($attribute->getOptions()) - 1; $i++){
+            $text .= $attribute->getOptions()[$i];
+            $text .= '|';
+        }
+
+        $text = substr($text, 0, -1);
+    
+        $attribute->text = $text;
+
+        $form = $this->createForm(AttributeType::class, $attribute);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $options = explode('|',$attribute->getText());
+            $attribute->setOptions($options);
+             
+            $slugify = new Slugify([ 'separator' => '_' ]);
+            $attribute->setSlug($slugify->slugify('pa '.$attribute->getName()));
+            $this->manager->persist($attribute);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Attribut de produit modifiée avec succès!");
+            return $this->redirectToRoute("admin_products_attributes_update", ['id' => $attribute->getId()]);
+        }
+        return $this->render("admin/products/attributes/update.html.twig", [
+            'form' => $form->createView()
+        ]);
+    }
+
+     /**
+     * @Route("/products/attributes/delete/{id}", name="admin_products_attributes_delete", methods={"GET"})
+     * @method productsAttributesDelete
+     * @param Attribute $attribute
+     * @return Response
+     */
+    public function productsAttributesDelete(Attribute $attribute): Response
+    {
+        $attribute = $this->manager->getRepository(Width::class)->find($attribute->getId());
+
+        if(is_null($attribute))
+            throw $this->createNotFoundException("Cet attribut de produit n'existe pas!");
+        
+        $this->manager->remove($attribute);
+        $this->manager->flush();
+
+        $this->addFlash("success", "Attribut de produit supprimé avec succès!");
+
+        return $this->redirectToRoute("admin_products_attributes");
+       
+    }
+
+
+    /**
+     * @Route("/products/orders", name="admin_products_orders", methods={"GET"})
+     * @method productOrders
+     * @return Response
+     */
+    public function productorders()
+    {   
+ 
+        return $this->render("admin/products/orders/index.html.twig",  [
+            'orders' => $this->manager->getRepository(Order::class)->findAll()
+        ]);
+    }
+
+
+     /**
+     * @Route("/products/orders/create", name="admin_products_orders_create", methods={"GET", "POST"})
+     * @method productOrdersCreate
+     * @param Request $request
+     * @param ProductRepository $productRepository
+     * @return Response
+     */
+    public function productordersCreate(Request $request, SessionInterface $session): Response
+    {
+
+        if($request->isXmlHttpRequest()){
+           $response = '';
+           $code = 0;
+           $total = 0;
+            if($request->get('action')){
+
+               switch($request->get('action')){
+                    case "add":
+                        if($request->get('quantity')){
+                            $product = $this->manager->getRepository(Product::class)->find($request->get('code'));
+                            $itemArray = [
+                                $product->getId() =>[
+                                    'name'=>$product->getName(), 
+                                    'code'=>$product->getId(), 
+                                    'quantity'=>$request->get("quantity"), 
+                                    'price'=>$product->getSellingPrice()
+                                     ]
+                                ];
+                              
+                                if(!empty($session->get("cart_item"))) {
+                                    if(in_array($product->getId(), $session->get("cart_item"))) {
+                                        foreach($session->get("cart_item") as $k => $v) {
+                                                if($product->getId() == $k)
+                                                    $session->get("cart_item")[$k]["quantity"] = $request->get("quantity");
+                                        }
+                                    } else {
+
+                                        $items = $session->get('cart_item', []);
+                                        array_push($items, [
+                                            'name'=>$product->getName(), 
+                                            'code'=>$product->getId(), 
+                                            'quantity'=>$request->get("quantity"), 
+                                            'price'=>$product->getSellingPrice()
+                                        ]);
+
+                                        $session->set('cart_item', $items);
+
+                                        $i = 1;
+                                            $response .= '<tr id="element-'.$product->getId().'">';
+                                                $response .= '<td>'.$product->getName().'</td>';
+                                                $response .= '<td>'.$product->getSellingPrice().'</td>';
+                                                $response .= '<td>'.$request->get('quantity').'</td>';
+                                                $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+                                            $response .= '</tr>';
+                                        foreach($session->get('cart_item', []) as $v){
+                                            $total += $v['price'];
+                                        }
+                                        
+                                    }
+                                } else {
+                                    $session->set("cart_item", $itemArray);
+
+
+                                    $i = 1;
+                                    $response .= '<tr id="element-'.$product->getId().'">';
+                                        $response .= '<td>'.$product->getName().'</td>';
+                                        $response .= '<td>'.$product->getSellingPrice().'</td>';
+                                        $response .= '<td>'.$request->get('quantity').'</td>';
+                                        $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+                                    $response .= '</tr>';
+
+                                    foreach($session->get('cart_item', []) as $v){
+                                        $total += $v['price'];
+                                    }
+                                }
+                        }
+                    break;
+                    case "remove":
+                        if(!empty($session->get("cart_item"))) {
+                            foreach($session->get("cart_item") as $k => $v) {
+                                    if($request->get("code") == $k){
+                                        $code = $request->get("code");
+                                        $items = $session->get('cart_item', []);
+                                        unset($items[$k]);
+                                        $session->set('cart_item', $items);
+
+                                        foreach($session->get('cart_item', []) as $v){
+                                            $total += $v['price'];
+
+                                                $response .= '<tr id="element-'.$v['code'].'">';
+                                                $response .= '<td>'.$v['name'].'</td>';
+                                                $response .= '<td>'.$v['price'].'</td>';
+                                                $response .= '<td>'.$v['quantity'].'</td>';
+                                                $response .= '<td><a onClick="cartAction("remove","'.$v['code'].'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+                                                 $response .= '</tr>';
+                                        }
+
+                                    }else{
+                                        $code = $request->get("code");
+                                        $items = $session->get('cart_item', []);
+                                        unset($items[$k]);
+                                        $session->set('cart_item', $items);
+
+                                        foreach($session->get('cart_item', []) as $v){
+                                            $total += $v['price'];
+
+                                            $response .= '<tr id="element-'.$v['code'].'">';
+                                            $response .= '<td>'.$v['name'].'</td>';
+                                            $response .= '<td>'.$v['price'].'</td>';
+                                            $response .= '<td>'.$v['quantity'].'</td>';
+                                            $response .= '<td><a onClick="cartAction("remove","'.$v['code'].'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+                                             $response .= '</tr>';
+                                        }
+
+                                    }
+                                    if(empty($session->get("cart_item"))){
+                                        $items = $session->get('cart_item', []);
+                                        unset($items[$k]);
+                                        $session->set('cart_item', $items);
+                                        $session->set('cart_item', $items);
+                                        
+                                    }
+                            }
+                        }
+                    break;
+                    case "empty":
+                        $items = $session->get('cart_item', []);
+                        unset($items);
+                        $session->set('cart_item', $items);
+                    break;		
+               }
+            }
+
+            return $request->get('action') == 'add' ? new JsonResponse(['status' => 201,'response' => $response, 'total' => $total]): new JsonResponse(['status' => 200,'response' => $response, 'code' => $code, 'total'=>$total]);
+        }
+
+
+
+        $order = new Order();
+        $billing = new Billing();
+        $invoice = new Invoice();
+
+
+        $today = date("Ymd");
+        $rand = strtoupper(substr(uniqid(sha1(time())),0,4));
+        $unique = $today . $rand;
+        
+
+        $form = $this->createForm(BillingType::class, $billing);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $this->manager->getConnection()->beginTransaction();
+            
+           try{
+            $total = 0;
+            $shop = $this->manager->getRepository(Shop::class)->find(25);
+
+            $order->setNumber('123');
+            $order->setShop($shop);
+            $order->setCustomer($billing->getCustomer());
+            $order->setManager($shop->getManager());
+
+            foreach($session->get('cart_item', []) as $item){
+                $orderProduct = new OrderProduct();
+
+                $total += $item['price'];
+                $product = $this->manager->getRepository(Product::class)->find($item['code']);
+                $product->setQuantity($product->getQuantity() > 0 ? $product->getQuantity() - $item['quantity'] : 0);
+                $orderProduct->setProducts($product);
+                $orderProduct->setQuantity($item['quantity']);
+                
+                $order->addOrderProduct($orderProduct);
+            }
+
+            $order->setSaleTotal($total);
+            $order->setOrderNumber($unique);
+            $this->manager->persist($order);
+
+            if($billing->getDeliveryMan()){
+                $delivery = new Delivery();
+
+                $delivery->setDeliveryMan($billing->getDeliveryMan());
+                $delivery->setAddress($billing->getDeliveryAddress());
+                $delivery->setOrder($order);
+
+                $this->manager->persist($delivery);
+            }
+
+            $invoice->setPaymentType($billing->getPaymentType());
+            $invoice->setOrders($order);
+            $invoice->setAmount($total);
+            
+            $this->manager->persist($invoice);
+
+            $this->manager->flush();
+            $this->manager->commit();
+            $session->clear();
+
+            $mpdf = new Mpdf();
+            $mpdf->WriteHTML('<h1>Hello world!</h1>');
+            $mpdf->Output();
+           }catch(\Exception $e){
+             $this->manager->rollback();
+             throw $e;
+           }
+            
+        }
+        
+        return $this->render("admin/products/orders/create.html.twig", [
+            'products' => $this->manager->getRepository(Product::class)->findAll(),
+            'form' => $form->createView()
+        ]);
+    }
+
+      /**
+     * @Route("/products/orders/show/{id}", name="admin_products_orders_show", methods={"GET"})
+     * @method productOrdersShow
+     * @param Request $request
+     * @param ProductRepository $productRepository
+     * @return Response
+     */
+    public function productsOrderShow(Order $order)
+    {
+        $order = $this->manager->getRepository(Order::class)->find($order->getId());
+
+        if(is_null($order))
+            throw $this->createNotFoundException('Cette commande n\'existe pas');
+
+            return $this->render("admin/products/orders/show.html.twig", [
+                'order' => $order,
+                'products' => $this->manager->getRepository(OrderProduct::class)->findBy(['productOrder' => $order])
+            ]);
     }
 }

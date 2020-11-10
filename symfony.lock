@@ -99,6 +99,12 @@
     "monolog/monolog": {
         "version": "2.1.1"
     },
+    "mpdf/mpdf": {
+        "version": "v8.0.7"
+    },
+    "myclabs/deep-copy": {
+        "version": "1.10.1"
+    },
     "nikic/php-parser": {
         "version": "v4.10.2"
     },
@@ -143,6 +149,9 @@
         "files": [
             "config/packages/sensio_framework_extra.yaml"
         ]
+    },
+    "setasign/fpdi": {
+        "version": "v2.3.4"
     },
     "swiftmailer/swiftmailer": {
         "version": "v6.2.3"
@@ -551,6 +560,9 @@
     },
     "twig/extra-bundle": {
         "version": "v3.1.0"
+    },
+    "twig/intl-extra": {
+        "version": "v3.1.1"
     },
     "twig/twig": {
         "version": "v3.1.0"

@@ -28,7 +28,7 @@ class Color
     private $name;
     
     /**
-     * @ORM\OneToMany(targetEntity="Product", mappedBy="color")
+     * @ORM\ManyToMany(targetEntity="Product", inversedBy="colors"))
      */
     private $products;
 
@@ -42,6 +42,7 @@ class Color
     {
         $this->products = new ArrayCollection();
     }
+
 
     public function getId(): ?int
     {
@@ -65,36 +66,6 @@ class Color
         return $this->getName();
     }
 
-    /**
-     * @return Collection|Product[]
-     */
-    public function getProducts(): Collection
-    {
-        return $this->products;
-    }
-
-    public function addProduct(Product $product): self
-    {
-        if (!$this->products->contains($product)) {
-            $this->products[] = $product;
-            $product->setColor($this);
-        }
-
-        return $this;
-    }
-
-    public function removeProduct(Product $product): self
-    {
-        if ($this->products->contains($product)) {
-            $this->products->removeElement($product);
-            // set the owning side to null (unless already changed)
-            if ($product->getColor() === $this) {
-                $product->setColor(null);
-            }
-        }
-
-        return $this;
-    }
 
     public function getRegister(): ?User
     {
@@ -107,4 +78,31 @@ class Color
 
         return $this;
     }
+
+    /**
+     * @return Collection|Product[]
+     */
+    public function getProducts(): Collection
+    {
+        return $this->products;
+    }
+
+    public function addProduct(Product $product): self
+    {
+        if (!$this->products->contains($product)) {
+            $this->products[] = $product;
+        }
+
+        return $this;
+    }
+
+    public function removeProduct(Product $product): self
+    {
+        if ($this->products->contains($product)) {
+            $this->products->removeElement($product);
+        }
+
+        return $this;
+    }
+
 }

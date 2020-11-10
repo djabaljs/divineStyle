@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass=InvoiceRepository::class)
+ * @ORM\HasLifecycleCallbacks()
  */
 class Invoice
 {
@@ -25,8 +26,7 @@ class Invoice
     private $amount;
 
     /**
-     * @ORM\OneToOne(targetEntity=PaymentType::class, cascade={"persist", "remove"})
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\ManyToOne(targetEntity=PaymentType::class, inversedBy="invoices")
      */
     private $paymentType;
 
@@ -53,17 +53,6 @@ class Invoice
         return $this;
     }
 
-    public function getPaymentType(): ?PaymentType
-    {
-        return $this->paymentType;
-    }
-
-    public function setPaymentType(PaymentType $paymentType): self
-    {
-        $this->paymentType = $paymentType;
-
-        return $this;
-    }
 
     public function getOrders(): ?Order
     {
@@ -73,6 +62,18 @@ class Invoice
     public function setOrders(Order $orders): self
     {
         $this->orders = $orders;
+
+        return $this;
+    }
+
+    public function getPaymentType(): ?PaymentType
+    {
+        return $this->paymentType;
+    }
+
+    public function setPaymentType(?PaymentType $paymentType): self
+    {
+        $this->paymentType = $paymentType;
 
         return $this;
     }

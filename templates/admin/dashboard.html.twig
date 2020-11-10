@@ -49,11 +49,7 @@
                                     <div class="card-body">
                                         <h5 class="text-muted">Ventes</h5>
                                         <div class="metric-value d-inline-block">
-                                        {# {% if sales is not empty %}
-                                            <h1 class="mb-1">{{sales[0]["total_sales"]}} FCFA</h1>
-                                        {% else %} #}
-                                            <h1 class="mb-1">0 FCFA</h1>
-                                        {# {% endif %} #}
+                                            <h1 class="mb-1">{{amount|format_currency('XOF')}}</h1>
                                         </div>
                                         <div class="metric-label d-inline-block float-right text-success font-weight-bold">
                                             {# <span class="icon-circle-small icon-box-xs text-success bg-success-light"><i class="fa fa-fw fa-arrow-up"></i></span><span class="ml-1">${{sales[0]["total_sales"] * 10}}%</span> #}
@@ -149,7 +145,7 @@
                                                         <th class="border-0">Actions</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody>
+                                                {# <tbody>
                                                 {% set break = false %}
                                                    {% for order in orders|slice(0,5) %}
                                                     <tr>
@@ -200,7 +196,7 @@
                                                          {% set break = true %}
                                                     {% endif %}
                                                    {% endfor %}
-                                                </tbody>
+                                                </tbody> #}
                                             </table>
                                         </div>
                                     </div>

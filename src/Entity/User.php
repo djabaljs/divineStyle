@@ -108,6 +108,11 @@ class User implements UserInterface
      * @ORM\OneToMany(targetEntity=Height::class, mappedBy="register")
      */
     private $heights;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="register")
+     */
+    private $attributes;
     
 
 
@@ -121,6 +126,7 @@ class User implements UserInterface
         $this->lengths = new ArrayCollection();
         $this->widths = new ArrayCollection();
         $this->heights = new ArrayCollection();
+        $this->attributes = new ArrayCollection();
     }
 
 
@@ -530,6 +536,37 @@ class User implements UserInterface
             // set the owning side to null (unless already changed)
             if ($height->getRegister() === $this) {
                 $height->setRegister(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Attribute[]
+     */
+    public function getAttributes(): Collection
+    {
+        return $this->attributes;
+    }
+
+    public function addAttribute(Attribute $attribute): self
+    {
+        if (!$this->attributes->contains($attribute)) {
+            $this->attributes[] = $attribute;
+            $attribute->setRegister($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAttribute(Attribute $attribute): self
+    {
+        if ($this->attributes->contains($attribute)) {
+            $this->attributes->removeElement($attribute);
+            // set the owning side to null (unless already changed)
+            if ($attribute->getRegister() === $this) {
+                $attribute->setRegister(null);
             }
         }
 

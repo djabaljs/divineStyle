@@ -67,11 +67,11 @@ class Product
     private $shop;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Length", inversedBy="products")
+     * @ORM\ManyToMany(targetEntity="Length", mappedBy="products", cascade={"persist"}))
      * @ORM\JoinColumn(nullable=true)
      * 
      */
-    private $length;
+    private $lengths;
 
      /**
      * @ORM\ManyToOne(targetEntity="Width", inversedBy="products")
@@ -96,9 +96,9 @@ class Product
     private $wcProductId;
 
     /**
-     * @ORM\ManyToMany(targetEntity="Order", mappedBy="products")
+     * @ORM\ManyToOne(targetEntity="Order", inversedBy="products")
      */
-    private $orders;
+    private $order;
 
     /**
      * @ORM\Column(type="array", nullable=true)
@@ -111,13 +111,29 @@ class Product
     private $minimumStock;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Color", inversedBy="products")
+     * @ORM\ManyToMany(targetEntity="Color", mappedBy="products")
      */
-    private $color;
+    private $colors;
+
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $isVariable;
+
+    public $colorArrays;
+    public $lengthArrays;
+
+    /**
+     * @ORM\OneToMany(targetEntity=OrderProduct::class, mappedBy="products")
+     */
+    private $orderProducts;
 
     public function __construct()
     {
-        $this->orders = new ArrayCollection();
+        $this->lengths = new ArrayCollection();
+        $this->colors = new ArrayCollection();
+        $this->orderProducts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -224,18 +240,6 @@ class Product
         return $this;
     }
 
-    public function getLength(): ?Length
-    {
-        return $this->length;
-    }
-
-    public function setLength(?Length $length): self
-    {
-        $this->length = $length;
-
-        return $this;
-    }
-
     public function getWidth(): ?Width
     {
         return $this->width;
@@ -284,33 +288,6 @@ class Product
         return $this;
     }
 
-    /**
-     * @return Collection|Order[]
-     */
-    public function getOrders(): Collection
-    {
-        return $this->orders;
-    }
-
-    public function addOrder(Order $order): self
-    {
-        if (!$this->orders->contains($order)) {
-            $this->orders[] = $order;
-            $order->addProduct($this);
-        }
-
-        return $this;
-    }
-
-    public function removeOrder(Order $order): self
-    {
-        if ($this->orders->contains($order)) {
-            $this->orders->removeElement($order);
-            $order->removeProduct($this);
-        }
-
-        return $this;
-    }
 
     public function getImageUrls(): ?array
     {
@@ -336,14 +313,139 @@ class Product
         return $this;
     }
 
-    public function getColor(): ?Color
+    public function getIsVariable(): ?bool
     {
-        return $this->color;
+        return $this->isVariable;
     }
 
-    public function setColor(?Color $color): self
+    public function setIsVariable(bool $isVariable): self
     {
-        $this->color = $color;
+        $this->isVariable = $isVariable;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Length[]
+     */
+    public function getLengths(): Collection
+    {
+        return $this->lengths;
+    }
+
+    public function addLength(Length $length): self
+    {
+        if (!$this->lengths->contains($length)) {
+            $this->lengths[] = $length;
+            $length->addProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removeLength(Length $length): self
+    {
+        if ($this->lengths->contains($length)) {
+            $this->lengths->removeElement($length);
+            $length->removeProduct($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Color[]
+     */
+    public function getColors(): Collection
+    {
+        return $this->colors;
+    }
+
+    public function addColor(Color $color): self
+    {
+        if (!$this->colors->contains($color)) {
+            $this->colors[] = $color;
+            $color->addProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removeColor(Color $color): self
+    {
+        if ($this->colors->contains($color)) {
+            $this->colors->removeElement($color);
+            $color->removeProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function setColors($colors) {
+       $colorArrays = [];
+
+       foreach($colors as $color){
+           $colorArrays[] = $color;
+       }
+
+        $this->colors = new ArrayCollection($colorArrays);
+        // foreach($this->colors as $id => $color) {
+          
+        //     if(!isset($colors[$id])) {
+        //         //remove from old because it doesn't exist in new
+        //         $this->colors->remove($id);
+        //     }
+        //     else {
+        //         //the product already exists do not overwrite
+        //         unset($colors[$id]);
+        //     }
+        // }
+
+        // //add products that exist in new but not in old
+        // foreach($colors as $id => $color) {
+        //     $this->color[$id] = $color;
+        // }    
+    }
+
+    public function getOrder(): ?Order
+    {
+        return $this->order;
+    }
+
+    public function setOrder(?Order $order): self
+    {
+        $this->order = $order;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|OrderProduct[]
+     */
+    public function getOrderProducts(): Collection
+    {
+        return $this->orderProducts;
+    }
+
+    public function addOrderProduct(OrderProduct $orderProduct): self
+    {
+        if (!$this->orderProducts->contains($orderProduct)) {
+            $this->orderProducts[] = $orderProduct;
+            $orderProduct->setProducts($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrderProduct(OrderProduct $orderProduct): self
+    {
+        if ($this->orderProducts->contains($orderProduct)) {
+            $this->orderProducts->removeElement($orderProduct);
+            // set the owning side to null (unless already changed)
+            if ($orderProduct->getProducts() === $this) {
+                $orderProduct->setProducts(null);
+            }
+        }
 
         return $this;
     }

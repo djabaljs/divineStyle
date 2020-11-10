@@ -47,4 +47,16 @@ class OrderRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    // public function findProducts(Order $order)
+    // {
+    //     $qb = $this->createQueryBuilder('o');
+    //     $qb 
+    //         ->innerJoin('o.orderProducts','op')
+    //         ->select('op.products')
+    //         ->andWhere('op.productOrder = :order')
+    //         ->setParameter('order', $order)
+    //         ;
+    //     return $qb->getQuery()->getResult();
+    // }
 }

@@ -1,0 +1,219 @@
+{% extends 'base.html.twig' %}
+{% block stylesheets %}
+ <link rel="stylesheet" href="{{asset('concept/assets/vendor/select2/css/select2.css')}}"/>
+ <style>
+
+ </style>
+{% endblock %}
+{% block body %}
+<div class="container-fluid dashboard-content ">
+      <!-- ============================================================== -->
+                <!-- pageheader -->
+                <!-- ============================================================== -->
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="page-header">
+                            <h2 class="pageheader-title">Data Tables</h2>
+                            <p class="pageheader-text">Proin placerat ante duiullam scelerisque a velit ac porta, fusce sit amet vestibulum mi. Morbi lobortis pulvinar quam.</p>
+                            <div class="page-breadcrumb">
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Tables</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Data Tables</li>
+                                    </ol>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                         {% include 'shared/flash_message.html.twig' %}
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <a class="btn btn-info" href="{{path('admin_products')}}" style="color:#fff"><i class="fas fa-list"></i> Liste des produits</a>
+                            <a class="btn btn-success" href="{{path('admin_products_create')}}" style="color:#fff"><i class="fas fa-save"></i> Enregistrer des produits</a>
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+                
+                <!-- ============================================================== -->
+                <!-- end pageheader -->
+                <!-- ============================================================== -->
+                   <div class="row">
+                 
+                    <!-- ============================================================== -->
+                    <!-- data table  -->
+                    <!-- ============================================================== -->
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="card">
+                            
+                            <div class="card-header">
+                                <h5 class="mb-0">Modification de produit</h5>
+                            </div>
+                            {# <div class="card-body">
+                                    {{form_start(form)}}
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                           <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="product_name">Nom</label>
+                                                    {{form_row(form.name, {attr:{'class': 'form-control', 'placeholder':'Nom du produit','style':'height:50px'}})}}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="product_unit_price">Prix d'achat</label>
+                                                    {{form_row(form.buyingPrice, {attr:{'class': 'form-control', 'style':'height:50px'}})}}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="email">Prix de vente</label>
+                                                    {{form_row(form.sellingPrice, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="product_quantity">Quantité</label>
+                                                    {{form_row(form.quantity, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="product_category">Catégorie</label>
+                                                        <input type="hidden" name="category" value="{{update}}">
+                                                        {{form_row(form.category,  {attr:{'class': 'form-control','disabled':'true'}})}}
+                                                </div>
+                                            </div>
+                                           
+                                           
+                                        </div>
+                                        <div class="col-md-6">
+                                                <div class="col-md-12 ">
+                                                    <div class="form-group">
+                                                        <label for="product_isVariable">Type de produit</label>
+                                                        {{form_row(form.isVariable)}}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12 element">
+                                                    <div class="form-group">
+                                                        <label for="product_lengths">Taille</label>
+                                                        {{form_row(form.lengths, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                    </div>
+                                                </div>
+                                                {# <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="product_width">Largeur</label>
+                                                        {{form_row(form.width, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="product_height">Hauteur</label>
+                                                        {{form_row(form.height, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                    </div>
+                                                </div> #}
+                                                 <div class="col-md-12 element">
+                                                    <div class="form-group">
+                                                        <label for="product_colors">Couleur</label>
+                                                        {{form_row(form.colors, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="product_minimumStock">Stock minimum</label>
+                                                        {{form_row(form.minimumStock, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                    </div>
+                                                </div>
+                                                 <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="product_provider">Fournisseur</label>
+                                                        {{form_row(form.provider, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                    </div>
+                                                 </div>  
+                                                 <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="product_quantity">Magasin</label>
+                                                        {{form_row(form.shop, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                    </div>
+                                            </div>
+                                            </div>
+                                      </div>
+                                    <div class="form-group">
+                                     <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
+                                    </div>
+                                {{form_end(form)}}
+                            </div> #}
+                        </div>
+                    </div>
+                    <!-- ============================================================== -->
+                    <!-- end data table  -->
+                    <!-- ============================================================== -->
+                </div>
+
+</div>
+{% endblock %}
+{% block javascripts %}
+ <script src="{{asset('concept/assets/vendor/select2/js/select2.min.js')}}"></script>
+ <script>
+    $('#product_lengths').select2({
+        placeholder: "Tailles disponibles",
+        allowClear: true
+    });
+    $('#product_colors').select2({
+        placeholder: "Couleurs disponibles",
+        allowClear: true
+    });
+    $('#product_isVariable').select2({
+        placeholder: "Selectionner le type",
+        allowClear: true
+    });
+    $('#product_category').select2({
+        placeholder: "Selectionner la catégorie",
+        allowClear: true
+    });
+    $('#product_provider').select2({
+        placeholder: "Selectionner le fournisseur",
+        allowClear: true
+    });
+    $('#product_shop').select2({
+        placeholder: "Selectionner le magasin",
+        allowClear: true
+    });
+
+    $('#product_isVariable').change(function(){
+        if($(this).val() == 0){
+            $('.element').hide();
+            $('.element').hide();
+            $('#product_length').removeAttr('required');
+            $('#product_color').removeAttr('required');
+        }else if($(this).val() == 1){
+            $('.element').show();
+            $('.element').show();
+            $('#product_length').removeAttr('required');
+            $('#product_color').removeAttr('required');
+             $('#product_length').attr('required', '');
+            $('#product_color').attr('required', '');
+        }
+    });
+ </script>
+{% endblock %}

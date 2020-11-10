@@ -46,35 +46,29 @@ class Order
     private $shop;
 
     /**
-     * @ORM\Column(type="integer")
-    */
-    private $quantity;
-
-    /**
-     * @ORM\ManyToMany(targetEntity=Product::class, inversedBy="orders", cascade={"persist"})
-     */
-    private $products;
-
-    /**
      * @ORM\ManyToOne(targetEntity="Customer", inversedBy="orders")
      */
     private $customer;
 
     /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $orderNumber;
-    
-    /**
      * @ORM\OneToOne(targetEntity="Delivery", mappedBy="order")
      */
     private $deliveries;
-    
+
+    /**
+     * @ORM\OneToMany(targetEntity=OrderProduct::class, mappedBy="productOrder", cascade={"persist"})
+     */
+    private $orderProducts;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $orderNumber;
+
     public function __construct()
     {
-        $this->products = new ArrayCollection();
+        $this->orderProducts = new ArrayCollection();
     }
-
 
     public function getId(): ?int
     {
@@ -113,48 +107,11 @@ class Order
         return $this;
     }
 
-    /**
-     * @return Collection|Product[]
-     */
-    public function getProducts(): Collection
-    {
-        return $this->products;
-    }
-
-    public function addProduct(Product $product): self
-    {
-        if (!$this->products->contains($product)) {
-            $this->products[] = $product;
-        }
-
-        return $this;
-    }
-
-    public function removeProduct(Product $product): self
-    {
-        if ($this->products->contains($product)) {
-            $this->products->removeElement($product);
-        }
-
-        return $this;
-    }
-
     public function getSaleTotal(): ?float
     {
         return $this->saleTotal;
     }
 
-    public function getQuantity(): ?int
-    {
-        return $this->quantity;
-    }
-
-    public function setQuantity(int $quantity): self
-    {
-        $this->quantity = $quantity;
-
-        return $this;
-    }
 
     public function getShop(): ?Shop
     {
@@ -180,17 +137,6 @@ class Order
         return $this;
     }
 
-    public function getOrderNumber(): ?string
-    {
-        return $this->orderNumber;
-    }
-
-    public function setOrderNumber(string $orderNumber): self
-    {
-        $this->orderNumber = $orderNumber;
-
-        return $this;
-    }
 
     public function getDeliveries(): ?Delivery
     {
@@ -206,6 +152,50 @@ class Order
         if ($deliveries->getOrder() !== $newOrder) {
             $deliveries->setOrder($newOrder);
         }
+
+        return $this;
+    }
+
+
+    /**
+     * @return Collection|OrderProduct[]
+     */
+    public function getOrderProducts(): Collection
+    {
+        return $this->orderProducts;
+    }
+
+    public function addOrderProduct(OrderProduct $orderProduct): self
+    {
+        if (!$this->orderProducts->contains($orderProduct)) {
+            $this->orderProducts[] = $orderProduct;
+            $orderProduct->setProductOrder($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrderProduct(OrderProduct $orderProduct): self
+    {
+        if ($this->orderProducts->contains($orderProduct)) {
+            $this->orderProducts->removeElement($orderProduct);
+            // set the owning side to null (unless already changed)
+            if ($orderProduct->getProductOrder() === $this) {
+                $orderProduct->setProductOrder(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getOrderNumber(): ?string
+    {
+        return $this->orderNumber;
+    }
+
+    public function setOrderNumber(string $orderNumber): self
+    {
+        $this->orderNumber = $orderNumber;
 
         return $this;
     }
