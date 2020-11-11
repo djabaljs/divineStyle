@@ -26,15 +26,15 @@ class Invoice
     private $amount;
 
     /**
-     * @ORM\ManyToOne(targetEntity=PaymentType::class, inversedBy="invoices")
-     */
-    private $paymentType;
-
-    /**
      * @ORM\OneToOne(targetEntity=Order::class, cascade={"persist", "remove"})
      * @ORM\JoinColumn(nullable=false)
      */
     private $orders;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $invoiceNumber;
 
     public function getId(): ?int
     {
@@ -66,14 +66,14 @@ class Invoice
         return $this;
     }
 
-    public function getPaymentType(): ?PaymentType
+    public function getInvoiceNumber(): ?string
     {
-        return $this->paymentType;
+        return $this->invoiceNumber;
     }
 
-    public function setPaymentType(?PaymentType $paymentType): self
+    public function setInvoiceNumber(string $invoiceNumber): self
     {
-        $this->paymentType = $paymentType;
+        $this->invoiceNumber = $invoiceNumber;
 
         return $this;
     }

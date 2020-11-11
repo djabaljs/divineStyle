@@ -30,7 +30,7 @@ class Shop
     private $name;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
     private $address;
 
@@ -59,6 +59,11 @@ class Shop
      * @ORM\OneToMany(targetEntity="Order", mappedBy="shop")
      */
     private $orders;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $phone;
 
     public function __construct()
     {
@@ -239,6 +244,18 @@ class Shop
     public function __toString()
     {
         return $this->getName();
+    }
+
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+
+    public function setPhone(string $phone): self
+    {
+        $this->phone = $phone;
+
+        return $this;
     }
 
 }

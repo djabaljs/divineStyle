@@ -38,6 +38,11 @@ class Delivery
      */
     private $order;
 
+    /**
+     * @ORM\Column(type="float")
+     */
+    private $amountPaid;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -87,6 +92,18 @@ class Delivery
     public function setOrder(?Order $order): self
     {
         $this->order = $order;
+
+        return $this;
+    }
+
+    public function getAmountPaid(): ?float
+    {
+        return $this->amountPaid;
+    }
+
+    public function setAmountPaid(float $amountPaid): self
+    {
+        $this->amountPaid = $amountPaid;
 
         return $this;
     }

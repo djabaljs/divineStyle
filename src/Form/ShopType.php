@@ -23,6 +23,13 @@ class ShopType extends AbstractType
                 'label' => false,
                 'required' => false
             ])
+            ->add('phone', TextType::class, [
+                'label' => false,
+                'required' => true,
+                'attr' => [
+                    'placeholder' => 'Téléphone du magasin'
+                ]
+            ])
             ->add('manager', EntityType::class, [
                 'label' => false,
                 'class' => User::class,

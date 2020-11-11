@@ -2,9 +2,10 @@
 
 namespace App\Repository;
 
+use App\Entity\Order;
 use App\Entity\OrderProduct;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @method OrderProduct|null find($id, $lockMode = null, $lockVersion = null)
@@ -47,4 +48,14 @@ class OrderProductRepository extends ServiceEntityRepository
         ;
     }
     */
+    
+    public function findOrderProducts(Order $order)
+    {
+        $qb = $this->createQueryBuilder('o');
+        $qb
+            ->where('o.productOrder = :order')
+            ->setParameter('order', $order)
+            ;
+        return $qb->getQuery()->getResult();
+    }
 }

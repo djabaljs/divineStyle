@@ -14,6 +14,7 @@ use App\Form\ShopType;
 use App\Form\UserType;
 use App\Entity\Billing;
 use App\Entity\Invoice;
+use App\Entity\Payment;
 use App\Entity\Product;
 use App\Form\ColorType;
 use App\Form\WidthType;
@@ -36,7 +37,10 @@ use App\Form\ShopUpdateType;
 use App\Form\DeliveryManType;
 use App\Form\PaymentTypeType;
 use App\Repository\UserRepository;
+use App\Repository\OrderRepository;
+use App\Repository\PaymentRepository;
 use App\Repository\ProductRepository;
+use App\Services\Invoice\InvoiceService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -71,16 +75,22 @@ class AdminController extends AbstractController
      */
     public function dashboard(WoocommerceApiService $apiService): Response
     {
-        $invoices = $this->manager->getRepository(Invoice::class)->findAll();
-        $total = 0;
-        foreach($invoices as $invoice){
-            $total += $invoice->getAmount();
+        $payments = $this->manager->getRepository(Payment::class)->findAll();
+        $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->findBy(['status' => 1]);
+
+        $totalPaid = 0;
+        $totalAmount = 0;
+        foreach($payments as $payment){
+            $totalPaid += $payment->getAmountPaid();
+            $totalAmount += $payment->getAmount();
         }
         return $this->render('admin/dashboard.html.twig', [
             'orders' => $this->manager->getRepository(Order::class)->findAll(),
             'customers' => $this->manager->getRepository(Customer::class)->findAll(),
             'products' => $this->manager->getRepository(Product::class)->findAll(),
-            "amount" => $total
+            "amountPaid" => $totalPaid,
+            'amount' => $totalAmount,
+            'deliveries' => $deliveriesSuccessfully
         ]);
 
     }
@@ -493,7 +503,7 @@ class AdminController extends AbstractController
             try{
                 
                 $this->manager->persist($shop);
-                $this->manager->persist($staff);
+                // $this->manager->persist($staff);
                 $this->manager->flush();
                 $this->manager->commit();
 
@@ -1364,11 +1374,11 @@ class AdminController extends AbstractController
      * @method productOrders
      * @return Response
      */
-    public function productorders()
+    public function productorders(PaymentRepository $paymentRepository)
     {   
- 
+
         return $this->render("admin/products/orders/index.html.twig",  [
-            'orders' => $this->manager->getRepository(Order::class)->findAll()
+            'payments' => $paymentRepository->findBy([], ['createdAt' => 'DESC'])
         ]);
     }
 
@@ -1377,11 +1387,14 @@ class AdminController extends AbstractController
      * @Route("/products/orders/create", name="admin_products_orders_create", methods={"GET", "POST"})
      * @method productOrdersCreate
      * @param Request $request
-     * @param ProductRepository $productRepository
+     * @param SessionInterface $session
+     * @param InvoiceService $invoiceService
      * @return Response
      */
-    public function productordersCreate(Request $request, SessionInterface $session): Response
+    public function productordersCreate(Request $request, SessionInterface $session, InvoiceService $invoiceService): Response
     {
+        
+        $invoice = $this->manager->getRepository(Invoice::class)->find(26);
 
         if($request->isXmlHttpRequest()){
            $response = '';
@@ -1423,7 +1436,7 @@ class AdminController extends AbstractController
                                         $i = 1;
                                             $response .= '<tr id="element-'.$product->getId().'">';
                                                 $response .= '<td>'.$product->getName().'</td>';
-                                                $response .= '<td>'.$product->getSellingPrice().'</td>';
+                                                $response .= '<td>'.number_format($product->getSellingPrice()).'</td>';
                                                 $response .= '<td>'.$request->get('quantity').'</td>';
                                                 $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
                                             $response .= '</tr>';
@@ -1439,7 +1452,7 @@ class AdminController extends AbstractController
                                     $i = 1;
                                     $response .= '<tr id="element-'.$product->getId().'">';
                                         $response .= '<td>'.$product->getName().'</td>';
-                                        $response .= '<td>'.$product->getSellingPrice().'</td>';
+                                        $response .= '<td>'.number_format($product->getSellingPrice()).'</td>';
                                         $response .= '<td>'.$request->get('quantity').'</td>';
                                         $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
                                     $response .= '</tr>';
@@ -1461,10 +1474,9 @@ class AdminController extends AbstractController
 
                                         foreach($session->get('cart_item', []) as $v){
                                             $total += $v['price'];
-
                                                 $response .= '<tr id="element-'.$v['code'].'">';
                                                 $response .= '<td>'.$v['name'].'</td>';
-                                                $response .= '<td>'.$v['price'].'</td>';
+                                                $response .= '<td>'.number_format($v['price']).'</td>';
                                                 $response .= '<td>'.$v['quantity'].'</td>';
                                                 $response .= '<td><a onClick="cartAction("remove","'.$v['code'].'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
                                                  $response .= '</tr>';
@@ -1481,7 +1493,7 @@ class AdminController extends AbstractController
 
                                             $response .= '<tr id="element-'.$v['code'].'">';
                                             $response .= '<td>'.$v['name'].'</td>';
-                                            $response .= '<td>'.$v['price'].'</td>';
+                                            $response .= '<td>'.number_format($v['price']).'</td>';
                                             $response .= '<td>'.$v['quantity'].'</td>';
                                             $response .= '<td><a onClick="cartAction("remove","'.$v['code'].'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
                                              $response .= '</tr>';
@@ -1506,7 +1518,7 @@ class AdminController extends AbstractController
                }
             }
 
-            return $request->get('action') == 'add' ? new JsonResponse(['status' => 201,'response' => $response, 'total' => $total]): new JsonResponse(['status' => 200,'response' => $response, 'code' => $code, 'total'=>$total]);
+            return $request->get('action') == 'add' ? new JsonResponse(['status' => 201,'response' => $response, 'total' => number_format($total)]): new JsonResponse(['status' => 200,'response' => $response, 'code' => $code, 'total'=>number_format($total)]);
         }
 
 
@@ -1514,7 +1526,7 @@ class AdminController extends AbstractController
         $order = new Order();
         $billing = new Billing();
         $invoice = new Invoice();
-
+        $payment = new Payment();
 
         $today = date("Ymd");
         $rand = strtoupper(substr(uniqid(sha1(time())),0,4));
@@ -1525,62 +1537,98 @@ class AdminController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
+            if(!empty($session->get('cart_item',[]))){
 
-            $this->manager->getConnection()->beginTransaction();
-            
-           try{
-            $total = 0;
-            $shop = $this->manager->getRepository(Shop::class)->find(25);
+                $this->manager->getConnection()->beginTransaction();
+                $this->manager->getConnection()->setAutoCommit(false);
 
-            $order->setNumber('123');
-            $order->setShop($shop);
-            $order->setCustomer($billing->getCustomer());
-            $order->setManager($shop->getManager());
+            try{
+                $total = 0;
+                $shop = $this->manager->getRepository(Shop::class)->find(25);
 
-            foreach($session->get('cart_item', []) as $item){
-                $orderProduct = new OrderProduct();
+                $order->setNumber('123');
+                $order->setShop($shop);
+                $order->setCustomer($billing->getCustomer());
+                $order->setManager($shop->getManager());
 
-                $total += $item['price'];
-                $product = $this->manager->getRepository(Product::class)->find($item['code']);
-                $product->setQuantity($product->getQuantity() > 0 ? $product->getQuantity() - $item['quantity'] : 0);
-                $orderProduct->setProducts($product);
-                $orderProduct->setQuantity($item['quantity']);
+                foreach($session->get('cart_item', []) as $item){
+                    $orderProduct = new OrderProduct();
+
+                    $total += $item['price'];
+                    $product = $this->manager->getRepository(Product::class)->find($item['code']);
+                    $product->setQuantity($product->getQuantity() > 0 ? $product->getQuantity() - $item['quantity'] : 0);
+                    $orderProduct->setProducts($product);
+                    $orderProduct->setQuantity($item['quantity']);
+                    
+                    $order->addOrderProduct($orderProduct);
+                }
+
+                $order->setSaleTotal($total);
+                $order->setOrderNumber($unique);
+                $this->manager->persist($order);
+
+                if($billing->getDeliveryMan()){
+                    $delivery = new Delivery();
+
+                    $delivery->setDeliveryMan($billing->getDeliveryMan());
+                    $delivery->setAddress($billing->getDeliveryAddress());
+                    $delivery->setOrder($order);
+
+                    $this->manager->persist($delivery);
+                }
+
+                $rand = strtoupper(substr(uniqid(sha1(time())),0,4));
+                $unique = $today . $rand;
                 
-                $order->addOrderProduct($orderProduct);
-            }
+                if(!is_null(($billing->getDeliveryMan()))){
+                    
+                    $delivery->setOrder($order);
+                    $delivery->setDeliveryMan($billing->getDeliveryMan());
+                    $delivery->setAddress($billing->getDeliveryAddress());
+                    $delivery->setAmountPaid($billing->getDeliveryAmount());
+                    $delivery->setStatus(false);
 
-            $order->setSaleTotal($total);
-            $order->setOrderNumber($unique);
-            $this->manager->persist($order);
+                    $this->manager->persist($delivery);
 
-            if($billing->getDeliveryMan()){
-                $delivery = new Delivery();
+                    $total += $billing->getDeliveryAmount();
+                }
 
-                $delivery->setDeliveryMan($billing->getDeliveryMan());
-                $delivery->setAddress($billing->getDeliveryAddress());
-                $delivery->setOrder($order);
-
-                $this->manager->persist($delivery);
-            }
-
-            $invoice->setPaymentType($billing->getPaymentType());
-            $invoice->setOrders($order);
-            $invoice->setAmount($total);
             
-            $this->manager->persist($invoice);
+                $invoice->setOrders($order);
+                $invoice->setAmount($total);
+                $invoice->setInvoiceNumber($unique);
 
-            $this->manager->flush();
-            $this->manager->commit();
-            $session->clear();
+                $this->manager->persist($invoice);
 
-            $mpdf = new Mpdf();
-            $mpdf->WriteHTML('<h1>Hello world!</h1>');
-            $mpdf->Output();
-           }catch(\Exception $e){
-             $this->manager->rollback();
-             throw $e;
-           }
-            
+    
+                foreach($session->get('cart_item',[]) as $item){
+                    $product = $this->manager->getRepository(Product::class)->find($item['code']);
+
+                    $this->api->putQ('products', $product);
+                }
+
+                $payment->setInvoice($invoice);
+                $payment->setPaymentType($billing->getPaymentType());
+                $payment->setAmountPaid($billing->getAmountPaid());
+                $payment->setAmount($total - $billing->getAmountPaid());
+                $this->manager->persist($payment);
+      
+                $this->manager->flush();
+                $this->manager->commit();
+                
+                $session->clear();
+
+                $logo = $request->getUriForPath('/concept/assets/images/logo.jpg');
+                $invoiceService->generateInvoice($invoice, $logo);
+
+            }catch(\Exception $e){
+                $this->manager->rollback();
+                throw $e;
+            }
+                
+            }else{
+               $this->addFlash("danger","Aucun produit selectionné!");
+            }
         }
         
         return $this->render("admin/products/orders/create.html.twig", [

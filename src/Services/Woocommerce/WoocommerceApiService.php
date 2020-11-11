@@ -420,6 +420,56 @@ class WoocommerceApiService  extends AbstractController
 
     }
 
+     /**
+     * @method updateQ
+     * @throws Exception $e
+     * @return Response
+     */
+    public function putQ($target, $data)
+    {
+        switch($target){
+            case "products":
+
+                try{
+                  
+                    $response =  $this->client->request(
+                        "PUT",
+                        $this->endpoint.''.$target.'/'.$data->getWcProductId(), [
+                         // use a different HTTP Basic authentication only for this request
+                         'auth_basic' => [$this->username, $this->password],
+                         "body" => [
+                            "stock_quantity" => $data->getQuantity(),
+                        ]
+                    ]);
+                    
+                    $statusCode = $response->getStatusCode();
+                    // $statusCode = 200
+                   
+                    if($statusCode === 200){
+
+                        $contentType = $response->getHeaders()['content-type'][0];
+                        // $contentType = 'application/json'
+                        $content = $response->getContent();
+                        // $content = '{"id":521583, "name":"symfony-docs", ...}'
+                        $content = $response->toArray();
+                        // $content = ['id' => 521583, 'name' => 'symfony-docs', ...]
+                        $this->addFlash("success", "La quantité du produit a été modifié sur le site de vente.");
+                        
+                        return $content;
+
+                    }else{
+                        $this->addFlash("danger", "La quantité du produit n'a pas été modifié sur le site de vente.");
+                    }
+                  
+                }catch(\Exception $e){
+                    throw $e;
+                }
+            break;
+                
+        }
+
+    }
+
     /**
      * @method delete
      * @throws Exception $e

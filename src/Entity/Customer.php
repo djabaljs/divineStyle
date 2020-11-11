@@ -52,6 +52,11 @@ class Customer
      */
     private $orders;
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $address;
+
     public function __construct()
     {
         $this->sales = new ArrayCollection();
@@ -157,5 +162,17 @@ class Customer
     public function __toString()
     {
         return $this->getFirstname().' '.$this->getLastname();
+    }
+
+    public function getAddress(): ?string
+    {
+        return $this->address;
+    }
+
+    public function setAddress(?string $address): self
+    {
+        $this->address = $address;
+
+        return $this;
     }
 }

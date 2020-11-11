@@ -98,7 +98,7 @@
                                                 </td>
                                                 <td>{{product.buyingPrice}}</td>
                                                 <td>{{product.sellingPrice}}</td>
-                                                <td {% if product.minimumStock == product.quantity %} style="background:red;color:#FFF"{% else %} style="background:green; color:#FFF"{% endif %}>
+                                                <td {% if product.minimumStock == product.quantity or product.quantity == 0  %} style="background:red;color:#FFF"{% else %} style="background:green; color:#FFF"{% endif %}>
                                                  {{ product.quantity }}
                                                 </td>
                                                 <td>

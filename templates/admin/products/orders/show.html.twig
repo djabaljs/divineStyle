@@ -78,23 +78,29 @@
                                                 </tr>
                                         </thead>
                                         <tbody>
+										{% set total = 0 %}
                                          {% for product in products %}
+										 {% set total = total + (product.quantity * product.products.sellingPrice) %}
                                             <tr>
                                                 <td>{{loop.index}}</td>
                                                 <td>{{product.products.name}}</td>
-                                                <td>{{product.products.sellingPrice}}</td>
+                                                <td>{{product.products.sellingPrice|format_currency('XOF')}}</td>
                                                 <td>{{product.quantity}}</td>
                                             </tr>
                                          {% endfor %}
-                                        </tbody>
-                                        <tfoot>
-											<tr>
-												<th>N°</th>
-												<th>Nom</th>
-												<th>Pu</th>
-												<th>Qt</th>
+										 <tr>
+												<td colspan="3" align=right>Sous-total:</td>
+												<td>{{0|format_currency('XOF')}}</td>
 											</tr>
-                                        </tfoot>
+											<tr>
+												<td colspan="3" align=right>Remise:</td>
+												<td>{{0|format_currency('XOF')}}</td>
+											</tr>
+											<tr>
+												<td colspan="3" align=right>TOTAL TTC:</td>
+												<td>{{total|format_currency('XOF')}}</td>
+											</tr>
+                                        </tbody>
                                     </table>
                                 </div>
                             </div>

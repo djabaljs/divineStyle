@@ -117,7 +117,7 @@
                                             {% for item in app.session.get('cart_item')%}
                                                 <tr id="element-{{item['code']}}">
                                                     <td>{{item['name']}}</td>
-                                                    <td>{{item['price']}}</td>
+                                                    <td>{{item['price']|format_currency('XOF')}}</td>
                                                     <td>{{item['quantity']}}</td>
                                                     <td><a onClick="cartAction('remove','{{item["code"]}}')" class="btnRemoveAction btn btn-danger btn-sm"><i class="fa fa-remove"></i></a></td>
                                                 </tr>
@@ -159,10 +159,21 @@
                                                         {{form_row(form.paymentType, {attr: {'class':'form-control'}})}}
                                                     </td>
                                                 </tr>
+                                                 <tr>
+                                                    <td>Montant à payer</td>
+                                                    <td colspan="3">
+                                                        {{form_row(form.amountPaid, {attr: {'class':'form-control'}})}}
+                                                    </td>
+                                                </tr>
                                                 <tr>
-                                                    <td rowspan="2">Livraison</td>
+                                                    <td rowspan="3">Livraison</td>
                                                     <td  colspan="3">
                                                     {{form_row(form.deliveryMan, {attr: {'class':'form-control'}})}}
+                                                    </td>
+                                                </tr>
+                                                 <tr>
+                                                    <td  colspan="3">
+                                                    {{form_row(form.deliveryAmount, {attr: {'class':'form-control'}})}}
                                                     </td>
                                                 </tr>
                                                   <tr>
@@ -251,7 +262,14 @@ var queryString = "";
 	});	
 }
 $('#billing_deliveryMan').change(function(){
-    $('#billing_deliveryAddress').prop('required',true);
+    if($(this).val() >= 1){
+          $('#billing_deliveryAddress').prop('required',true);
+          $('#billing_deliveryAmount').prop('required', true);
+    }else{
+         $('#billing_deliveryAddress').prop('required',false);
+         $('#billing_deliveryAmount').prop('required', false);
+    }
+  
 })
  </script>
 {% endblock %}

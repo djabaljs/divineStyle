@@ -96,11 +96,6 @@ class Product
     private $wcProductId;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Order", inversedBy="products")
-     */
-    private $order;
-
-    /**
      * @ORM\Column(type="array", nullable=true)
      */
     private $imageUrls = [];

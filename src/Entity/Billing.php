@@ -7,9 +7,14 @@ class Billing{
 
     private $paymentType;
 
+    private $amountPaid;
+
+
     private $deliveryMan;
     
     private $deliveryAddress;
+
+    private $deliveryAmount;
 
     private $delivery;
 
@@ -111,6 +116,46 @@ class Billing{
     public function setCustomer($customer)
     {
         $this->customer = $customer;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of amountPaid
+     */ 
+    public function getAmountPaid()
+    {
+        return $this->amountPaid;
+    }
+
+    /**
+     * Set the value of amountPaid
+     *
+     * @return  self
+     */ 
+    public function setAmountPaid($amountPaid)
+    {
+        $this->amountPaid = $amountPaid;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of deliveryAmount
+     */ 
+    public function getDeliveryAmount()
+    {
+        return $this->deliveryAmount;
+    }
+
+    /**
+     * Set the value of deliveryAmount
+     *
+     * @return  self
+     */ 
+    public function setDeliveryAmount($deliveryAmount)
+    {
+        $this->deliveryAmount = $deliveryAmount;
 
         return $this;
     }

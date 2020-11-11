@@ -27,14 +27,14 @@ class PaymentType
      */
     private $name;
 
-        /**
-     * @ORM\OneToMany(targetEntity=Invoice::class, mappedBy="paymentType")
+    /**
+     * @ORM\OneToMany(targetEntity=Payment::class, mappedBy="paymentType")
      */
-    private $invoices;
+    private $payments;
 
     public function __construct()
     {
-        $this->invoices = new ArrayCollection();
+       $this->payments = new ArrayCollection();
     }
 
 
@@ -55,31 +55,32 @@ class PaymentType
         return $this;
     }
 
+
     /**
-     * @return Collection|Invoice[]
+     * @return Collection|Payment[]
      */
-    public function getInvoices(): Collection
+    public function getPayments(): Collection
     {
-        return $this->invoices;
+        return $this->payments;
     }
 
-    public function addInvoice(Invoice $invoice): self
+    public function addPayment(Payment $payment): self
     {
-        if (!$this->invoices->contains($invoice)) {
-            $this->invoices[] = $invoice;
-            $invoice->setPaymentType($this);
+        if (!$this->payments->contains($payment)) {
+            $this->payments[] = $payment;
+            $payment->setPaymentType($this);
         }
 
         return $this;
     }
 
-    public function removeInvoice(Invoice $invoice): self
+    public function removePayment(Payment $payment): self
     {
-        if ($this->invoices->contains($invoice)) {
-            $this->invoices->removeElement($invoice);
+        if ($this->payments->contains($payment)) {
+            $this->payments->removeElement($payment);
             // set the owning side to null (unless already changed)
-            if ($invoice->getPaymentType() === $this) {
-                $invoice->setPaymentType(null);
+            if ($payment->getPaymentType() === $this) {
+                $payment->setPaymentType(null);
             }
         }
 
