@@ -119,7 +119,7 @@
                                     <div class="card-body">
                                         <h5 class="text-muted">Total des commandes</h5>
                                         <div class="metric-value d-inline-block">
-                                            <h1 class="mb-1">{{orders|length}}</h1>
+                                            <h1 class="mb-1">{{payments|length}}</h1>
                                         </div>
                                         <div class="metric-label d-inline-block float-right text-danger font-weight-bold">
                                             {# <span class="icon-circle-small icon-box-xs text-danger bg-danger-light bg-danger-light "><i class="fa fa-fw fa-arrow-down"></i></span><span class="ml-1">4%</span> #}
@@ -166,69 +166,25 @@
                                                 <thead class="bg-light">
                                                     <tr class="border-0">
                                                         <th class="border-0">#</th>
-                                                        <th class="border-0">Image</th>
-                                                        <th class="border-0">Nom du produit</th>
-                                                        <th class="border-0">ID produit</th>
-                                                        <th class="border-0">Quantité</th>
-                                                        <th class="border-0">Prix</th>
-                                                        <th class="border-0">Date commande</th>
-                                                        <th class="border-0">ID Client</th>
-                                                        <th class="border-0">Statut</th>
-                                                        <th class="border-0">Actions</th>
+                                                        <th class="border-0">N°commande</th>
+                                                        <th class="border-0">Client</th>
+                                                        <th class="border-0">Montant</th>
+                                                        <th class="border-0">Date</th>
+                                                        <th class="border-0">Heure</th>
                                                     </tr>
                                                 </thead>
-                                                {# <tbody>
-                                                {% set break = false %}
-                                                   {% for order in orders|slice(0,5) %}
+                                                <tbody>
+                                              {% for payment in payments %}
                                                     <tr>
                                                         <td>{{loop.index}}</td>
-                                                        <td>
-                                                            <div class="m-r-10"><img src="{{asset('concept/assets/images/product-pic.jpg')}}" alt="user" class="rounded" width="45"></div>
-                                                        </td>
-                                                        <td>
-                                                        {% for item in order['line_items'] %}
-                                                        <p>{{item['name']}}</p>
-                                                        {% endfor %}
-                                                        </td>
-                                                        <td>
-                                                        {% for item in order['line_items'] %}
-                                                        <p>{{item['id']}}</p>
-                                                        {% endfor %}
-                                                        </td>
-                                                        <td>
-                                                         {% for item in order['line_items'] %}
-                                                        <p>{{item['quantity']}}</p>
-                                                        {% endfor %}
-                                                        </td>
-                                                        <td>
-                                                         {% for item in order['line_items'] %}
-                                                        <p>{{item['price']}}</p>
-                                                        {% endfor %}
-                                                        </td>
-                                                        <td>{{order['date_created']|date('d-m-Y H:m:s')}}</td>
-                                                        <td>{{order['customer_id']}}</td>
-                                                        <td>
-                                                        {%  if order['status'] == 'cancelled'%}
-                                                        <p>Annulé</p>
-                                                        {% elseif order['status'] == 'failed' %}
-                                                        <p>Échoué</p>
-                                                        {% elseif order['status'] == 'processing' %}
-                                                        <p>Traitement</p>
-                                                        {% elseif order['status'] == 'on-hold' %}
-                                                        <p>En attente</p>
-                                                        {% elseif order['status'] == 'pending-payment' %}
-                                                        <p>En attente de payement</p>
-                                                        {% endif %}
-                                                        </td>
-                                                        <td>
-                                                        <button class="btn btn-info"><a href="">Details</a></button>
-                                                        <td>
+                                                        <td>{{payment.invoice.orders.orderNumber}}</td>
+                                                        <td>{{payment.invoice.orders.customer}}</td>
+                                                        <td>{{payment.amount| format_currency('XOF') }}</td>
+                                                        <td>{{payment.invoice.orders.createdAt|date('Y-m-d')}}</td>
+                                                        <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
                                                     </tr>
-                                                    {% if loop.index == 5 %}
-                                                         {% set break = true %}
-                                                    {% endif %}
-                                                   {% endfor %}
-                                                </tbody> #}
+                                                {% endfor %}
+                                                </tbody>
                                             </table>
                                         </div>
                                     </div>

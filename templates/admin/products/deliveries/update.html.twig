@@ -1,0 +1,139 @@
+{% extends 'base.html.twig' %}
+{% block stylesheets %}
+ <link rel="stylesheet" href="{{asset('concept/assets/vendor/select2/css/select2.css')}}"/>
+
+{% endblock %}
+{% block body %}
+<div class="container-fluid dashboard-content ">
+      <!-- ============================================================== -->
+                <!-- pageheader -->
+                <!-- ============================================================== -->
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="page-header">
+                            <h2 class="pageheader-title">Data Tables</h2>
+                            <p class="pageheader-text">Proin placerat ante duiullam scelerisque a velit ac porta, fusce sit amet vestibulum mi. Morbi lobortis pulvinar quam.</p>
+                            <div class="page-breadcrumb">
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Tables</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Data Tables</li>
+                                    </ol>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                         {% include 'shared/flash_message.html.twig' %}
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            
+                            <a href="{{path('admin_orders_deliveries')}}" class="btn btn-info" style="color:#fff"><i class="fas fa-list"></i> Liste des livraisons</a>
+                            <a href="{{path('admin_orders_deliveries_create')}}" class="btn btn-success" style="color:#fff"><i class="fas fa-list"></i> Planifier des livraisons</a>
+
+                        </button>
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+                <!-- ============================================================== -->
+                <!-- end pageheader -->
+                <!-- ============================================================== -->
+                   <div class="row">
+                 
+                    <!-- ============================================================== -->
+                    <!-- data table  -->
+                    <!-- ============================================================== -->
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="card">
+                            
+                            <div class="card-header">
+                                <h5 class="mb-0">Modification de livraison</h5>
+                            </div>
+                            <div class="card-body">
+                                {{form_start(form)}}
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                           <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="delivery_deliveryMan">Livreur</label>
+                                                    {{form_row(form.deliveryMan, {attr:{'class': 'form-control'}})}}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="delivery_order">Commande à livrer</label>
+                                                    {{form_row(form.order, {attr:{'class': 'form-control'}})}}
+                                                </div>
+                                            </div>
+                                             <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="delivery_recipient">Nom & prénoms du récepteur</label>
+                                                    {{form_row(form.recipient, {attr:{'class': 'form-control'}})}}
+                                                </div>
+                                            </div>
+                                             <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="delivery_recipientPhone">Téléphone du récepteur</label>
+                                                    {{form_row(form.recipientPhone, {attr:{'class': 'form-control'}})}}
+                                                </div>
+                                            </div>
+                                             <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="delivery_address">Adresse de livraison</label>
+                                                    {{form_row(form.address, {attr:{'class': 'form-control'}})}}
+                                                </div>
+                                            </div>
+                                              <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="delivery_amountPaid">Montant de la livraison</label>
+                                                    {{form_row(form.amountPaid, {attr:{'class': 'form-control'}})}}
+                                                </div>
+                                            </div>
+                                        </div>
+                                      </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                            <button type="submit" class="btn btn-warning"><i class="fas fa-edit"></i> Modifier</button>
+                                            </div>
+                                        </div> 
+                                     </div>
+                                {{form_end(form)}}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ============================================================== -->
+                    <!-- end data table  -->
+                    <!-- ============================================================== -->
+                </div>
+                     
+</div>
+{% endblock %}
+{% block javascripts %}
+   <script src="{{asset('concept/assets/vendor/select2/js/select2.min.js')}}"></script>
+ <script>
+
+$('#delivery_deliveryMan').select2();
+$('#delivery_order').select2();
+$('#delivery').select2();
+</script>
+{% endblock %}

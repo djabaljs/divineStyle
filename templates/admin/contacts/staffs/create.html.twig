@@ -1,0 +1,137 @@
+{% extends 'base.html.twig' %}
+{% block stylesheets %}
+   <link rel="stylesheet" href="{{asset('concept/assets/vendor/multi-select/css/multi-select.css')}}">
+    <link rel="stylesheet" href="{{asset('concept/assets/libs/css/style.css')}}">
+    <link rel="stylesheet" href="{{asset('concept/assets/vendor/fonts/fontawesome/css/fontawesome-all.css')}}">
+    <link rel="stylesheet" href="{{asset('concept/assets/libs/css/style.css')}}">
+    <link href="{{asset('concept/assets/vendor/fonts/circular-std/style.css')}}" rel="stylesheet">
+<style>
+ .custom-header{
+     background-color: #ddd;
+     fomt-family: sans-serif;
+     font-size: 16px;
+     text-align: center;
+ }
+</style>
+{% endblock %}
+{% block body %}
+<div class="container-fluid dashboard-content ">
+      <!-- ============================================================== -->
+                <!-- pageheader -->
+                <!-- ============================================================== -->
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="page-header">
+                            <h2 class="pageheader-title">Data Tables</h2>
+                            <p class="pageheader-text">Proin placerat ante duiullam scelerisque a velit ac porta, fusce sit amet vestibulum mi. Morbi lobortis pulvinar quam.</p>
+                            <div class="page-breadcrumb">
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Tables</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Data Tables</li>
+                                    </ol>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                         {% include 'shared/flash_message.html.twig' %}
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <a class="btn btn-info" href="{{path('admin_staffs')}}" style="color:#fff"><i class="fas fa-list"></i> Liste du personnel</a>
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+                
+                <!-- ============================================================== -->
+                <!-- end pageheader -->
+                <!-- ============================================================== -->
+                   <div class="row">
+                 
+                    <!-- ============================================================== -->
+                    <!-- data table  -->
+                    <!-- ============================================================== -->
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="card">
+                            
+                            <div class="card-header">
+                                <h5 class="mb-0">Créer un personnel</h5>
+                            </div>
+                            <div class="card-body">
+                                {{form_start(form)}}
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="staff_firstname">Nom</label>
+                                            {{form_row(form.firstname, {attr:{'class': 'form-control', 'placeholder':'Nom du personnel','id':'firstname','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                      <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="staff_lastname">Prénom(s)</label>
+                                            {{form_row(form.lastname, {attr:{'class': 'form-control', 'placeholder':'Prénom(s) du personnel','id':'lastname','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="staff_email">Email</label>
+                                            {{form_row(form.email, {attr:{'class': 'form-control', 'placeholder':'Email du personnel','id':'email','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="staff_phone">Téléphone</label>
+                                            {{form_row(form.phone, {attr:{'class': 'form-control', 'placeholder':'Téléphone du presonnel','id':'phone','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="staff_address">Adresse</label>
+                                                {{form_row(form.address, {attr:{'class': 'form-control', 'placeholder':'Personnels du magasin', 'id': 'address'}})}}
+                                        </div>
+                                    </div>
+                                       <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="staff_shop">Magasin</label>
+                                                {{form_row(form.shop, {attr:{'class': 'form-control', 'id': 'shop'}})}}
+                                        </div>
+                                    </div>
+                                     <div class="col-md-8">
+                                       <div class="form-group">
+                                     <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
+                                    </div>
+                                    </div>
+                                    
+                                {{form_end(form)}}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ============================================================== -->
+                    <!-- end data table  -->
+                    <!-- ============================================================== -->
+                </div>
+
+</div>
+{% endblock %}
+{% block javascripts %}
+
+{% endblock %}

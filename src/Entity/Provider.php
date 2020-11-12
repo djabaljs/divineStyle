@@ -9,9 +9,12 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass=ProviderRepository::class)
+ * @ORM\HasLifecycleCallbacks()
  */
 class Provider
 {
+    use Timestamp;
+    
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -40,15 +43,22 @@ class Provider
     private $email;
 
     /**
-     * @ORM\OneToMany(targetEntity="Product", mappedBy="provider")
+     * @ORM\OneToMany(targetEntity=ProviderProduct::class, mappedBy="provider")
+     */
+    private $providerProducts;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Product::class, mappedBy="provider")
      */
     private $products;
 
     public function __construct()
     {
+        $this->providerProducts = new ArrayCollection();
         $this->products = new ArrayCollection();
     }
-    
+
+
     public function getId(): ?int
     {
         return $this->id;
@@ -109,6 +119,37 @@ class Provider
     }
 
     /**
+     * @return Collection|ProviderProduct[]
+     */
+    public function getProviderProducts(): Collection
+    {
+        return $this->providerProducts;
+    }
+
+    public function addProviderProduct(ProviderProduct $providerProduct): self
+    {
+        if (!$this->providerProducts->contains($providerProduct)) {
+            $this->providerProducts[] = $providerProduct;
+            $providerProduct->setProvider($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProviderProduct(ProviderProduct $providerProduct): self
+    {
+        if ($this->providerProducts->contains($providerProduct)) {
+            $this->providerProducts->removeElement($providerProduct);
+            // set the owning side to null (unless already changed)
+            if ($providerProduct->getProvider() === $this) {
+                $providerProduct->setProvider(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
      * @return Collection|Product[]
      */
     public function getProducts(): Collection
@@ -138,4 +179,6 @@ class Provider
 
         return $this;
     }
+
+    
 }

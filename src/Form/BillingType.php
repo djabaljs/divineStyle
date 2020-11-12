@@ -10,7 +10,10 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 
@@ -22,6 +25,7 @@ class BillingType extends AbstractType
             ->add('paymentType', EntityType::class, [
                 'class' => PaymentType::class,
                 'choice_label' => 'name',
+                'required' => false,
                 'placeholder' => 'Selectionner la méthode de paiement',
                 'label' => false
             ])
@@ -35,10 +39,10 @@ class BillingType extends AbstractType
                 'class' => Customer::class,
                 'label' => false,
                 'placeholder' => 'Selectionner un client',
-                'required' => false,
             ])
-            ->add('amountPaid', NumberType::class, [
+            ->add('amountPaid', IntegerType::class, [
                 'label' => false,
+                'required' => false,
                 'attr' => [
                 'placeholder' => 'Montant à payer',
                 ]
@@ -49,6 +53,30 @@ class BillingType extends AbstractType
                 'attr' => [
                 'placeholder' => 'Montant de livraison',
                 ]
+            ])
+            ->add('recipient', TextType::class, [
+                'label' => false,
+                'required' => false,
+                'attr' => [
+                'placeholder' => 'Nom du destinataire',
+                ]
+            ])
+            ->add('recipientPhone', TextType::class, [
+                'label' => false,
+                'required' => false,
+                'attr' => [
+                    'placeholder' => 'Téléphone du destinataire'
+                ]
+               
+            ])
+            ->add('choice', ChoiceType::class, [
+                'label' => false,
+                'required' => false,
+                'placeholder' => 'Sélectionner un destinataire',
+                'choices'  => [
+                    'Moi même' => 0,
+                    'Autre' => 1,
+                ],
             ])
             ->add('deliveryAddress', TextareaType::class, [
                 'label' => false,

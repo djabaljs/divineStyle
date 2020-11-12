@@ -20,6 +20,12 @@ class Billing{
 
     private $customer;
 
+    private $recipient;
+
+    private $recipientPhone;
+
+    private $choice;
+
     /**
      * Get the value of paymentType
      */ 
@@ -60,6 +66,7 @@ class Billing{
         return $this;
     }
 
+    
     /**
      * Get the value of delivery
      */ 
@@ -156,6 +163,66 @@ class Billing{
     public function setDeliveryAmount($deliveryAmount)
     {
         $this->deliveryAmount = $deliveryAmount;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of recipient
+     */ 
+    public function getRecipient()
+    {
+        return $this->recipient;
+    }
+
+    /**
+     * Set the value of recipient
+     *
+     * @return  self
+     */ 
+    public function setRecipient($recipient)
+    {
+        $this->recipient = $recipient;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of recipientPhone
+     */ 
+    public function getRecipientPhone()
+    {
+        return $this->recipientPhone;
+    }
+
+    /**
+     * Set the value of recipientPhone
+     *
+     * @return  self
+     */ 
+    public function setRecipientPhone($recipientPhone)
+    {
+        $this->recipientPhone = $recipientPhone;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of choice
+     */ 
+    public function getChoice()
+    {
+        return $this->choice;
+    }
+
+    /**
+     * Set the value of choice
+     *
+     * @return  self
+     */ 
+    public function setChoice($choice)
+    {
+        $this->choice = $choice;
 
         return $this;
     }

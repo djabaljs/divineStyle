@@ -26,7 +26,7 @@ class Payment
     private $invoice;
 
     /**
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="float", nullable=true)
      */
     private $amountPaid;
 
@@ -37,7 +37,7 @@ class Payment
 
     /**
      * @ORM\ManyToOne(targetEntity=PaymentType::class, inversedBy="payments")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
     private $paymentType;
 
@@ -63,8 +63,11 @@ class Payment
         return $this->amountPaid;
     }
 
-    public function setAmountPaid(float $amountPaid): self
+    public function setAmountPaid(?float $amountPaid): self
     {
+        if(is_null($amountPaid)){
+            $amountPaid = 0;
+        }
         $this->amountPaid = $amountPaid;
 
         return $this;

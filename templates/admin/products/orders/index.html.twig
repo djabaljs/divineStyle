@@ -47,7 +47,7 @@
                     <!-- button  -->
                     <!-- ============================================================== -->
                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                            <a href="{{path('admin_products_orders_create')}}" class="btn btn-success" style="color:#fff" ><i class="fas fa-save"></i> Enregistrer une commande</a>
+                            <a href="{{path('admin_products_orders_create')}}" class="btn btn-success" style="color:#fff" ><i class="fas fa-save"></i> Enregistrer une vente</a>
                    </div>
                     <!-- ============================================================== -->
                     <!-- button  -->
@@ -64,7 +64,7 @@
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h5 class="mb-0">Liste des commandes effectuées</h5>
+                                <h5 class="mb-0">Liste des ventes effectuées</h5>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
@@ -90,12 +90,12 @@
                                                 <td>{{payment.invoice.orders.saleTotal| format_currency('XOF') }}</td>
                                                 <td>{{payment.amount| format_currency('XOF') }}</td>
                                                 <td>{{payment.invoice.orders.createdAt|date('Y-m-d')}}</td>
-                                                <td>{{payment.invoice.orders.createdAt|date('H:m')}}</td>
+                                                <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
                                                  <td>
                                                     <a href="{{path('admin_products_orders_show', {id: payment.invoice.orders.id})}}" class="btn btn-info"><i class="fas fa-eye"></i></a>
                                                     {# <a href="{{path('admin_products_orders_update', {id: order.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a> #}
-                                                    {# <a href="{{path('admin_products_orders_delete', {id: order.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a> #}
-                                                    <a href="{{path('admin_products_orders_show', {id: payment.invoice.orders.id})}}" class="btn btn-primary"><i class="fas fa-file"></i></a>
+                                                    <a href="{{path('admin_products_orders_invoice_show', {id: payment.invoice.id})}}" class="btn btn-primary"><i class="fas fa-file"></i></a>
+                                                    <a href="{{path('admin_products_orders_delete', {id: payment.invoice.orders.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
                                                 </td>
                                             </tr>
                                          {% endfor %}

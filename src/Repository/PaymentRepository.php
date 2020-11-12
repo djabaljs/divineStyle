@@ -48,4 +48,28 @@ class PaymentRepository extends ServiceEntityRepository
     }
     */
 
+    public function ordersSuccessfully()
+    {
+        $qb = $this->createQueryBuilder('p');
+        $qb 
+            ->where('p.amountPaid != 0')
+            ->orderBy('p.createdAt', 'DESC')
+            ;
+
+        return $qb->getQuery()
+                  ->getResult();
+    }
+
+    public function ordersNotSuccessfully()
+    {
+        $qb = $this->createQueryBuilder('p');
+        $qb 
+            ->where('p.amountPaid = 0')
+            ->orderBy('p.createdAt', 'DESC')
+            ;
+
+        return $qb
+                ->getQuery()
+                ->getResult();
+    }
 }

@@ -94,7 +94,7 @@
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="product_quantity">Quantité</label>
-                                                    {{form_row(form.quantity, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                    {{form_row(form.quantity, {attr:{'class': 'form-control','style':'height:50px','disabled':'true'}})}}
                                                 </div>
                                             </div>
                                             <div class="col-md-12">
@@ -158,9 +158,12 @@
                                             </div>
                                             </div>
                                       </div>
-                                    <div class="form-group">
-                                     <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
-                                    </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                              <button type="submit" class="btn btn-warning"><i class="fas fa-edit"></i> Modifier</button>
+                                             </div> 
+                                        </div>
+                                     
                                 {{form_end(form)}}
                             </div>
                         </div>

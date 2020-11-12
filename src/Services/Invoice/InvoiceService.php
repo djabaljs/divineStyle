@@ -52,11 +52,9 @@ class InvoiceService{
      {
          $this->mpdf = new Mpdf([
             'margin_left' => 20,
-            'margin_right' => 15,
-            'margin_top' => 38,
-            'margin_bottom' => 25,
-            'margin_header' => 10,
-            'margin_footer' => 10
+            'margin_right' => 20,
+            'margin_top' => 50,
+            'margin_bottom' => 10
          ]);
 
          $this->orderProductRepository = $orderProductRepository;
@@ -96,13 +94,16 @@ class InvoiceService{
 
      
 
-       $deliveryBody = '';
+       $deliveryAmount  = 0;
+       $deliveryBody ='';
+
        if(!is_null($delivery)){
+           $deliveryAmount = $delivery->getAmountPaid();
            $deliveryBody = '
            <tr>
-                <td class="totals">Livraison:</td>
-                <td class="totals cost">'.number_format($delivery->getAmountPaid()).'</td>
-          </tr>
+           <td width="45%"><span style="font-size: 7pt; color: #555555; font-family: sans;">INFORMATIONS DE LA LIVRAISON:</span><br /><br />Nom &
+                Prénoms:  '.$delivery->getRecipient().'<br />Contacts:'   .$delivery->getRecipientPhone().'<br />Commune:   '.$delivery->getAddress().'<br /></td>
+           </tr>
            ';
        }
 
@@ -202,25 +203,23 @@ class InvoiceService{
         <sethtmlpageheader name="myheader" value="on" show-this-page="1" />
         <sethtmlpagefooter name="myfooter" value="on" />
         mpdf-->
-            <div style="text-align: right">Date: '.$date.'</div>
-            <div style="text-align: right">Heure: '.$hour.'</div>
             <table width="100%" style="font-family: serif;" cellpadding="10">
                 <tr>
-                    <td width="45%"></td>
-                    <td width="10%">&nbsp;</td>
-                    <td width="45%"><span style="font-size: 7pt; color: #555555; font-family: sans-serif;"></span><br /><br />Nom &
-                        Prénoms: '.$customer.'<br />Contacts:' .$customer->getPhone().'<br />Commune: '.$customer->getAddress().'<br /></td>
+                    <td width="45%"><br /><br /><span style="font-size: 7pt; color: #555555; font-family: sans;">INFORMATION DU CLIENT:</span><br /><br />Nom &
+                        Prénoms:  '.$customer.'<br />Contacts:'   .$customer->getPhone().'<br />Commune:   '.$customer->getAddress().'<br /></td>
+                    <td align=right><br /><br />Date: '.$date.'<br/>Heure: '.$hour.'</td>
                 </tr>
+                '.$deliveryBody.'
             </table>
             <br />
             <table class="items" width="100%" style="font-size: 9pt; border-collapse: collapse; " cellpadding="8">
                 <thead>
                     <tr>
-                        <td width="15%">No.</td>
-                        <td width="10%">Designation</td>
-                        <td width="45%">P.U</td>
+                        <td width="10%">No.</td>
+                        <td width="45%">Designation</td>
+                        <td width="15%">P.U</td>
                         <td width="15%">Q<sup>t</sup></td>
-                        <td width="15%">Total</td>
+                        <td width="20%">Total</td>
                     </tr>
                 </thead>
                 <tbody>
@@ -229,8 +228,8 @@ class InvoiceService{
                     <!-- END ITEMS HERE -->
                    
                     <tr>
-                        <td class="blanktotal" colspan="3" rowspan="6">
-                       '.$paymentBody.'
+                        <td class="blanktotal" colspan="3" rowspan="4">
+                        <br /><br /><br /><br /><br /><br /><br />  '.$paymentBody.'><br /><br /><br /><br /><br /><br />
                         </td>
                         <td class="totals">Sous-total:</td>
                         <td class="totals cost">'.number_format($invoice->getOrders()->getSaleTotal()).'</td>
@@ -239,7 +238,10 @@ class InvoiceService{
                         <td class="totals">Taxe:</td>
                         <td class="totals cost">'.number_format(0).'</td>
                     </tr>
-                    '.$deliveryBody.'
+                    <tr>
+                        <td class="totals">Livraison:</td>
+                        <td class="totals cost">'.number_format($deliveryAmount).'</td>
+                    </tr>
                     <tr>
                         <td class="totals"><b>TOTAL TTC:</b></td>
                         <td class="totals cost"><b>'.number_format($invoice->getAmount()).'</b></td>
@@ -250,16 +252,19 @@ class InvoiceService{
         
         </html>
         ';
-
+        // The library defines a function strcode2utf() to convert htmlentities to UTF-8 encoded text
+        $this->mpdf->SetTitle('Divine Styles');
         $this->mpdf->SetProtection(array('print'));
-        $this->mpdf->SetTitle("Divine styles. - Facture");
-        $this->mpdf->SetAuthor("Acme Trading Co.");
-        $this->mpdf->SetWatermarkText("Payé");
+        $this->mpdf->SetTitle("Divine Styles. - Facture");
+        $this->mpdf->SetAuthor("Divine Styles.");
+        $this->mpdf->SetWatermarkText("PAYÉ");
         $this->mpdf->showWatermarkText = true;
         $this->mpdf->watermark_font = 'DejaVuSansCondensed';
         $this->mpdf->watermarkTextAlpha = 0.1;
-        $this->mpdf->SetDisplayMode('fullpage');
-        // $this->mpdf->SetWatermarkImage($logo);
+        // $this->mpdf->SetDisplayMode('fullpage');
+        // $this->mpdf->SetWatermarkImage('http://localhost:8000/concept/assets/images/logo.jpg', 1,
+        // '',
+        // array(160,10));
         // $this->mpdf->showWatermarkImage = true;
         
         $this->mpdf->WriteHTML($this->html);

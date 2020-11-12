@@ -18,13 +18,14 @@ class OrderProduct
     private $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Order::class, inversedBy="orderProducts")
-     * @ORM\JoinColumn(nullable=false)
+     *@ORM\ManyToOne(targetEntity=Order::class, inversedBy="orderProducts", cascade={"persist","remove"})
+     *@ORM\JoinColumn(onDelete="CASCADE")
      */
     private $productOrder;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Product::class, inversedBy="orderProducts")
+     * @ORM\ManyToOne(targetEntity=Product::class, inversedBy="orderProducts", cascade={"persist", "remove"})
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $products;
 

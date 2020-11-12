@@ -7,9 +7,11 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass=DeliveryRepository::class)
+ * @ORM\HasLifecycleCallbacks()
  */
 class Delivery
 {
+    use Timestamp;
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -42,6 +44,16 @@ class Delivery
      * @ORM\Column(type="float")
      */
     private $amountPaid;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $recipient;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $recipientPhone;
 
     public function getId(): ?int
     {
@@ -104,6 +116,30 @@ class Delivery
     public function setAmountPaid(float $amountPaid): self
     {
         $this->amountPaid = $amountPaid;
+
+        return $this;
+    }
+
+    public function getRecipient(): ?string
+    {
+        return $this->recipient;
+    }
+
+    public function setRecipient(string $recipient): self
+    {
+        $this->recipient = $recipient;
+
+        return $this;
+    }
+
+    public function getRecipientPhone(): ?string
+    {
+        return $this->recipientPhone;
+    }
+
+    public function setRecipientPhone(string $recipientPhone): self
+    {
+        $this->recipientPhone = $recipientPhone;
 
         return $this;
     }

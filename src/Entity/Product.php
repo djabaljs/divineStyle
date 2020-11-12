@@ -56,10 +56,6 @@ class Product
      */
     private $register;
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Provider::class, inversedBy="products")
-     */
-    private $provider;
 
     /**
      * @ORM\ManyToOne(targetEntity=Shop::class, inversedBy="products")
@@ -124,11 +120,22 @@ class Product
      */
     private $orderProducts;
 
+    /**
+     * @ORM\OneToMany(targetEntity=ProviderProduct::class, mappedBy="product")
+     */
+    private $providerProducts;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Provider::class, inversedBy="products", cascade={"persist"})
+     */
+    private $provider;
+
     public function __construct()
     {
         $this->lengths = new ArrayCollection();
         $this->colors = new ArrayCollection();
         $this->orderProducts = new ArrayCollection();
+        $this->providerProducts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -218,19 +225,6 @@ class Product
     public function setWcProductId(?int $wc_productId): self
     {
         $this->wcProductId = $wc_productId;
-
-        return $this;
-    }
-
-
-    public function getProvider(): ?Provider
-    {
-        return $this->provider;
-    }
-
-    public function setProvider(?Provider $provider): self
-    {
-        $this->provider = $provider;
 
         return $this;
     }
@@ -444,5 +438,49 @@ class Product
 
         return $this;
     }
+
+    /**
+     * @return Collection|ProviderProduct[]
+     */
+    public function getProviderProducts(): Collection
+    {
+        return $this->providerProducts;
+    }
+
+    public function addProviderProduct(ProviderProduct $providerProduct): self
+    {
+        if (!$this->providerProducts->contains($providerProduct)) {
+            $this->providerProducts[] = $providerProduct;
+            $providerProduct->setProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProviderProduct(ProviderProduct $providerProduct): self
+    {
+        if ($this->providerProducts->contains($providerProduct)) {
+            $this->providerProducts->removeElement($providerProduct);
+            // set the owning side to null (unless already changed)
+            if ($providerProduct->getProduct() === $this) {
+                $providerProduct->setProduct(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getProvider(): ?Provider
+    {
+        return $this->provider;
+    }
+
+    public function setProvider(?Provider $provider): self
+    {
+        $this->provider = $provider;
+
+        return $this;
+    }
+
 
 }

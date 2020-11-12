@@ -56,7 +56,7 @@ class Order
     private $deliveries;
 
     /**
-     * @ORM\OneToMany(targetEntity=OrderProduct::class, mappedBy="productOrder", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity=OrderProduct::class, mappedBy="productOrder", cascade={"persist","remove"})
      */
     private $orderProducts;
 

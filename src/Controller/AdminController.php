@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use Mpdf\Mpdf;
 use App\Entity\Shop;
 use App\Entity\User;
 use App\Entity\Color;
@@ -13,6 +12,7 @@ use App\Entity\Length;
 use App\Form\ShopType;
 use App\Form\UserType;
 use App\Entity\Billing;
+use App\Entity\Command;
 use App\Entity\Invoice;
 use App\Entity\Payment;
 use App\Entity\Product;
@@ -21,6 +21,7 @@ use App\Form\WidthType;
 use App\Entity\Category;
 use App\Entity\Customer;
 use App\Entity\Delivery;
+use App\Entity\Provider;
 use App\Form\HeightType;
 use App\Form\LengthType;
 use App\Entity\Attribute;
@@ -28,16 +29,21 @@ use App\Form\BillingType;
 use App\Form\ProductType;
 use App\Form\CategoryType;
 use App\Form\CustomerType;
+use App\Form\DeliveryType;
+use App\Form\ProviderType;
 use Cocur\Slugify\Slugify;
 use App\Entity\DeliveryMan;
 use App\Entity\PaymentType;
 use App\Form\AttributeType;
 use App\Entity\OrderProduct;
 use App\Form\ShopUpdateType;
+use App\Entity\Replenishment;
 use App\Form\DeliveryManType;
 use App\Form\PaymentTypeType;
+use App\Entity\CommandProduct;
+use App\Entity\ProviderProduct;
+use App\Form\ReplenishmentType;
 use App\Repository\UserRepository;
-use App\Repository\OrderRepository;
 use App\Repository\PaymentRepository;
 use App\Repository\ProductRepository;
 use App\Services\Invoice\InvoiceService;
@@ -73,7 +79,7 @@ class AdminController extends AbstractController
      * @throws Exception $e
      * @return Response
      */
-    public function dashboard(WoocommerceApiService $apiService): Response
+    public function dashboard(PaymentRepository $paymentRepository): Response
     {
         $payments = $this->manager->getRepository(Payment::class)->findAll();
         $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->findBy(['status' => 1]);
@@ -90,7 +96,8 @@ class AdminController extends AbstractController
             'products' => $this->manager->getRepository(Product::class)->findAll(),
             "amountPaid" => $totalPaid,
             'amount' => $totalAmount,
-            'deliveries' => $deliveriesSuccessfully
+            'deliveries' => $deliveriesSuccessfully,
+            'payments' => $paymentRepository->ordersNotSuccessfully()
         ]);
 
     }
@@ -405,7 +412,7 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("/customers/create", name="admin_customer_create", methods={"POST", "GET"})
+     * @Route("/customers/create", name="admin_customers_create", methods={"POST", "GET"})
      * @param Request
      * @param WoocommerceApiService $apiService
      * @return Response
@@ -432,14 +439,14 @@ class AdminController extends AbstractController
     }
 
      /**
-     * @Route("/customers/update", name="admin_customer_create", methods={"PUT", "GET"})
+     * @Route("/customers/update/{id}", name="admin_customers_update", methods={"POST", "GET"})
      * @param Request
      * @param Customer $customer
      * @return Response
      */
     public function updateCustomer(Request $request, Customer $customer)
     {
-        $customer = $this->getDoctrine()->getRepository(Customer::class)->find($customer->getId());
+        $customer = $this->getDoctrine()->getRepository(Customer::class)->find($customer);
 
         if(is_null($customer))
             throw $this->createNotFoundException("Ce client n'existe pas!");
@@ -449,20 +456,132 @@ class AdminController extends AbstractController
 
         if($form->isSubmitted() && $form->isValid())
         {
-            $this->manger->persist($customer);
-            $this->manger->flush($customer);
+            $this->manager->persist($customer);
+            $this->manager->flush($customer);
 
             $this->addFlash("success", "Client modifié avec succès!");
             
         }
 
-        return $this->render('admin/contacts/customers/create.html.twig',[
+        return $this->render('admin/contacts/customers/update.html.twig',[
             'form' => $form->createView()
         ]);
     }
 
 
+    /**
+     * @Route("/customers/delete/{id}", name="admin_customers_delete", methods={"GET"})
+     * @param Customer $customer
+     * @return Response
+     */
+    public function deleteCustomer(Customer $customer)
+    {
+        $customer = $this->manager->getRepository(Customer::class)->find($customer);
 
+        if(is_null($customer)){
+
+            $this->addFlash("danger","Ce client n\existe pas!");
+
+            return $this->redirectToRoute('admin_customers');
+        }
+
+        $this->manager->remove($customer);
+        $this->manager->flush();
+
+        return $this->redirectToRoute('admin_customers');
+    }
+
+
+    /**
+     * @Route("/providers", name="admin_providers", methods={"GET"})
+     * @param Exception $e
+     * @return Response
+     */
+    public function providers()
+    {
+        return $this->render("admin/contacts/providers/index.html.twig", [
+            'providers' => $this->manager->getRepository(Provider::class)->findAll()
+        ]);
+    }
+
+    /**
+     * @Route("/providers/create", name="admin_providers_create", methods={"POST", "GET"})
+     * @param Request
+     * @return Response
+     */
+    public function createProvider(Request $request)
+    {
+        $provider = new Provider();
+
+        $form = $this->createForm(ProviderType::class, $provider);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid())
+        {
+            $this->manger->persist($provider);
+            $this->manger->flush($provider);
+
+            $this->addFlash("success", "Fournisseur enregistré avec succès!");
+            
+        }
+
+        return $this->render('admin/contacts/providers/create.html.twig',[
+            'form' => $form->createView()
+        ]);
+    }
+
+     /**
+     * @Route("/providers/update/{id}", name="admin_providers_update", methods={"POST", "GET"})
+     * @param Request
+     * @param Provider $provider
+     * @return Response
+     */
+    public function updateProvider(Request $request, Provider $provider)
+    {
+        $provider = $this->getDoctrine()->getRepository(Provider::class)->find($provider);
+
+        if(is_null($provider))
+            throw $this->createNotFoundException("Ce fournisseur  n'existe pas!");
+
+        $form = $this->createForm(ProviderType::class, $provider);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid())
+        {
+            $this->manager->persist($provider);
+            $this->manager->flush($provider);
+
+            $this->addFlash("success", "Fournisseur modifié avec succès!");
+            
+        }
+
+        return $this->render('admin/contacts/providers/update.html.twig',[
+            'form' => $form->createView()
+        ]);
+    }
+
+
+    /**
+     * @Route("/providers/delete/{id}", name="admin_providers_delete", methods={"GET"})
+     * @param Provider $provider
+     * @return Response
+     */
+    public function deleteProviders(Provider $provider)
+    {
+        $provider = $this->manager->getRepository(Provider::class)->find($provider);
+
+        if(is_null($provider)){
+
+            $this->addFlash("danger","Ce fournisseur n\existe pas!");
+
+            return $this->redirectToRoute('admin_providers');
+        }
+
+        $this->manager->remove($provider);
+        $this->manager->flush();
+
+        return $this->redirectToRoute('admin_providers');
+    }
 
      /**
      * @Route("/shops", name="admin_shops", methods={"GET"})
@@ -641,7 +760,7 @@ class AdminController extends AbstractController
     {
         $staffs = $userRepository->findStaffs();
 
-        return $this->render('admin/staffs/index.html.twig',[
+        return $this->render('admin/contacts/staffs/index.html.twig',[
             'staffs' => $staffs
         ]);
     }
@@ -673,7 +792,7 @@ class AdminController extends AbstractController
             $this->redirectToRoute('admin_staffs');
         }
 
-        return $this->render('admin/staffs/update.html.twig',[
+        return $this->render('admin/contacts/staffs/create.html.twig',[
             'form' => $form->createView()
         ]);
     }
@@ -701,7 +820,7 @@ class AdminController extends AbstractController
 
         }
 
-        return $this->render('admin/staffs/update.html.twig',[
+        return $this->render('admin/contacts/staffs/update.html.twig',[
             'form' => $form->createView()
         ]);
     }
@@ -1378,7 +1497,20 @@ class AdminController extends AbstractController
     {   
 
         return $this->render("admin/products/orders/index.html.twig",  [
-            'payments' => $paymentRepository->findBy([], ['createdAt' => 'DESC'])
+            'payments' => $paymentRepository->ordersSuccessfully()
+        ]);
+    }
+
+      /**
+     * @Route("/products/commands", name="admin_products_commands", methods={"GET"})
+     * @method productCommands
+     * @return Response
+     */
+    public function productCommands(PaymentRepository $paymentRepository)
+    {   
+
+        return $this->render("admin/products/commands/index.html.twig",  [
+            'payments' => $paymentRepository->ordersNotSuccessfully()
         ]);
     }
 
@@ -1587,6 +1719,14 @@ class AdminController extends AbstractController
                     $delivery->setAddress($billing->getDeliveryAddress());
                     $delivery->setAmountPaid($billing->getDeliveryAmount());
                     $delivery->setStatus(false);
+                   
+                    if($billing->getChoice() == 0){
+                        $delivery->setRecipient($billing->getCustomer());
+                        $delivery->setRecipientPhone($billing->getCustomer()->getPhone());
+                    }else{
+                        $delivery->setRecipient($billing->getRecipient());
+                        $delivery->setRecipientPhone($billing->getRecipientPhone());
+                    }
 
                     $this->manager->persist($delivery);
 
@@ -1601,11 +1741,7 @@ class AdminController extends AbstractController
                 $this->manager->persist($invoice);
 
     
-                foreach($session->get('cart_item',[]) as $item){
-                    $product = $this->manager->getRepository(Product::class)->find($item['code']);
 
-                    $this->api->putQ('products', $product);
-                }
 
                 $payment->setInvoice($invoice);
                 $payment->setPaymentType($billing->getPaymentType());
@@ -1613,13 +1749,30 @@ class AdminController extends AbstractController
                 $payment->setAmount($total - $billing->getAmountPaid());
                 $this->manager->persist($payment);
       
+
                 $this->manager->flush();
                 $this->manager->commit();
                 
+
+                foreach($session->get('cart_item',[]) as $item){
+                    $product = $this->manager->getRepository(Product::class)->find($item['code']);
+
+                    $this->api->putQ('products', $product);
+                }
+
                 $session->clear();
 
                 $logo = $request->getUriForPath('/concept/assets/images/logo.jpg');
-                $invoiceService->generateInvoice($invoice, $logo);
+
+                if($payment->getAmountPaid() > 0){
+                    $invoiceService->generateInvoice($invoice, $logo);
+                    $this->addFlash("success", "Vente effectuée avec succès");
+                    return $this->redirectToRoute('admin_products_orders_create');
+                }else{
+                    $this->addFlash("success", "La commande a été enregistré");
+                    return $this->redirectToRoute('admin_products_orders_create');
+
+                }
 
             }catch(\Exception $e){
                 $this->manager->rollback();
@@ -1655,5 +1808,477 @@ class AdminController extends AbstractController
                 'order' => $order,
                 'products' => $this->manager->getRepository(OrderProduct::class)->findBy(['productOrder' => $order])
             ]);
+    }
+
+    /**
+     * @Route("/products/orders/invoice/show/{id}", name="admin_products_orders_invoice_show", methods={"GET", "POST"})
+     * @method productOrdersInvoiceShow
+     * @param Invoice $invoice
+     * @param InvoiceService $invoiceService
+     * @return Response
+     */
+    public function productsOrdersInvoiceShow(Invoice $invoice, InvoiceService $invoiceService)
+    {
+        $invoice = $this->manager->getRepository(Invoice::class)->find($invoice->getId());
+
+        if(is_null($invoice))
+            throw $this->createNotFoundException('Cette facture n\'existe pas!');
+
+       return $invoiceService->generateInvoice($invoice,'');
+    }
+
+      /**
+     * @Route("/products/orders/delete/{id}", name="admin_products_orders_delete", methods={"GET"})
+     * @method productOrdersDelete
+     * @param Order $order
+     * @return Response
+     */
+    public function productOrdersDelete(Order $order)
+    {
+        
+
+        $orderProduct = $this->manager->getRepository(OrderProduct::class)->findOneBy(['productOrder' => $order]);
+
+        // if(is_null($orderProduct))
+        //     throw $this->createNotFoundException('Cette commande n\'existe pas');
+
+        $this->manager->getConnection()->beginTransaction();
+        $this->manager->getConnection()->setAutoCommit(false);
+
+        $order = $this->manager->getRepository(Order::class)->find($order->getId());
+
+        try{
+            
+        
+            // $this->manager->remove($orderProduct);
+            $this->manager->remove($order);
+            $this->manager->flush();
+
+            $this->manager->commit();
+
+            $this->addFlash("success","Vente supprimée avec succès");
+
+            return $this->redirectToRoute("admin_products_orders");
+
+        }catch(\Exception $e){
+            $this->manager->rollback();
+            throw $e;
+        }
+    }
+
+    /**
+     * @Route("/products/replenishment/", name="admin_products_replenishment", methods={"GET","POST"})
+     * @method productReplenishment
+     * @param Request $request
+     * @return Response
+     */
+    public function productsReplenishment(Request $request)
+    {
+       $replenishment = new Replenishment();
+       $providerProduct = new ProviderProduct();
+       
+       $form = $this->createForm(ReplenishmentType::class, $replenishment);
+       $form->handleRequest($request);
+
+       if($form->isSubmitted() && $form->isValid()){
+
+        $product = $this->manager->getRepository(Product::class)->find($replenishment->getProduct());
+        
+        if(is_null($product)){
+          $this->addFlash('danger','Ce produit ne peut être réapprovisionné dans le magasin '.$replenishment->getShop()->getName());
+          return $this->redirectToRoute('admin_products_replenishment');
+        }
+
+        $provider = $this->manager->getRepository(Provider::class)->find($replenishment->getProvider()->getId());
+        
+        if(is_null($provider)){
+            $this->addFlash('danger', 'Ce fournisseur n\'existe pas');
+            return $this->redirectToRoute('admin_products_replenishment');
+        }
+        
+        $product->setQuantity($replenishment->getQuantity());
+        $providerProduct->setProduct($product);
+        $providerProduct->setProvider($provider);
+        $providerProduct->setQuantity($replenishment->getQuantity());
+
+      
+        $this->manager->persist($providerProduct);
+        $this->manager->persist($product);
+        $this->manager->flush();
+
+        $this->api->putQ('products', $product);
+        
+        $this->addFlash('success', 'Réapprovisionnement effectué avec succès !');
+
+        // return $this->redirectToRoute('admin_products_replenishment');
+        
+       }
+
+       return $this->render('admin/products/replenishments/index.html.twig',[
+           'form' => $form->createView()
+       ]);
+    }
+
+
+
+
+    //  /**
+    //  * @Route("/products/commands/create", name="admin_products_commands_create", methods={"GET", "POST"})
+    //  * @method productCommandsCreate
+    //  * @param Request $request
+    //  * @param SessionInterface $session
+    //  * @param InvoiceService $invoiceService
+    //  * @return Response
+    //  */
+    // public function productCommandsCreate(Request $request, SessionInterface $session, InvoiceService $invoiceService): Response
+    // {
+        
+    //     $invoice = $this->manager->getRepository(Invoice::class)->find(26);
+
+    //     if($request->isXmlHttpRequest()){
+    //        $response = '';
+    //        $code = 0;
+    //        $total = 0;
+    //         if($request->get('action')){
+
+    //            switch($request->get('action')){
+    //                 case "add":
+    //                     if($request->get('quantity')){
+    //                         $product = $this->manager->getRepository(Product::class)->find($request->get('code'));
+    //                         $itemArray = [
+    //                             $product->getId() =>[
+    //                                 'name'=>$product->getName(), 
+    //                                 'code'=>$product->getId(), 
+    //                                 'quantity'=>$request->get("quantity"), 
+    //                                 'price'=>$product->getSellingPrice()
+    //                                  ]
+    //                             ];
+                              
+    //                             if(!empty($session->get("cart_item"))) {
+    //                                 if(in_array($product->getId(), $session->get("cart_item"))) {
+    //                                     foreach($session->get("cart_item") as $k => $v) {
+    //                                             if($product->getId() == $k)
+    //                                                 $session->get("cart_item")[$k]["quantity"] = $request->get("quantity");
+    //                                     }
+    //                                 } else {
+
+    //                                     $items = $session->get('cart_item', []);
+    //                                     array_push($items, [
+    //                                         'name'=>$product->getName(), 
+    //                                         'code'=>$product->getId(), 
+    //                                         'quantity'=>$request->get("quantity"), 
+    //                                         'price'=>$product->getSellingPrice()
+    //                                     ]);
+
+    //                                     $session->set('cart_item', $items);
+
+    //                                     $i = 1;
+    //                                         $response .= '<tr id="element-'.$product->getId().'">';
+    //                                             $response .= '<td>'.$product->getName().'</td>';
+    //                                             $response .= '<td>'.number_format($product->getSellingPrice()).'</td>';
+    //                                             $response .= '<td>'.$request->get('quantity').'</td>';
+    //                                             $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+    //                                         $response .= '</tr>';
+    //                                     foreach($session->get('cart_item', []) as $v){
+    //                                         $total += $v['price'];
+    //                                     }
+                                        
+    //                                 }
+    //                             } else {
+    //                                 $session->set("cart_item", $itemArray);
+
+
+    //                                 $i = 1;
+    //                                 $response .= '<tr id="element-'.$product->getId().'">';
+    //                                     $response .= '<td>'.$product->getName().'</td>';
+    //                                     $response .= '<td>'.number_format($product->getSellingPrice()).'</td>';
+    //                                     $response .= '<td>'.$request->get('quantity').'</td>';
+    //                                     $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+    //                                 $response .= '</tr>';
+
+    //                                 foreach($session->get('cart_item', []) as $v){
+    //                                     $total += $v['price'];
+    //                                 }
+    //                             }
+    //                     }
+    //                 break;
+    //                 case "remove":
+    //                     if(!empty($session->get("cart_item"))) {
+    //                         foreach($session->get("cart_item") as $k => $v) {
+    //                                 if($request->get("code") == $k){
+    //                                     $code = $request->get("code");
+    //                                     $items = $session->get('cart_item', []);
+    //                                     unset($items[$k]);
+    //                                     $session->set('cart_item', $items);
+
+    //                                     foreach($session->get('cart_item', []) as $v){
+    //                                         $total += $v['price'];
+    //                                             $response .= '<tr id="element-'.$v['code'].'">';
+    //                                             $response .= '<td>'.$v['name'].'</td>';
+    //                                             $response .= '<td>'.number_format($v['price']).'</td>';
+    //                                             $response .= '<td>'.$v['quantity'].'</td>';
+    //                                             $response .= '<td><a onClick="cartAction("remove","'.$v['code'].'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+    //                                              $response .= '</tr>';
+    //                                     }
+
+    //                                 }else{
+    //                                     $code = $request->get("code");
+    //                                     $items = $session->get('cart_item', []);
+    //                                     unset($items[$k]);
+    //                                     $session->set('cart_item', $items);
+
+    //                                     foreach($session->get('cart_item', []) as $v){
+    //                                         $total += $v['price'];
+
+    //                                         $response .= '<tr id="element-'.$v['code'].'">';
+    //                                         $response .= '<td>'.$v['name'].'</td>';
+    //                                         $response .= '<td>'.number_format($v['price']).'</td>';
+    //                                         $response .= '<td>'.$v['quantity'].'</td>';
+    //                                         $response .= '<td><a onClick="cartAction("remove","'.$v['code'].'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+    //                                          $response .= '</tr>';
+    //                                     }
+
+    //                                 }
+    //                                 if(empty($session->get("cart_item"))){
+    //                                     $items = $session->get('cart_item', []);
+    //                                     unset($items[$k]);
+    //                                     $session->set('cart_item', $items);
+    //                                     $session->set('cart_item', $items);
+                                        
+    //                                 }
+    //                         }
+    //                     }
+    //                 break;
+    //                 case "empty":
+    //                     $items = $session->get('cart_item', []);
+    //                     unset($items);
+    //                     $session->set('cart_item', $items);
+    //                 break;		
+    //            }
+    //         }
+
+    //         return $request->get('action') == 'add' ? new JsonResponse(['status' => 201,'response' => $response, 'total' => number_format($total)]): new JsonResponse(['status' => 200,'response' => $response, 'code' => $code, 'total'=>number_format($total)]);
+    //     }
+
+
+
+    //     $command = new Command();
+    //     $billing = new Billing();
+
+    //     $today = date("Ymd");
+    //     $rand = strtoupper(substr(uniqid(sha1(time())),0,4));
+    //     $unique = $today . $rand;
+        
+
+    //     $form = $this->createForm(BillingType::class, $billing);
+    //     $form->handleRequest($request);
+
+    //     if($form->isSubmitted() && $form->isValid()){
+    //         if(!empty($session->get('cart_item',[]))){
+
+    //             $this->manager->getConnection()->beginTransaction();
+    //             $this->manager->getConnection()->setAutoCommit(false);
+
+    //         try{
+    //             $total = 0;
+    //             $shop = $this->manager->getRepository(Shop::class)->find(25);
+
+    //             $command->setShop($shop);
+    //             $command->setCustomer($billing->getCustomer());
+    //             $command->setManager($shop->getManager());
+
+    //             foreach($session->get('cart_item', []) as $item){
+    //                 $commandProduct = new CommandProduct();
+
+    //                 $total += $item['price'];
+    //                 $product = $this->manager->getRepository(Product::class)->find($item['code']);
+    //                 $product->setQuantity($product->getQuantity() > 0 ? $product->getQuantity() - $item['quantity'] : 0);
+    //                 $commandProduct->setProduct($product);
+    //                 $commandProduct->setQuantity($item['quantity']);
+                    
+    //                 $command->addCommandProduct($commandProduct);
+    //             }
+
+    //             $command->setTotalCommand($total);
+    //             $command->setNumber($unique);
+    //             $this->manager->persist($command);
+
+    //             if($billing->getDeliveryMan()){
+    //                 $delivery = new Delivery();
+
+    //                 $delivery->setDeliveryMan($billing->getDeliveryMan());
+    //                 $delivery->setAddress($billing->getDeliveryAddress());
+    //                 $delivery->setOrder($order);
+
+    //                 $this->manager->persist($delivery);
+    //             }
+
+    //             $rand = strtoupper(substr(uniqid(sha1(time())),0,4));
+    //             $unique = $today . $rand;
+                
+    //             if(!is_null(($billing->getDeliveryMan()))){
+                    
+    //                 $delivery->setOrder($order);
+    //                 $delivery->setDeliveryMan($billing->getDeliveryMan());
+    //                 $delivery->setAddress($billing->getDeliveryAddress());
+    //                 $delivery->setAmountPaid($billing->getDeliveryAmount());
+    //                 $delivery->setStatus(false);
+                   
+    //                 if($billing->getChoice() == 0){
+    //                     $delivery->setRecipient($billing->getCustomer());
+    //                     $delivery->setRecipientPhone($billing->getCustomer()->getPhone());
+    //                 }else{
+    //                     $delivery->setRecipient($billing->getRecipient());
+    //                     $delivery->setRecipientPhone($billing->getRecipientPhone());
+    //                 }
+
+    //                 $this->manager->persist($delivery);
+
+    //                 $total += $billing->getDeliveryAmount();
+    //             }
+
+            
+    //             $invoice->setOrders($order);
+    //             $invoice->setAmount($total);
+    //             $invoice->setInvoiceNumber($unique);
+
+    //             $this->manager->persist($invoice);
+
+    
+
+
+    //             $payment->setInvoice($invoice);
+    //             $payment->setPaymentType($billing->getPaymentType());
+    //             $payment->setAmountPaid($billing->getAmountPaid());
+    //             $payment->setAmount($total - $billing->getAmountPaid());
+    //             $this->manager->persist($payment);
+      
+
+    //             $this->manager->flush();
+    //             $this->manager->commit();
+                
+
+    //             foreach($session->get('cart_item',[]) as $item){
+    //                 $product = $this->manager->getRepository(Product::class)->find($item['code']);
+
+    //                 $this->api->putQ('products', $product);
+    //             }
+
+    //             $session->clear();
+
+    //             $logo = $request->getUriForPath('/concept/assets/images/logo.jpg');
+    //             $invoiceService->generateInvoice($invoice, $logo);
+
+    //         }catch(\Exception $e){
+    //             $this->manager->rollback();
+    //             throw $e;
+    //         }
+                
+    //         }else{
+    //            $this->addFlash("danger","Aucun produit selectionné!");
+    //         }
+    //     }
+        
+    //     return $this->render("admin/products/orders/create.html.twig", [
+    //         'products' => $this->manager->getRepository(Product::class)->findAll(),
+    //     ]);
+    // }
+
+    /**
+     * @Route("/orders/deliveries", name="admin_orders_deliveries", methods={"GET"})
+     * @method ordersDeliveries
+     * @param Request $request
+     * @return Response
+     */
+    public function ordersDeliveries()
+    {
+        return $this->render('admin/products/deliveries/index.html.twig',[
+            'deliveries' => $this->manager->getRepository(Delivery::class)->findBy([], ['createdAt' => 'DESC'])
+        ]);
+    }
+
+     /**
+     * @Route("/orders/deliveries/create", name="admin_orders_deliveries_create", methods={"GET", "POST"})
+     * @method ordersDeliveriesCreate
+     * @param Request $request
+     * @return Response
+     */
+    public function ordersDeliveriesCreate(Request $request)
+    {
+        $delivery = new Delivery();
+
+        $form = $this->createForm(DeliveryType::class, $delivery);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $this->manager->persist($delivery);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Planification de livraison crée !");
+            return  $this->redirectToRoute("admin_orders_deliveries_create");
+        }
+
+        return $this->render('admin/products/deliveries/create.html.twig',[
+            'form' => $form->createView()
+        ]);
+    }
+
+         /**
+     * @Route("/orders/deliveries/update/{id}", name="admin_orders_deliveries_update", methods={"GET", "POST"})
+     * @method ordersDeliveriesUpdate
+     * @param Request $request
+     * @return Response
+     */
+    public function ordersDeliveriesUpdate(Request $request, Delivery $delivery)
+    {
+        $delivery = $this->manager->getRepository(Delivery::class)->find($delivery);
+
+        if(is_null($delivery)){
+            $this->addFlash("danger","Cette livraison n'existe pas!");
+            return $this->redirectToRoute('admin_orders_deliveries');
+        }
+
+
+        $form = $this->createForm(DeliveryType::class, $delivery);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $this->manager->persist($delivery);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Planification de livraison modifiée !");
+            return  $this->redirectToRoute("admin_orders_deliveries_update", ['id' => $delivery->getId()]);
+        }
+
+        return $this->render('admin/products/deliveries/update.html.twig',[
+            'form' => $form->createView()
+        ]);
+    }
+
+    /**
+     * @Route("/orders/deliveries/delete/{id}", name="admin_orders_deliveries_delete", methods={"GET"})
+     * @method ordersDeliveriesDelete
+     * @param Request $request
+     * @return Response
+     */
+    public function ordersDeliveriesDelete(Delivery $delivery)
+    {
+        $delivery = $this->manager->getRepository(Delivery::class)->find($delivery);
+
+
+        if(is_null($delivery)){
+            $this->addFlash("danger","Cette livraison n'existe pas!");
+            return $this->redirectToRoute('admin_orders_deliveries');
+        }
+
+        $this->manager->remove($delivery);
+        $this->manager->flush();
+
+        $this->addFlash("success", "Livraison supprimée!");
+
+        return $this->redirectToRoute('admin_orders_deliveries');
+
     }
 }

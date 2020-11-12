@@ -113,7 +113,6 @@ class User implements UserInterface
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="register")
      */
     private $attributes;
-    
 
 
     public function __construct()

@@ -1,0 +1,115 @@
+{% extends 'base.html.twig' %}
+{% block stylesheets %}
+  
+{% endblock %}
+{% block body %}
+<div class="container-fluid dashboard-content ">
+      <!-- ============================================================== -->
+                <!-- pageheader -->
+                <!-- ============================================================== -->
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="page-header">
+                            <h2 class="pageheader-title">Data Tables</h2>
+                            <p class="pageheader-text">Proin placerat ante duiullam scelerisque a velit ac porta, fusce sit amet vestibulum mi. Morbi lobortis pulvinar quam.</p>
+                            <div class="page-breadcrumb">
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Tables</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Data Tables</li>
+                                    </ol>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                         {% include 'shared/flash_message.html.twig' %}
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            
+                            <a href="{{path('admin_customers')}}" style="color:#fff" class="btn btn-info"><i class="fas fa-list"></i> Liste des clients</a>
+                            <a href="{{path('admin_customers_create')}}" class="btn btn-success" style="color:#fff"><i class="fas fa-save"></i> Enregistrer des clients</a>
+
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+                <!-- ============================================================== -->
+                <!-- end pageheader -->
+                <!-- ============================================================== -->
+                   <div class="row">
+                 
+                    <!-- ============================================================== -->
+                    <!-- data table  -->
+                    <!-- ============================================================== -->
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="card">
+                            
+                            <div class="card-header">
+                                <h5 class="mb-0">Modication du client</h5>
+                            </div>
+                            <div class="card-body">
+                                {{form_start(form)}}
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="firstname">Nom</label>
+                                            {{form_row(form.firstname, {attr:{'class': 'form-control', 'placeholder':'Nom client','id':'firstname','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="lastname">Prénom</label>
+                                            {{form_row(form.lastname, {attr:{'class': 'form-control', 'placeholder':'Prénom client','id':'lastname','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="phone">Téléphone</label>
+                                            {{form_row(form.phone, {attr:{'class': 'form-control', 'placeholder':'Téléphone client','id':'phone', 'style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="email">Email</label>
+                                            {{form_row(form.email, {attr:{'class': 'form-control', 'placeholder':'Email client','id':'email','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                       <div class="form-group">
+                                         <button type="submit" class="btn btn-warning"><i class="fas fa-edit"></i> Modifier</button>
+                                        </div>
+                                    </div>
+                                    
+                                {{form_end(form)}}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ============================================================== -->
+                    <!-- end data table  -->
+                    <!-- ============================================================== -->
+                </div>
+                     
+</div>
+{% endblock %}
+{% block javascripts %}
+  
+{% endblock %}

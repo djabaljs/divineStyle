@@ -65,6 +65,7 @@ class Shop
      */
     private $phone;
 
+
     public function __construct()
     {
         $this->staffs = new ArrayCollection();
