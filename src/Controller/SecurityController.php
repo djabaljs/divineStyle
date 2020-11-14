@@ -23,7 +23,12 @@ class SecurityController extends AbstractController
         if (in_array('ROLE_ADMIN', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles())){
             return $this->redirectToRoute('admin_dashboard');
         } elseif (in_array('ROLE_MANAGER', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles())) {
-            return $this->redirectToRoute('manager_dashboard');
+            if(!is_null($user->getShop())){
+                return $this->redirectToRoute('manager_dashboard');
+            }else{
+                $this->addFlash("danger", "Vous n'ếtes pas associé à un magasin de vente!");
+                return $this->redirectToRoute('app_logout');
+            }
         } elseif (in_array('ROLE_DELIVERY_MAN', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles())) {
             return $this->redirectToRoute('delivery_man_dashboard');
         } elseif (in_array('ROLE_SUPER_ADMIN', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles())) {

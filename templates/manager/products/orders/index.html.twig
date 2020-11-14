@@ -47,8 +47,7 @@
                     <!-- button  -->
                     <!-- ============================================================== -->
                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                            
-                            <a href="{{path('admin_orders_deliveries_create')}}" class="btn btn-success" style="color:#fff" ><i class="fas fa-save"></i> Planifier une livraison</a>
+                        <a href="{{path('manager_products_orders_create')}}" class="btn btn-success" style="color:#fff" ><i class="fas fa-save"></i> Enregistrer une vente</a>
                    </div>
                     <!-- ============================================================== -->
                     <!-- button  -->
@@ -65,7 +64,7 @@
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h5 class="mb-0">Liste des livraisons</h5>
+                                <h5 class="mb-0">Liste des ventes effectuées</h5>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
@@ -73,45 +72,43 @@
                                         <thead>
                                             <tr>
                                                 <th>N°</th>
-                                                <th>Livreur</th>
-                                                <th>N°Commande</th>
-                                                <th>Récepteur</th>
-                                                <th>Adresse</th>
-                                                <th>Téléphone</th>
-                                                <th>Montant de livraison</th>
-                                                <th>Statut</th>    
-                                                <th>Actions</th>    
+                                                <th>N° commande</th>
+                                                <th>Client</th>
+                                                <th>Montant Payer</th>
+                                                <th>Reste à Payer</th>
+                                                <th>Date</th>
+                                                <th>Heure</th>
+                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                           {% for delivery in deliveries %}
-                                             <tr>
+                                         {% for payment in payments %}
+                                            <tr>
                                                 <td>{{loop.index}}</td>
-                                                <td>{{delivery.deliveryMan}}</td>
-                                                <td>{{delivery.order.orderNumber}}</td>
-                                                <td>{{delivery.recipient}}</td>
-                                                <td>{{delivery.address}}</td>
-                                                <td>{{delivery.recipientPhone}}</td>
-                                                <td>{{delivery.amountPaid|format_currency('XOF') }}</td>
-                                                <td>{{delivery.status == null? 'Pas livré': 'Livré' }}</td>
-                                                <td>
-                                                    {# <a href="{{path('admin_category_show', {id: category.id})}}" class="btn btn-info"><i class="fas fa-eye"></i></a> #}
-                                                    <a href="{{path('admin_orders_deliveries_update', {id: delivery.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                                    <a href="{{path('admin_orders_deliveries_delete', {id: delivery.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                                                <td>{{payment.invoice.orders.orderNumber}}</td>
+                                                <td>{{payment.invoice.orders.customer}}</td>
+                                                <td>{{payment.invoice.orders.saleTotal| format_currency('XOF') }}</td>
+                                                <td>{{payment.amount| format_currency('XOF') }}</td>
+                                                <td>{{payment.invoice.orders.createdAt|date('Y-m-d')}}</td>
+                                                <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
+                                                 <td>
+                                                    <a href="{{path('manager_products_orders_show', {id: payment.invoice.orders.id})}}" class="btn btn-info"><i class="fas fa-eye"></i></a>
+                                                    {# <a href="{{path('admin_products_orders_update', {id: order.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a> #}
+                                                    <a href="{{path('manager_products_orders_invoice_show', {id: payment.invoice.id})}}" class="btn btn-primary"><i class="fas fa-file"></i></a>
+                                                    {# <a href="{{path('admin_products_orders_delete', {id: payment.invoice.orders.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a> #}
                                                 </td>
                                             </tr>
-                                           {% endfor %}
+                                         {% endfor %}
                                         </tbody>
                                         <tfoot>
-                                          <tr>
+                                              <tr>
                                                 <th>N°</th>
-                                                <th>Livreur</th>
-                                                <th>N°Commande</th>
-                                                <th>Récepteur</th>
-                                                <th>Adresse</th>
-                                                <th>Téléphone</th>
-                                                <th>Montant de livraison</th>
-                                                <th>Statut</th>    
+                                                <th>N° commande</th>
+                                                <th>Client</th>
+                                                <th>Montant Payer</th>
+                                                <th>Reste à Payer</th>
+                                                <th>Date</th>
+                                                <th>Heure</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>

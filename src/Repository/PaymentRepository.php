@@ -2,9 +2,10 @@
 
 namespace App\Repository;
 
+use App\Entity\Shop;
 use App\Entity\Payment;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @method Payment|null find($id, $lockMode = null, $lockVersion = null)
@@ -65,6 +66,53 @@ class PaymentRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('p');
         $qb 
             ->where('p.amountPaid = 0')
+            ->orderBy('p.createdAt', 'DESC')
+            ;
+
+        return $qb
+                ->getQuery()
+                ->getResult();
+    }
+
+    public function shopPayments(Shop $shop)
+    {
+        $qb = $this->createQueryBuilder('p');
+        $qb
+            ->innerJoin('p.invoice', 'i')
+            ->innerJoin('i.orders', 'o')
+            ->where('o.shop = :shop')
+            ->setParameter('shop', $shop);
+            ;
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function shopOrdersSuccessfully($shop)
+    {
+        $qb = $this->createQueryBuilder('p');
+        $qb 
+            ->where('p.amountPaid != 0')
+            ->innerJoin('p.invoice', 'i')
+            ->innerJoin('i.orders', 'o')
+            ->where('o.shop = :shop')
+            ->setParameter('shop', $shop)
+            ->orderBy('p.createdAt', 'DESC')
+            ;
+
+        return $qb
+                ->getQuery()
+                ->getResult();
+    }
+
+    public function shopOrdersNotSuccessfully($shop)
+    {
+        $qb = $this->createQueryBuilder('p');
+        $qb 
+            ->where('p.amountPaid != 0')
+            ->innerJoin('p.invoice', 'i')
+            ->innerJoin('i.orders', 'o')
+            ->where('o.shop = :shop')
+            ->setParameter('shop', $shop)
             ->orderBy('p.createdAt', 'DESC')
             ;
 

@@ -2,9 +2,10 @@
 
 namespace App\Repository;
 
+use App\Entity\Shop;
 use App\Entity\Category;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @method Category|null find($id, $lockMode = null, $lockVersion = null)
@@ -53,6 +54,19 @@ class CategoryRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('c');
         $qb
             ->leftJoin('c.product', 'p')
+        ;
+        
+        return $qb->getQuery()->getResult();
+    }
+
+    public function getShopProductsQuantity($shop)
+    {
+        $qb = $this->createQueryBuilder('c');
+        $qb
+            ->select('c')
+            ->innerJoin('c.products', 'p')
+            ->where('p.shop = :shop')
+            ->setParameter('shop', $shop)
         ;
         
         return $qb->getQuery()->getResult();

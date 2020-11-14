@@ -1,6 +1,9 @@
 {% extends 'base.html.twig' %}
 {% block stylesheets %}
-  
+ <link rel="stylesheet" href="{{asset('concept/assets/vendor/select2/css/select2.css')}}"/>
+ <style>
+
+ </style>
 {% endblock %}
 {% block body %}
 <div class="container-fluid dashboard-content ">
@@ -25,6 +28,7 @@
                     </div>
                 </div>
 
+
                 <div class="row">
                     <!-- ============================================================== -->
                     <!-- button  -->
@@ -37,21 +41,20 @@
                     <!-- ============================================================== -->
                 </div>
                 <br/>
-
                 <div class="row">
                     <!-- ============================================================== -->
                     <!-- button  -->
                     <!-- ============================================================== -->
                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                            
-                            <a href="{{path('admin_categories')}}" class="btn btn-success" style="color:#fff"><i class="fas fa-list"></i> Liste des catégories principales</a>
-                        </button>
+                            <a class="btn btn-info" href="{{path('admin_payment_types')}}" style="color:#fff"><i class="fas fa-list"></i> Liste des types de paiement</a>
+                            <a class="btn btn-success" href="{{path('admin_payment_types_create')}}" style="color:#fff"><i class="fas fa-save"></i> Enregistrer des types de paiement</a>
                    </div>
                     <!-- ============================================================== -->
                     <!-- button  -->
                     <!-- ============================================================== -->
                 </div>
                 <br/>
+                
                 <!-- ============================================================== -->
                 <!-- end pageheader -->
                 <!-- ============================================================== -->
@@ -64,22 +67,16 @@
                         <div class="card">
                             
                             <div class="card-header">
-                                <h5 class="mb-0">Enregistrer une catégorie principale</h5>
+                                <h5 class="mb-0">Modification de type de paiement</h5>
                             </div>
                             <div class="card-body">
-                                {{form_start(form)}}
+                                   {{form_start(form)}}
                                     <div class="row">
                                         <div class="col-md-6">
                                            <div class="col-md-12">
                                                 <div class="form-group">
-                                                    <label for="category_name">Nom</label>
+                                                    <label for="paymentTypeType_name">Nom</label>
                                                     {{form_row(form.name, {attr:{'class': 'form-control', 'placeholder':'Nom de la catégorie','style':'height:50px'}})}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="category_description">Description</label>
-                                                    {{form_row(form.description, {attr:{'class': 'form-control', 'style':'height:100px'}})}}
                                                 </div>
                                             </div>
                                         </div>
@@ -98,9 +95,8 @@
                     <!-- end data table  -->
                     <!-- ============================================================== -->
                 </div>
-                     
+
 </div>
 {% endblock %}
 {% block javascripts %}
-  
 {% endblock %}

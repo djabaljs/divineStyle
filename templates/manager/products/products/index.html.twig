@@ -30,7 +30,7 @@
                         </div>
                     </div>
                 </div>
-                      <div class="row">
+                  <div class="row">
                     <!-- ============================================================== -->
                     <!-- button  -->
                     <!-- ============================================================== -->
@@ -40,8 +40,20 @@
                     <!-- ============================================================== -->
                     <!-- button  -->
                     <!-- ============================================================== -->
-                    </div>
-                    <br/>
+                </div>
+                <br/>
+                  {# <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <a href="{{path('admin_products_create')}}" class="btn btn-success" style="color:#fff" ><i class="fas fa-save"></i> Enregistrer un produit</a>
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/> #}
                 <!-- ============================================================== -->
                 <!-- end pageheader -->
                 <!-- ============================================================== -->
@@ -61,10 +73,11 @@
                                             <tr>
                                                 <th>N°</th>
                                                 <th>Images</th>
-                                                <th>Nom</th>
-                                                <th>Catégorie</th>
-                                                <th>Quantité en stock</th>
-                                                <th>Prix HT</th>
+                                                <th>Noms</th>
+                                                <th>Catégories</th>
+                                                <th>Prix d'achat</th>
+                                                <th>Prix  de vente</th>
+                                                <th>Qt en stock</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -73,27 +86,23 @@
                                              <tr>
                                                 <td>{{loop.index}}</td>
                                                 <td>
-                                                {% if product.imagesUrl is not empty  %}
-                                                <img src="{{product.imagesUrl[0]['src']}}" class="img-thumbnail" style="width:100px" />
+                                                {% if product.imageUrls is not empty  %}
+                                                <img src="{{product.imageUrls[0]}}" class="img-thumbnail" style="width:100px" />
                                                 {% else %}
                                                 <p>Aucune image</p>
                                                 {% endif %}
                                                 </td>
                                                 <td>{{product.name}}</td>
                                                 <td>
-                                                {% for category in product.categories %}
-                                                 <p>{{category['name']}}</p>
-                                                {% endfor %}
+                                                {{product.category.name}}
                                                 </td>
-                                                <td>{% if product.stockQuantity is null %}
-                                                    <p>0</p>
-                                                    {% endif %}
+                                                <td>{{product.buyingPrice}}</td>
+                                                <td>{{product.sellingPrice}}</td>
+                                                <td {% if product.minimumStock == product.quantity or product.quantity == 0  %} style="background:red;color:#FFF"{% else %} style="background:green; color:#FFF"{% endif %}>
+                                                 {{ product.quantity }}
                                                 </td>
-                                                <td>{{product.price}}</td>
                                                 <td>
-                                                <a href="{{path('manager_product_show', {id: product.woocommerceId})}}" class="btn btn-info"><i class="fas fa-eye"></i></a>
-                                                <a class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                                <a class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                                                <a href="{{path('manager_products_show', {slug: product.slug})}}" class="btn btn-info btn-xs"><i class="fas fa-eye"></i></a>
                                                 </td>
                                             </tr>
                                            {% endfor %}
@@ -102,10 +111,11 @@
                                             <tr>
                                                 <th>N°</th>
                                                 <th>Images</th>
-                                                <th>Nom</th>
-                                                <th>Catégorie</th>
-                                                <th>Prix HT</th>
-                                                <th>Prix TTC</th>
+                                                <th>Noms</th>
+                                                <th>Catégories</th>
+                                                <th>Prix d'achat</th>
+                                                <th>Prix  de vente</th>
+                                                <th>Qt en stock</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>

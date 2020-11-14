@@ -25,6 +25,7 @@
                     </div>
                 </div>
 
+                
                 <div class="row">
                     <!-- ============================================================== -->
                     <!-- button  -->
@@ -37,15 +38,12 @@
                     <!-- ============================================================== -->
                 </div>
                 <br/>
-
                 <div class="row">
                     <!-- ============================================================== -->
                     <!-- button  -->
                     <!-- ============================================================== -->
                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                            
-                            <a href="{{path('admin_categories')}}" class="btn btn-success" style="color:#fff"><i class="fas fa-list"></i> Liste des catégories principales</a>
-                        </button>
+                            <a href="{{path('manager_customers')}}"  class="btn btn-success" style="color:#fff"><i class="fas fa-list"></i> Liste des clients</a>
                    </div>
                     <!-- ============================================================== -->
                     <!-- button  -->
@@ -64,32 +62,40 @@
                         <div class="card">
                             
                             <div class="card-header">
-                                <h5 class="mb-0">Enregistrer une catégorie principale</h5>
+                                <h5 class="mb-0">Enregistrer un client</h5>
                             </div>
                             <div class="card-body">
                                 {{form_start(form)}}
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                           <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="category_name">Nom</label>
-                                                    {{form_row(form.name, {attr:{'class': 'form-control', 'placeholder':'Nom de la catégorie','style':'height:50px'}})}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="category_description">Description</label>
-                                                    {{form_row(form.description, {attr:{'class': 'form-control', 'style':'height:100px'}})}}
-                                                </div>
-                                            </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="firstname">Nom</label>
+                                            {{form_row(form.firstname, {attr:{'class': 'form-control', 'placeholder':'Nom client','id':'firstname','style':'height:50px'}})}}
                                         </div>
-                                      </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
-                                            </div>
-                                        </div> 
-                                     </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="lastname">Prénom</label>
+                                            {{form_row(form.lastname, {attr:{'class': 'form-control', 'placeholder':'Prénom client','id':'lastname','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="phone">Téléphone</label>
+                                            {{form_row(form.phone, {attr:{'class': 'form-control', 'placeholder':'Téléphone client','id':'phone', 'style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="email">Email</label>
+                                            {{form_row(form.email, {attr:{'class': 'form-control', 'placeholder':'Email client','id':'email','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                     <div class="col-md-8">
+                                        <div class="form-group">
+                                     <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
+                                    </div>
+                                    </div>
+                                    
                                 {{form_end(form)}}
                             </div>
                         </div>

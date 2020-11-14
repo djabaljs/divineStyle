@@ -6,6 +6,7 @@ use App\Entity\Billing;
 use App\Entity\Customer;
 use App\Entity\DeliveryMan;
 use App\Entity\PaymentType;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -19,8 +20,12 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 
 class BillingType extends AbstractType
 {
+    private $shop;
+
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
+        $this->shop = $options['shop'];
+
         $builder
             ->add('paymentType', EntityType::class, [
                 'class' => PaymentType::class,
@@ -37,6 +42,14 @@ class BillingType extends AbstractType
             ])
             ->add('customer', EntityType::class, [
                 'class' => Customer::class,
+                'query_builder' => function (EntityRepository $er){
+                    $qb = $er->createQueryBuilder('c');
+                    $qb 
+                        ->where('c.shops = :shop')
+                        ->setParameter('shop', $this->shop)
+                        ;
+                    return $qb;
+                },
                 'label' => false,
                 'placeholder' => 'Selectionner un client',
             ])
@@ -92,6 +105,7 @@ class BillingType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Billing::class,
+            'shop' => null
         ]);
     }
 }

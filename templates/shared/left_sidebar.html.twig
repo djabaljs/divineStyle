@@ -90,7 +90,7 @@
                                 <a class="nav-link" href="{{path('admin_shops')}}"><i class="fab fa-fw fas fa-home" aria-hidden="true"></i>Magasins</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="pages/general-table.html"><i class="fab fa-fw fas fa-chart-line" aria-hidden="true"></i>Rapports</a>
+                                <a class="nav-link" href="{{path('admin_reports')}}"><i class="fab fa-fw fas fa-chart-line" aria-hidden="true"></i>Rapports</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-6" aria-controls="submenu-6"><i class="fas fa-fw fa-cog"></i>Options</a>
@@ -137,13 +137,13 @@
                                 <div id="submenu-2" class="collapse submenu" style="">
                                     <ul class="nav flex-column">
                                         <li class="nav-item">
-                                            <a class="nav-link" href="{{path("manager_sales")}}">Ventes</a>
+                                            <a class="nav-link" href="{{path("manager_products_orders_create")}}">Ventes</a>
                                         </li>
                                           <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Commandes</a>
+                                            <a class="nav-link" href="{{path("manager_products_commands")}}">Commandes</a>
                                         </li>
                                           <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Livraisons</a>
+                                            <a class="nav-link" href="{{path("manager_orders_deliveries")}}">Livraisons</a>
                                         </li>
                                     </ul>
                                 </div>
@@ -153,7 +153,7 @@
                                 <div id="submenu-3" class="collapse submenu" style="">
                                     <ul class="nav flex-column">
                                         <li class="nav-item">
-                                            <a class="nav-link" href="pages/chart-c3.html">Clients</a>
+                                            <a class="nav-link" href="{{path("manager_customers")}}">Clients</a>
                                         </li>
                                     </ul>
                                 </div>

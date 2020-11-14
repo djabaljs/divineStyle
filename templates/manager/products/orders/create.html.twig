@@ -1,0 +1,318 @@
+{% extends 'base.html.twig' %}
+{% block stylesheets %}
+ <link rel="stylesheet" href="{{asset('concept/assets/vendor/select2/css/select2.css')}}"/>
+ <style>
+   #products, #order{
+    height: 300px;
+    overflow: scroll;
+   }
+   .price{
+       width: 70px;
+   }
+ </style>
+{% endblock %}
+{% block body %}
+<div class="container-fluid dashboard-content ">
+      <!-- ============================================================== -->
+                <!-- pageheader -->
+                <!-- ============================================================== -->
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="page-header">
+                            <h2 class="pageheader-title">Data Tables</h2>
+                            <p class="pageheader-text">Proin placerat ante duiullam scelerisque a velit ac porta, fusce sit amet vestibulum mi. Morbi lobortis pulvinar quam.</p>
+                            <div class="page-breadcrumb">
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Tables</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Data Tables</li>
+                                    </ol>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                         {% include 'shared/flash_message.html.twig' %}
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+
+                <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            
+                            <a href="{{path('manager_products_orders')}}" class="btn btn-success" style="color:#fff"> <i class="fas fa-list"></i> Liste des ventes effectuées</a>
+                   </div>
+                    <!-- ============================================================== -->
+                    <!-- button  -->
+                    <!-- ============================================================== -->
+                </div>
+                <br/>
+
+                    <!-- ============================================================== -->
+                    <!-- data table  -->
+                    <!-- ============================================================== -->
+                        <div class="row">
+                            <div class="col-md-12" id="products">
+                                <div class="row">
+                                    {% for product in products %}
+                                            <div class="col-lg-3">
+                                                <div class="card">
+                                                    <img class="card-img" src="https://s3.eu-central-1.amazonaws.com/bootstrapbaymisc/blog/24_days_bootstrap/vans.png" alt="Vans">
+                                                    <div class="card-body">
+                                                    <h4 class="card-title">{{product.name}}</h4>
+                                                    <h6 class="card-subtitle mb-2 text-muted">Catégorie: {{product.category.name}}</h6>
+                                                    <h6 class="card-subtitle mb-2 text-muted">En stock: {{product.quantity}}</h6>
+                                                    <p class="card-text">
+                                                    <div class="buy d-flex justify-content-between align-items-center">
+                                                        <div class="price text-success"><h5 class="mt-4">{{product.sellingPrice}} CFA</div>
+                                                        <input type="number" class="price"  value="{% if product.quantity <= 0 %}0{% else %}1{% endif %}" name="quantity" id="qty_{{product.id}}" min="0" max="{{product.quantity}}">
+                                                            {% set in_session = 0 %}
+                                                            {% if app.session.get('cart_item') is empty %}
+                                                                {% set session_code_array = app.session.get('cart_item')|keys %}
+                                                                {% if products[loop.index - 1].id in session_code_array  %}
+                                                                    {% set in_session = 1 %}
+                                                                {% endif %}
+                                                            {% endif %}
+                                                        <button {% if product.quantity <= 0 %}disabled{% endif %} class="btn btn-danger btn-sm btnAddAction" id="add_{{products[loop.index -1].id }}" {% if in_session  != 0 %} style="display:none" {% endif %} onClick="cartAction('add', '{{product.id}}')"><i class="fas fa-shopping-cart"></i></button>
+                                                        <button class="btn btn-danger btn-sm btnAdded"id="added_{{products[loop.index -1].id }}" {% if in_session != 1 %} style="display:none" {% endif %}>Ajouté</button>
+                                                    </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                <div class="card" id="order">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Liste des produits sélectionnés</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="col-md-12">
+                                        <div class="table-responsive" >
+                                        <table id="example" class="table table-striped table-bordered second" style="width:100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nom</th>
+                                                    <th>Pu</th>
+                                                    <th>Qt</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="cart-item">
+                                            {% set total = 0 %}
+                                            {% for item in app.session.get('cart_item')%}
+                                                <tr id="element-{{item['code']}}">
+                                                    <td>{{item['name']}}</td>
+                                                    <td>{{item['price']|format_currency('XOF')}}</td>
+                                                    <td>{{item['quantity']}}</td>
+                                                    <td><a onClick="cartAction('remove','{{item["code"]}}')" class="btnRemoveAction btn btn-danger btn-sm"><i class="fa fa-remove"></i></a></td>
+                                                </tr>
+                                                {% set total = total + (item['price'] * item['quantity']) %}
+                                            {% endfor %}
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                <td colspan="5" align=right id="total" style="text-transform:uppercase;"><trong>Total: {{total| format_currency('XOF')}}</strong></td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                 
+                <!-- ============================================================== -->
+                   <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- data table  -->
+                    <!-- ============================================================== -->
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                       {{form_start(form)}}
+                            <div class="card">
+                                    <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table id="example" class="table table-striped table-bordered second" style="width:100%">
+                                            <thead>
+                                                 <tr>
+                                                    <td>Client</td>
+                                                    <td colspan="3">
+                                                        {{form_row(form.customer, {attr: {'class':'form-control'}})}}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td rowspan="2">Paiement</td>
+                                                    <td colspan="3">
+                                                        {{form_row(form.paymentType, {attr: {'class':'form-control'}})}}
+                                                    </td>
+                                                </tr>
+                                                 <tr>
+                                                    <td colspan="3">
+                                                        {{form_row(form.amountPaid, {attr: {'class':'form-control','style':'height:50px'}})}}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td id="delivery" rowspan="4">Livraison</td>
+                                                    <td  colspan="3">
+                                                    {{form_row(form.deliveryMan, {attr: {'class':'form-control'}})}}
+                                                    </td>
+                                                </tr>
+                                                 <tr>
+                                                    <td  colspan="3">
+                                                    {{form_row(form.deliveryAmount, {attr: {'class':'form-control','style':'height:50px'}})}}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td  colspan="3">
+                                                    {{form_row(form.choice, {attr: {'class':'form-control'}})}}
+                                                    </td>
+                                                </tr >
+                                                   <tr id="recipient">
+                                                    <td  colspan="3">
+                                                    {{form_row(form.recipient, {attr: {'class':'form-control','style':'height:50px'}})}}
+                                                    </td>
+                                                </tr>
+                                                </tr>
+                                                   <tr  id="recipientPhone">
+                                                    <td  colspan="3">
+                                                    {{form_row(form.recipientPhone, {attr: {'class':'form-control','style':'height:50px'}})}}
+                                                    </td>
+                                                </tr>
+                                                  <tr>
+                                                    <td  colspan="3">
+                                                    {{form_row(form.deliveryAddress, {attr: {'class':'form-control'}})}}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="1"><button class="btn btn-success form-control">Facturer</button></td>
+                                                    <td colspan="3" align=right id="endTotal" style="font-size:20px;text-transform:uppercase;">NET: <strong>{{total| format_currency('XOF')}}</strong></td>
+                                                </tr>
+                                              </thead>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                       {{form_end(form)}}
+                    </div>
+                    <!-- ============================================================== -->
+                    <!-- end data table  -->
+                    <!-- ============================================================== -->
+                </div>
+            <input type="hidden" name="total" id="totals" value="{{total}}">
+</div>
+{% endblock %}
+{% block javascripts %}
+ <script src="{{asset('concept/assets/vendor/select2/js/select2.min.js')}}"></script>
+ <script>
+
+$('#billing_paymentType').select2();
+$('#billing_deliveryMan').select2();
+$('#billing_customer').select2();
+var total = $('#totals').val();
+
+
+function cartAction(action,product_code) {
+var queryString = "";
+	if(action != "") {
+		switch(action) {
+			case "add":
+				queryString = 'action='+action+'&code='+ product_code+'&quantity='+$("#qty_"+product_code).val();
+			break;
+			case "remove":
+				queryString = 'action='+action+'&code='+ product_code;
+			break;
+			case "empty":
+				queryString = 'action='+action;
+			break;
+		}	 
+	}
+
+	$.ajax({
+	url: "http://localhost:8000/user/manager/products/orders/create",
+	data:queryString,
+	type: "POST",
+	success:function(data){
+            if(data.status == 201){
+          $('#cart-item').append(data.response);
+          $('#total').html('<strong>Total:'+data.total+'</strong>');
+          $('#endTotal').html('<strong>Total:'+data.total+' cfa</strong>');
+          $('#billing_amountPaid').attr({"max": data.total});
+        }else if(data.status == 200){
+          $('#cart-item').html(data.response);
+          $('#total').html('<strong>Total:'+data.total+' cfa</strong>');
+          $('#endTotal').html('<strong>Total:'+data.total+' cfa</strong>');
+          $('#billing_amountPaid').attr({"max": data.total});
+        }
+		if(action != "") {
+			switch(action) {
+				case "add":
+					$("#add_"+product_code).hide();
+					$("#added_"+product_code).show();
+				break;
+				case "remove":
+					$("#add_"+product_code).show();
+					$("#added_"+product_code).hide();
+				break;
+				case "empty":
+					$(".btnAddAction").show();
+					$(".btnAdded").hide();
+				break;
+			}	 
+		}
+	},
+	error:function (){}
+	});	
+}
+$('#billing_deliveryMan').change(function(){
+    if($(this).val() >= 1){
+          $('#billing_deliveryAddress').prop('required',true);
+          $('#billing_deliveryAmount').prop('required', true);
+          $('#billing_choice').prop('required', true);
+    }else{
+        $('#billing_choice').prop('required', false);
+         $('#billing_deliveryAddress').prop('required',false);
+         $('#billing_deliveryAmount').prop('required', false);
+           $('#billing_recipient').prop('required', false);
+        $('#billing_recipientPhone').prop('required', false)
+    }
+  
+})
+$('#recipient').hide();
+$('#recipientPhone').hide();
+$('#billing_choice').change(function(){
+    if($(this).val() == 0){
+        $('#recipient').hide();
+        $('#recipientPhone').hide();
+        $('#billing_recipient').prop('required', false);
+        $('#billing_recipientPhone').prop('required', false)
+        $('#delivery').attr('rowspan', '4');
+    }else if($(this).val() == 1){
+        $('#recipient').show();
+        $('#recipientPhone').show();
+        $('#billing_recipient').prop('required', true);
+        $('#billing_recipientPhone').prop('required', true)
+        $('#delivery').attr('rowspan', '6');
+    }
+})
+
+
+$("#billing_amountPaid").keypress(function(){
+    if($(this).val() != 0){
+         $("#billing_paymentType").prop("required", true);
+    }
+})
+ </script>
+{% endblock %}

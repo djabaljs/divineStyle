@@ -12,7 +12,6 @@ use App\Entity\Length;
 use App\Form\ShopType;
 use App\Form\UserType;
 use App\Entity\Billing;
-use App\Entity\Command;
 use App\Entity\Invoice;
 use App\Entity\Payment;
 use App\Entity\Product;
@@ -40,12 +39,12 @@ use App\Form\ShopUpdateType;
 use App\Entity\Replenishment;
 use App\Form\DeliveryManType;
 use App\Form\PaymentTypeType;
-use App\Entity\CommandProduct;
 use App\Entity\ProviderProduct;
 use App\Form\ReplenishmentType;
 use App\Repository\UserRepository;
 use App\Repository\PaymentRepository;
 use App\Repository\ProductRepository;
+use App\Repository\DeliveryRepository;
 use App\Services\Invoice\InvoiceService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -79,25 +78,38 @@ class AdminController extends AbstractController
      * @throws Exception $e
      * @return Response
      */
-    public function dashboard(PaymentRepository $paymentRepository): Response
+    public function dashboard(PaymentRepository $paymentRepository, DeliveryRepository $deliveryRepository): Response
     {
+
+      
         $payments = $this->manager->getRepository(Payment::class)->findAll();
         $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->findBy(['status' => 1]);
+        $deliveries = $this->manager->getRepository(Delivery::class)->findAll();
 
+        $deliveryAmount = 0;
+        
+        foreach($deliveries as $delivery){
+            $deliveryAmount += $delivery->getAmountPaid();
+        }
+
+   
         $totalPaid = 0;
         $totalAmount = 0;
         foreach($payments as $payment){
             $totalPaid += $payment->getAmountPaid();
             $totalAmount += $payment->getAmount();
         }
+
         return $this->render('admin/dashboard.html.twig', [
             'orders' => $this->manager->getRepository(Order::class)->findAll(),
             'customers' => $this->manager->getRepository(Customer::class)->findAll(),
             'products' => $this->manager->getRepository(Product::class)->findAll(),
-            "amountPaid" => $totalPaid,
+            "amountPaid" => $totalPaid + $deliveryAmount,
             'amount' => $totalAmount,
             'deliveries' => $deliveriesSuccessfully,
-            'payments' => $paymentRepository->ordersNotSuccessfully()
+            'payments' => $paymentRepository->ordersNotSuccessfully(),
+            'deliverySuccessFully' =>  $deliveryRepository->isSuccessFully(),
+            'deliveryIsNotSuccessFully' =>  $deliveryRepository->isNotSuccessFully(),
         ]);
 
     }
@@ -426,8 +438,8 @@ class AdminController extends AbstractController
 
         if($form->isSubmitted() && $form->isValid())
         {
-            $this->manger->persist($customer);
-            $this->manger->flush($customer);
+            $this->manager->persist($customer);
+            $this->manager->flush($customer);
 
             $this->addFlash("success", "Client enregistré avec succès!");
             
@@ -1882,10 +1894,10 @@ class AdminController extends AbstractController
 
        if($form->isSubmitted() && $form->isValid()){
 
-        $product = $this->manager->getRepository(Product::class)->find($replenishment->getProduct());
+        $product = $this->manager->getRepository(Product::class)->findOneBy(["id" => $replenishment->getProduct(), "shop" => $replenishment->getShop()]);
         
         if(is_null($product)){
-          $this->addFlash('danger','Ce produit ne peut être réapprovisionné dans le magasin '.$replenishment->getShop()->getName());
+          $this->addFlash('danger','Inexistance de produit: Ce produit ne peut être réapprovisionné dans le magasin '.$replenishment->getShop()->getName());
           return $this->redirectToRoute('admin_products_replenishment');
         }
 
@@ -1896,7 +1908,7 @@ class AdminController extends AbstractController
             return $this->redirectToRoute('admin_products_replenishment');
         }
         
-        $product->setQuantity($replenishment->getQuantity());
+        $product->setQuantity($product->getQuantity() + $replenishment->getQuantity());
         $providerProduct->setProduct($product);
         $providerProduct->setProvider($provider);
         $providerProduct->setQuantity($replenishment->getQuantity());
@@ -2280,5 +2292,62 @@ class AdminController extends AbstractController
 
         return $this->redirectToRoute('admin_orders_deliveries');
 
+    }
+
+      /**
+     * @Route("/reports", name="admin_reports", methods={"GET"})
+     * @method report
+     * @param Request $request
+     * @return Response
+     */
+    public function reports()
+    {
+        return $this->render('admin/reports/index.html.twig', [
+            'shops' => $this->manager->getRepository(Shop::class)->findBy([],['createdAt' => 'DESC']),
+            'i' => 1
+        ]);
+    }
+
+      /**
+     * @Route("/reports/shop/{id}", name="admin_reports_shop", methods={"GET"})
+     * @method reportShop
+     * @param Shop $shop
+     * @return Response
+     */
+    public function reportsShop(Shop $shop)
+    {
+        $payments = $this->manager->getRepository(Payment::class)->shopPayments($shop);
+        
+        $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsSuccessfully($shop);
+        $deliveriesIsNotSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsNotSuccessfully($shop);
+
+        
+        $deliveries = $this->manager->getRepository(Delivery::class)->shopDeliveries($shop);
+
+        $deliveryAmount = 0;
+        
+        foreach($deliveries as $delivery){
+            $deliveryAmount += $delivery->getAmountPaid();
+        }
+
+   
+        $totalPaid = 0;
+        $totalAmount = 0;
+        foreach($payments as $payment){
+            $totalPaid += $payment->getAmountPaid();
+            $totalAmount += $payment->getAmount();
+        }
+
+        $shop = $this->manager->getRepository(Shop::class)->find($shop);
+        return $this->render('admin/reports/shop.html.twig', [
+            'shop' => $shop,
+            'totalAmount' => $totalAmount,
+            'totalPaid' => $totalPaid,
+            'deliveryIsSuccessfully' => $deliveriesSuccessfully,
+            'deliveryIsNotSuccessfully' => $deliveriesIsNotSuccessfully,
+            'payments' => $payments,
+            'deliveries' => $deliveries
+
+        ]);
     }
 }

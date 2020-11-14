@@ -2,9 +2,10 @@
 
 namespace App\Repository;
 
+use App\Entity\Shop;
 use App\Entity\Delivery;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @method Delivery|null find($id, $lockMode = null, $lockVersion = null)
@@ -47,4 +48,66 @@ class DeliveryRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    public function isSuccessFully()
+    {
+        $qb = $this->createQueryBuilder('d');
+        $qb
+            ->where('d.status IS NOT NULL')
+        ;
+
+        return $qb
+                ->getQuery()
+                ->getResult();
+    }
+
+    public function isNotsuccessFully()
+    {
+        $qb = $this->createQueryBuilder('d');
+        $qb
+            ->where('d.status IS NULL')
+        ;
+
+        return $qb
+                ->getQuery()
+                ->getResult();
+    }
+
+    public function shopDeliveries(Shop $shop)
+    {
+        $qb = $this->createQueryBuilder('d');
+        $qb 
+            ->innerJoin('d.order', 'o')
+            ->where('o.shop = :shop')
+            ->setParameter('shop', $shop)
+            ->orderBy("o.createdAt", "DESC")
+            ;
+        return $qb->getQuery()->getResult();
+    }
+
+    public function shopOrderIsSuccessfully(Shop $shop)
+    {
+        $qb = $this->createQueryBuilder('d');
+        $qb
+            ->where('d.status IS NOT NULL')
+            ->innerJoin('d.order', 'o')
+            ->where('o.shop = :shop')
+            ->setParameter('shop', $shop)
+            ;
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function shopOrderIsNotSuccessfully(Shop $shop)
+    {
+        $qb = $this->createQueryBuilder('d');
+        $qb
+            ->where('d.status IS NULL')
+            ->innerJoin('d.order', 'o')
+            ->where('o.shop = :shop')
+            ->setParameter('shop', $shop)
+            ;
+
+        return $qb->getQuery()->getResult();
+    }
 }

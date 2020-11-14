@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block stylesheets %}
-  
+ <link rel="stylesheet" href="{{asset('concept/assets/vendor/select2/css/select2.css')}}"/>
+
 {% endblock %}
 {% block body %}
 <div class="container-fluid dashboard-content ">
@@ -44,7 +45,9 @@
                     <!-- ============================================================== -->
                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                             
-                            <a href="{{path('admin_categories')}}" class="btn btn-success" style="color:#fff"><i class="fas fa-list"></i> Liste des catégories principales</a>
+                            <a href="{{path('manager_orders_deliveries')}}" class="btn btn-info" style="color:#fff"><i class="fas fa-list"></i> Liste des livraisons</a>
+                            <a href="{{path('manager_orders_deliveries_create')}}" class="btn btn-success" style="color:#fff"><i class="fas fa-list"></i> Planifier des livraisons</a>
+
                         </button>
                    </div>
                     <!-- ============================================================== -->
@@ -64,7 +67,7 @@
                         <div class="card">
                             
                             <div class="card-header">
-                                <h5 class="mb-0">Enregistrer une catégorie principale</h5>
+                                <h5 class="mb-0">Modification de livraison</h5>
                             </div>
                             <div class="card-body">
                                 {{form_start(form)}}
@@ -72,21 +75,45 @@
                                         <div class="col-md-6">
                                            <div class="col-md-12">
                                                 <div class="form-group">
-                                                    <label for="category_name">Nom</label>
-                                                    {{form_row(form.name, {attr:{'class': 'form-control', 'placeholder':'Nom de la catégorie','style':'height:50px'}})}}
+                                                    <label for="delivery_deliveryMan">Livreur</label>
+                                                    {{form_row(form.deliveryMan, {attr:{'class': 'form-control'}})}}
                                                 </div>
                                             </div>
                                             <div class="col-md-12">
                                                 <div class="form-group">
-                                                    <label for="category_description">Description</label>
-                                                    {{form_row(form.description, {attr:{'class': 'form-control', 'style':'height:100px'}})}}
+                                                    <label for="delivery_order">Commande à livrer</label>
+                                                    {{form_row(form.order, {attr:{'class': 'form-control'}})}}
+                                                </div>
+                                            </div>
+                                             <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="delivery_recipient">Nom & prénoms du récepteur</label>
+                                                    {{form_row(form.recipient, {attr:{'class': 'form-control'}})}}
+                                                </div>
+                                            </div>
+                                             <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="delivery_recipientPhone">Téléphone du récepteur</label>
+                                                    {{form_row(form.recipientPhone, {attr:{'class': 'form-control'}})}}
+                                                </div>
+                                            </div>
+                                             <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="delivery_address">Adresse de livraison</label>
+                                                    {{form_row(form.address, {attr:{'class': 'form-control'}})}}
+                                                </div>
+                                            </div>
+                                              <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="delivery_amountPaid">Montant de la livraison</label>
+                                                    {{form_row(form.amountPaid, {attr:{'class': 'form-control'}})}}
                                                 </div>
                                             </div>
                                         </div>
                                       </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
+                                            <button type="submit" class="btn btn-warning"><i class="fas fa-edit"></i> Modifier</button>
                                             </div>
                                         </div> 
                                      </div>
@@ -102,5 +129,11 @@
 </div>
 {% endblock %}
 {% block javascripts %}
-  
+   <script src="{{asset('concept/assets/vendor/select2/js/select2.min.js')}}"></script>
+ <script>
+
+$('#delivery_deliveryMan').select2();
+$('#delivery_order').select2();
+$('#delivery').select2();
+</script>
 {% endblock %}

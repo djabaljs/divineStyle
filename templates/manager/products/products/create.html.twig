@@ -28,7 +28,6 @@
                     </div>
                 </div>
 
-
                 <div class="row">
                     <!-- ============================================================== -->
                     <!-- button  -->
@@ -41,20 +40,20 @@
                     <!-- ============================================================== -->
                 </div>
                 <br/>
+
                 <div class="row">
                     <!-- ============================================================== -->
                     <!-- button  -->
                     <!-- ============================================================== -->
                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                            <a class="btn btn-info" href="{{path('admin_products')}}" style="color:#fff"><i class="fas fa-list"></i> Liste des produits</a>
-                            <a class="btn btn-success" href="{{path('admin_products_create')}}" style="color:#fff"><i class="fas fa-save"></i> Enregistrer des produits</a>
+                            
+                            <a href="{{path('admin_products')}}" class="btn btn-success" style="color:#fff"> <i class="fas fa-list"></i>Liste des produits</a>
                    </div>
                     <!-- ============================================================== -->
                     <!-- button  -->
                     <!-- ============================================================== -->
                 </div>
                 <br/>
-                
                 <!-- ============================================================== -->
                 <!-- end pageheader -->
                 <!-- ============================================================== -->
@@ -67,10 +66,10 @@
                         <div class="card">
                             
                             <div class="card-header">
-                                <h5 class="mb-0">Modification de produit</h5>
+                                <h5 class="mb-0">Enregistrer un produit</h5>
                             </div>
                             <div class="card-body">
-                                    {{form_start(form)}}
+                                {{form_start(form)}}
                                     <div class="row">
                                         <div class="col-md-6">
                                            <div class="col-md-12">
@@ -94,14 +93,13 @@
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="product_quantity">Quantité</label>
-                                                    {{form_row(form.quantity, {attr:{'class': 'form-control','style':'height:50px','disabled':'true'}})}}
+                                                    {{form_row(form.quantity, {attr:{'class': 'form-control','style':'height:50px'}})}}
                                                 </div>
                                             </div>
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="product_category">Catégorie</label>
-                                                        <input type="hidden" name="category" value="{{update}}">
-                                                        {{form_row(form.category,  {attr:{'class': 'form-control','disabled':'true'}})}}
+                                                    {{form_row(form.category, {attr:{'class': 'form-control'}})}}
                                                 </div>
                                             </div>
                                            
@@ -158,12 +156,9 @@
                                             </div>
                                             </div>
                                       </div>
-                                        <div class="col-md-12">
-                                            <div class="form-group">
-                                              <button type="submit" class="btn btn-warning"><i class="fas fa-edit"></i> Modifier</button>
-                                             </div> 
-                                        </div>
-                                     
+                                    <div class="form-group">
+                                     <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
+                                    </div>
                                 {{form_end(form)}}
                             </div>
                         </div>
@@ -172,7 +167,7 @@
                     <!-- end data table  -->
                     <!-- ============================================================== -->
                 </div>
-
+                     
 </div>
 {% endblock %}
 {% block javascripts %}
@@ -203,6 +198,8 @@
         allowClear: true
     });
 
+
+    $('.element').hide();
     $('#product_isVariable').change(function(){
         if($(this).val() == 0){
             $('.element').hide();
