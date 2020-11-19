@@ -13,7 +13,6 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 /**
  * @ORM\Entity(repositoryClass=ProductRepository::class)
  * @ORM\HasLifecycleCallbacks()
- * @UniqueEntity("name")
  */
 class Product
 {
@@ -48,6 +47,7 @@ class Product
 
     /**
      * @ORM\ManyToOne(targetEntity="Category", inversedBy="products")
+     * @ORM\JoinColumn(name="category_id", referencedColumnName="id", onDelete="CASCADE")
      */
     private $category;
 
@@ -82,7 +82,7 @@ class Product
     private $height;
 
     /**
-     * @ORM\Column(type="string", length=255, unique=true)
+     * @ORM\Column(type="string", length=255)
      */
     private $slug;
 
@@ -117,11 +117,13 @@ class Product
 
     /**
      * @ORM\OneToMany(targetEntity=OrderProduct::class, mappedBy="products")
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $orderProducts;
 
     /**
      * @ORM\OneToMany(targetEntity=ProviderProduct::class, mappedBy="product")
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $providerProducts;
 
@@ -151,18 +153,6 @@ class Product
     public function setName(string $name): self
     {
         $this->name = $name;
-
-        return $this;
-    }
-
-    public function getQuantity(): ?int
-    {
-        return $this->quantity;
-    }
-
-    public function setQuantity(int $quantity): self
-    {
-        $this->quantity = $quantity;
 
         return $this;
     }
@@ -483,4 +473,29 @@ class Product
     }
 
 
+
+    /**
+     * Get the value of quantity
+     */ 
+    public function getQuantity()
+    {
+        return $this->quantity;
+    }
+
+    /**
+     * Set the value of quantity
+     *
+     * @return  self
+     */ 
+    public function setQuantity($quantity)
+    {
+        $this->quantity = $quantity;
+
+        return $this;
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
+    }
 }

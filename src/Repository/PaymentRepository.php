@@ -61,6 +61,35 @@ class PaymentRepository extends ServiceEntityRepository
                   ->getResult();
     }
 
+    public function shopOrdersLastFiveSuccessfully(Shop $shop)
+    {
+        $qb = $this->createQueryBuilder('p');
+        $qb
+            ->innerJoin('p.invoice', 'i')
+            ->innerJoin('i.orders', 'o')
+            ->where('o.shop = :shop')
+            ->orderBy('o.createdAt', 'DESC')
+            ->setParameter('shop', $shop)
+            ->setMaxResults(5)
+            ;
+        return $qb->getQuery()
+                  ->getResult();
+    }
+
+    public function ordersLastFiveSuccessfully()
+    {
+        $qb = $this->createQueryBuilder('p');
+        $qb
+            ->innerJoin('p.invoice', 'i')
+            ->innerJoin('i.orders', 'o')
+            ->orderBy('o.createdAt', 'DESC')
+            ->setMaxResults(5)
+            ;
+        return $qb->getQuery()
+                  ->getResult();
+    }
+
+
     public function ordersNotSuccessfully()
     {
         $qb = $this->createQueryBuilder('p');
@@ -119,5 +148,46 @@ class PaymentRepository extends ServiceEntityRepository
         return $qb
                 ->getQuery()
                 ->getResult();
+    }
+
+    public function findPaymentsByWeek()
+    {
+        $start_week = date("Y-m-d",strtotime('monday this week'));
+        $end_week = date("Y-m-d",strtotime('saturday this week'));
+        return $this->createQueryBuilder('p')
+                    ->innerJoin('p.invoice', 'i')
+                    ->innerJoin('i.orders', 'o')
+                    ->where('p.createdAt >= :start')
+                    ->andWhere('p.createdAt <= :end')
+                    ->setParameter('start',$start_week)                      
+                    ->setParameter('end',$end_week)
+                    ->getQuery()
+                    ->getResult(); 
+                ;
+        
+    }
+
+    public function searchPayments($shop, $start, $end, $paymentType)
+    {
+        $start = $start->format(('Y-m-d')." 00:00:00");
+        ;
+        $end = $end->format(('Y-m-d')." 23:59:59");
+        ;
+        // dd($start, $end);
+        return $this->createQueryBuilder('p')
+                    ->where('p.createdAt BETWEEN :start AND :end')
+                    ->andWhere('p.paymentType = :paymentType')
+                    ->setParameter('start', $start)
+                    ->setParameter('end', $end)
+                    ->setParameter('paymentType', $paymentType)
+                    ->innerJoin('p.invoice', 'i')
+                    ->innerJoin('i.orders', 'o')
+                    ->andWhere('o.shop = :shop')
+                    ->setParameter('shop', $shop)
+                    ->orderBy('p.createdAt', 'DESC')
+                    ->getQuery()
+                    ->getResult()
+                    ;
+
     }
 }

@@ -33,21 +33,6 @@ class ReplenishmentType extends AbstractType
                 'attr' => [
                 ]
             ])
-            ->add('quantity', IntegerType::class, [
-                'label' => false,
-                'attr' => [
-                    'placeholder' => 'Quantité',
-                    'min' => 1
-                ]
-            ])
-            ->add('shop', EntityType::class, [
-                'class' => Shop::class,
-                'choice_label' => 'name',
-                'label' => false,
-                'placeholder' => 'Magasin',
-                'attr' => [
-                ]
-            ])
         ;
     }
 

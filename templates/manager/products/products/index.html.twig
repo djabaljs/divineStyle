@@ -75,7 +75,6 @@
                                                 <th>Images</th>
                                                 <th>Noms</th>
                                                 <th>Catégories</th>
-                                                <th>Prix d'achat</th>
                                                 <th>Prix  de vente</th>
                                                 <th>Qt en stock</th>
                                                 <th>Actions</th>
@@ -96,8 +95,7 @@
                                                 <td>
                                                 {{product.category.name}}
                                                 </td>
-                                                <td>{{product.buyingPrice}}</td>
-                                                <td>{{product.sellingPrice}}</td>
+                                                <td>{{product.sellingPrice|format_currency('XOF')}}</td>
                                                 <td {% if product.minimumStock == product.quantity or product.quantity == 0  %} style="background:red;color:#FFF"{% else %} style="background:green; color:#FFF"{% endif %}>
                                                  {{ product.quantity }}
                                                 </td>
@@ -113,7 +111,6 @@
                                                 <th>Images</th>
                                                 <th>Noms</th>
                                                 <th>Catégories</th>
-                                                <th>Prix d'achat</th>
                                                 <th>Prix  de vente</th>
                                                 <th>Qt en stock</th>
                                                 <th>Actions</th>

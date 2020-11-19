@@ -51,7 +51,7 @@ class Shop
     private $customers;
 
     /**
-     * @ORM\OneToMany(targetEntity=Product::class, mappedBy="shop")
+     * @ORM\OneToMany(targetEntity=Product::class, mappedBy="shop", cascade={"persist"})
      */
     private $products;
 

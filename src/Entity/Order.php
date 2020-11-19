@@ -39,6 +39,7 @@ class Order
      */
     private $manager;
 
+
     /**
      * @ORM\ManyToOne(targetEntity=Shop::class, inversedBy="orders")
      * @ORM\JoinColumn(nullable=false)
@@ -51,12 +52,12 @@ class Order
     private $customer;
 
     /**
-     * @ORM\OneToOne(targetEntity="Delivery", mappedBy="order")
+     * @ORM\OneToOne(targetEntity="Delivery", mappedBy="order", cascade="remove")
      */
     private $deliveries;
 
     /**
-     * @ORM\OneToMany(targetEntity=OrderProduct::class, mappedBy="productOrder", cascade={"persist","remove"})
+     * @ORM\OneToMany(targetEntity=OrderProduct::class, mappedBy="productOrder", cascade={"persist"})
      */
     private $orderProducts;
 

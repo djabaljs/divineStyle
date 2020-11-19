@@ -26,8 +26,8 @@ class Invoice
     private $amount;
 
     /**
-     * @ORM\OneToOne(targetEntity=Order::class, cascade={"persist", "remove"})
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\OneToOne(targetEntity=Order::class, cascade={"persist"})
+     * @ORM\JoinColumn(nullable=false, onDelete="CASCADE")
      */
     private $orders;
 

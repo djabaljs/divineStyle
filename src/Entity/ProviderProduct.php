@@ -28,7 +28,7 @@ class ProviderProduct
     private $provider;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Product::class, inversedBy="providerProducts")
+     * @ORM\ManyToOne(targetEntity=Product::class, inversedBy="providerProducts", cascade={"remove"})
      */
     private $product;
 

@@ -37,9 +37,9 @@ class WoocommerceApiService  extends AbstractController
       public function __construct(HttpClientInterface $client, ContainerInterface $container)
       {
           $this->client = $client;
-          $this->endpoint = $container->getParameter('DIVINE_STYLES_API_ENDPOINT');
-          $this->username = $container->getParameter('DIVINE_STYLES_USERNAME');
-          $this->password = $container->getParameter('DIVINE_STYLES_PASSWORD');
+          $this->endpoint = $container->getParameter('TEST_API_ENDPOINT');
+          $this->username = $container->getParameter('TEST_USERNAME');
+          $this->password = $container->getParameter('TEST_PASSWORD');
       } 
 
       /**
@@ -173,7 +173,8 @@ class WoocommerceApiService  extends AbstractController
                     }
                   
                 }catch(\Exception $e){
-                    throw $e;
+                    $this->addFlash("danger","Erreur: Une eurreur s'est produite lors de la création du produit!");
+                    // throw $e;
                 }
             break;
             case "categories":
@@ -211,7 +212,9 @@ class WoocommerceApiService  extends AbstractController
                     }
                   
                 }catch(\Exception $e){
-                    throw $e;
+                    $this->addFlash("danger","Erreur: Une eurreur s'est produite lors de la création de la catégorie!");
+
+                    // throw $e;
                 }
             break;
         case "attributes":
@@ -249,7 +252,8 @@ class WoocommerceApiService  extends AbstractController
                 }
               
             }catch(\Exception $e){
-                throw $e;
+                $this->addFlash("danger",$e->getMessage());
+
             }
         break;
                 
@@ -289,7 +293,8 @@ class WoocommerceApiService  extends AbstractController
             }
              
            }catch(\Exception $e){
-               throw $e;
+            $this->addFlash("danger",$e->getMessage());
+
            }
     }
 
@@ -324,7 +329,7 @@ class WoocommerceApiService  extends AbstractController
             }
              
            }catch(\Exception $e){
-               throw $e;
+              $this->addFlash("danger",$e->getMessage());
            }
     }
 
@@ -374,7 +379,8 @@ class WoocommerceApiService  extends AbstractController
                     }
                   
                 }catch(\Exception $e){
-                    throw $e;
+                    $this->addFlash("danger",$e->getMessage());
+
                 }
             break;
             case "categories":
@@ -412,7 +418,8 @@ class WoocommerceApiService  extends AbstractController
                     }
                   
                 }catch(\Exception $e){
-                    throw $e;
+                      $this->addFlash("danger",$e->getMessage());
+                    
                 }
             break;
                 
@@ -429,9 +436,8 @@ class WoocommerceApiService  extends AbstractController
     {
         switch($target){
             case "products":
-
+                
                 try{
-                  
                     $response =  $this->client->request(
                         "PUT",
                         $this->endpoint.''.$target.'/'.$data->getWcProductId(), [
@@ -462,7 +468,8 @@ class WoocommerceApiService  extends AbstractController
                     }
                   
                 }catch(\Exception $e){
-                    throw $e;
+              $this->addFlash("danger",$e->getMessage());
+                   
                 }
             break;
                 
@@ -508,7 +515,8 @@ class WoocommerceApiService  extends AbstractController
                     }
                      
                    }catch(\Exception $e){
-                       throw $e;
+                    $this->addFlash("danger",$e->getMessage());
+
                    }
                 break;
             case "categories":
@@ -541,7 +549,8 @@ class WoocommerceApiService  extends AbstractController
                     }
                      
                    }catch(\Exception $e){
-                       throw $e;
+                    $this->addFlash("danger",$e->getMessage());
+
                    }
                 break;
 

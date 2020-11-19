@@ -34,14 +34,14 @@ class ProductType extends AbstractType
             ->add('sellingPrice', NumberType::class, [
                 'label' => false
             ])
-            ->add('quantity', IntegerType::class, [
-                'label' => false,
-                'attr' => [
-                    'min' => 0,
-                    'value' => 1
-                ],
-                'required' => true
-            ])
+            // ->add('quantity', IntegerType::class, [
+            //     'label' => false,
+            //     'attr' => [
+            //         'min' => 0,
+            //         'value' => 1
+            //     ],
+            //     'required' => true
+            // ])
             ->add('category', EntityType::class, [
                 'label' => false,
                 'required' => true,
@@ -97,11 +97,11 @@ class ProductType extends AbstractType
                 'class' => Provider::class,
                 'placeholder' => 'Selectionner un fournisseur'
             ])
-            ->add('shop', EntityType::class, [
-                'label' => false,
-                'class' => Shop::class,
-                'placeholder' => 'Selectionner un magasin'
-            ])
+            // ->add('shop', EntityType::class, [
+            //     'label' => false,
+            //     'class' => Shop::class,
+            //     'placeholder' => 'Selectionner un magasin'
+            // ])
         ;
     }
 

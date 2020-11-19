@@ -8,7 +8,6 @@ use App\Entity\Billing;
 use App\Entity\Invoice;
 use App\Entity\Payment;
 use App\Entity\Product;
-use App\Form\OrderType;
 use App\Entity\Category;
 use App\Entity\Customer;
 use App\Entity\Delivery;
@@ -17,13 +16,9 @@ use App\Form\CustomerType;
 use App\Form\DeliveryType;
 use App\Entity\OrderProduct;
 use App\Repository\ShopRepository;
-use App\Repository\OrderRepository;
 use App\Repository\PaymentRepository;
 use App\Services\Invoice\InvoiceService;
-use App\Services\Product\ProductService;
 use Doctrine\ORM\EntityManagerInterface;
-use App\Services\Category\CategoryService;
-use App\Services\Product\MapProductService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\HttpFoundation\Response;
@@ -50,8 +45,10 @@ class ManagerController extends AbstractController
   public function __construct(EntityManagerInterface $entityManager, Security $security, WoocommerceApiService $apiService)
   {
       $this->manager = $entityManager;
-      $this->shop = $security->getUser()->getShop();
       $this->api = $apiService;
+      if(!is_null($security->getUser())){
+        $this->shop = $security->getUser()->getShop();
+      }
   }
 
   /**
@@ -64,7 +61,7 @@ class ManagerController extends AbstractController
   {
   
 
-        $payments = $this->manager->getRepository(Payment::class)->shopPayments($this->shop);
+        $payments = $this->manager->getRepository(Payment::class)->shopOrdersLastFiveSuccessfully($this->shop);
         
         $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsSuccessfully($this->shop);
         $deliveriesIsNotSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsNotSuccessfully($this->shop);
@@ -373,7 +370,7 @@ class ManagerController extends AbstractController
                 foreach($session->get('cart_item', []) as $item){
                     $orderProduct = new OrderProduct();
 
-                    $total += $item['price'];
+                    $total += $item['price'] * $item['quantity'];
                     $product = $this->manager->getRepository(Product::class)->find($item['code']);
                     $product->setQuantity($product->getQuantity() > 0 ? $product->getQuantity() - $item['quantity'] : 0);
                     $orderProduct->setProducts($product);
@@ -399,6 +396,7 @@ class ManagerController extends AbstractController
                 $rand = strtoupper(substr(uniqid(sha1(time())),0,4));
                 $unique = $today . $rand;
                 
+                $deliveryAmount = 0;
                 if(!is_null(($billing->getDeliveryMan()))){
                     
                     $delivery->setOrder($order);
@@ -409,6 +407,7 @@ class ManagerController extends AbstractController
                    
                     if($billing->getChoice() == 0){
                         $delivery->setRecipient($billing->getCustomer());
+                        
                         $delivery->setRecipientPhone($billing->getCustomer()->getPhone());
                     }else{
                         $delivery->setRecipient($billing->getRecipient());
@@ -418,6 +417,7 @@ class ManagerController extends AbstractController
                     $this->manager->persist($delivery);
 
                     $total += $billing->getDeliveryAmount();
+                    $deliveryAmount = $billing->getDeliveryAmount();
                 }
 
             
@@ -433,21 +433,29 @@ class ManagerController extends AbstractController
                 $payment->setInvoice($invoice);
                 $payment->setPaymentType($billing->getPaymentType());
                 $payment->setAmountPaid($billing->getAmountPaid());
-                $payment->setAmount($total - $billing->getAmountPaid());
+                $payment->setAmount($invoice->getAmount() -($billing->getAmountPaid() + $deliveryAmount));
                 $this->manager->persist($payment);
-      
 
+                $quantity = 0;
+                foreach($session->get('cart_item',[]) as $item){
+                    $productsC = $this->manager->getRepository(Product::class)->findBy(['slug' => $product->getSlug()]);
+                    foreach($productsC as $product){
+                        $quantity += $product->getQuantity();
+                        if($item['code'] == $product->getId()){
+                           $product->setQuantity($product->getQuantity());
+                           $this->manager->persist($product);
+                        }
+                    }
+                    $productC = clone($product);
+
+                    $productC->setQuantity($quantity);
+
+                    $this->api->putQ('products', $productC);
+                }
+                
                 $this->manager->flush();
                 $this->manager->commit();
-                
-
-                foreach($session->get('cart_item',[]) as $item){
-                    $product = $this->manager->getRepository(Product::class)->find($item['code']);
-
-                    $this->api->putQ('products', $product);
-                }
-
-                $session->clear();
+                $session->remove('cart_item');
 
                 $logo = $request->getUriForPath('/concept/assets/images/logo.jpg');
 

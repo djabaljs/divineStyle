@@ -82,8 +82,8 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                           {% for product in products %}
-                                             <tr>
+                                             {% for product in products %}
+                                                 <tr>
                                                 <td>{{loop.index}}</td>
                                                 <td>
                                                 {% if product.imageUrls is not empty  %}
@@ -96,9 +96,9 @@
                                                 <td>
                                                 {{product.category.name}}
                                                 </td>
-                                                <td>{{product.buyingPrice}}</td>
-                                                <td>{{product.sellingPrice}}</td>
-                                                <td {% if product.minimumStock == product.quantity or product.quantity == 0  %} style="background:red;color:#FFF"{% else %} style="background:green; color:#FFF"{% endif %}>
+                                                <td>{{product.buyingPrice|format_currency('XOF')}}</td>
+                                                <td>{{product.sellingPrice|format_currency('XOF')}}</td>
+                                                <td {% if product.minimumStock == product.quantity or product.quantity <= 0  %} style="background:red;color:#FFF"{% else %} style="background:green; color:#FFF"{% endif %}>
                                                  {{ product.quantity }}
                                                 </td>
                                                 <td>
@@ -107,7 +107,7 @@
                                                 <a href="{{path('admin_products_delete', {slug: product.slug})}}" class="btn btn-danger btn-xs"><i class="fas fa-trash"></i></a>
                                                 </td>
                                             </tr>
-                                           {% endfor %}
+                                             {% endfor %}
                                         </tbody>
                                         <tfoot>
                                             <tr>

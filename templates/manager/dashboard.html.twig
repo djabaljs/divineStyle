@@ -168,7 +168,8 @@
                                                         <th class="border-0">#</th>
                                                         <th class="border-0">N°commande</th>
                                                         <th class="border-0">Client</th>
-                                                        <th class="border-0">Montant</th>
+                                                        <th class="border-0">Montant payé</th>
+                                                        <th class="border-0">Reste</th>
                                                         <th class="border-0">Date</th>
                                                         <th class="border-0">Heure</th>
                                                     </tr>
@@ -179,6 +180,7 @@
                                                         <td>{{loop.index}}</td>
                                                         <td>{{payment.invoice.orders.orderNumber}}</td>
                                                         <td>{{payment.invoice.orders.customer}}</td>
+                                                        <td>{{payment.amountPaid| format_currency('XOF') }}</td>
                                                         <td>{{payment.amount| format_currency('XOF') }}</td>
                                                         <td>{{payment.invoice.orders.createdAt|date('Y-m-d')}}</td>
                                                         <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>

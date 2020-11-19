@@ -80,6 +80,7 @@
                                                 <th>Prenom</th>
                                                 <th>Email</th>
                                                 <th>Date enregistrement</th>
+                                                <th>Heure enregistrement</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -90,7 +91,8 @@
                                                 <td>{{customer.firstName}}</td>
                                                 <td>{{customer.lastName}}</td>
                                                 <td>{{customer.email}}</td>
-                                                <td>{{customer.createdAt|date('d-m-Y')}}</td>
+                                                <td>{{customer.createdAt|date('Y-m-d')}}</td>
+                                                <td>{{customer.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
                                                 <td>
                                                 <a href="{{path('manager_customers_update', {id: customer.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
                                                 <a href="{{path('manager_customers_delete', {id: customer.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>

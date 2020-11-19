@@ -60,5 +60,13 @@ class OrderRepository extends ServiceEntityRepository
     //     return $qb->getQuery()->getResult();
     // }
 
-    
+    public function findLastFiveProducts()
+    {
+        return $this->createQueryBuilder('o')
+            ->orderBy('o.createdAt','ASC')
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult()
+            ;
+    }
 }

@@ -30,8 +30,7 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="row">
+                  <div class="row">
                     <!-- ============================================================== -->
                     <!-- button  -->
                     <!-- ============================================================== -->
@@ -43,15 +42,12 @@
                     <!-- ============================================================== -->
                 </div>
                 <br/>
-                <div class="row">
+                 <div class="row">
                     <!-- ============================================================== -->
                     <!-- button  -->
                     <!-- ============================================================== -->
                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                        <button class="btn btn-success">
-                            <i class="fas fa-save"></i>
-                            <a href="{{path('admin_customers_create')}}" style="color:#fff" >Enregistrer un client</a>
-                        </button>
+                            <a href="{{path('admin_reports_shop', {id: shop.id})}}" class="btn btn-success" style="color:#fff" ><i class="fas"></i>Retour</a>
                    </div>
                     <!-- ============================================================== -->
                     <!-- button  -->
@@ -62,15 +58,13 @@
                 <!-- end pageheader -->
                 <!-- ============================================================== -->
                    <div class="row">
-                 
                     <!-- ============================================================== -->
                     <!-- data table  -->
                     <!-- ============================================================== -->
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                         <div class="card">
-                            
                             <div class="card-header">
-                                <h5 class="mb-0">Liste des clients</h5>
+                                <h5 class="mb-0">Liste des livraisons de {{shop.name}}</h5>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
@@ -78,38 +72,45 @@
                                         <thead>
                                             <tr>
                                                 <th>N°</th>
-                                                <th>Nom</th>
-                                                <th>Prenom</th>
-                                                <th>Email</th>
-                                                <th>Date enregistrement</th>
-                                                <th>Heure enregistrement</th>
-                                                <th>Actions</th>
+                                                <th>Livreur</th>
+                                                <th>N°Commande</th>
+                                                <th>Récepteur</th>
+                                                <th>Adresse</th>
+                                                <th>Téléphone</th>
+                                                <th>Montant de livraison</th>
+                                                <th>Statut</th>    
+                                                <th>Actions</th>    
                                             </tr>
                                         </thead>
                                         <tbody>
-                                           {% for customer in customers %}
+                                           {% for delivery in deliveries %}
                                              <tr>
                                                 <td>{{loop.index}}</td>
-                                                <td>{{customer.firstName}}</td>
-                                                <td>{{customer.lastName}}</td>
-                                                <td>{{customer.email}}</td>
-                                                <td>{{payment.invoice.orders.createdAt|date('Y-m-d')}}</td>
-                                                <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
+                                                <td>{{delivery.deliveryMan}}</td>
+                                                <td>{{delivery.order.orderNumber}}</td>
+                                                <td>{{delivery.recipient}}</td>
+                                                <td>{{delivery.address}}</td>
+                                                <td>{{delivery.recipientPhone}}</td>
+                                                <td>{{delivery.amountPaid|format_currency('XOF') }}</td>
+                                                <td>{{delivery.status == null? 'Pas livré': 'Livré' }}</td>
                                                 <td>
-                                                {# <a href="{{path('admin_customer_create', {id: category['id']})}}" class="btn btn-info"><i class="fas fa-eye"></i></a> #}
-                                                <a href="{{path('admin_customers_update', {id: customer.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                                <a class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                                                    {# <a href="{{path('admin_category_show', {id: category.id})}}" class="btn btn-info"><i class="fas fa-eye"></i></a> #}
+                                                    <a href="{{path('admin_orders_deliveries_update', {id: delivery.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
+                                                    <a href="{{path('admin_orders_deliveries_delete', {id: delivery.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
                                                 </td>
                                             </tr>
                                            {% endfor %}
                                         </tbody>
                                         <tfoot>
-                                            <tr>
-                                             <th>N°</th>
-                                                <th>Images</th>
-                                                <th>Nom</th>
-                                                <th>Description</th>
-                                                <th>Nombre disponible</th>
+                                          <tr>
+                                                <th>N°</th>
+                                                <th>Livreur</th>
+                                                <th>N°Commande</th>
+                                                <th>Récepteur</th>
+                                                <th>Adresse</th>
+                                                <th>Téléphone</th>
+                                                <th>Montant de livraison</th>
+                                                <th>Statut</th>    
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>

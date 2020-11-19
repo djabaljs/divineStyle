@@ -81,18 +81,14 @@
                                                     {{form_row(form.provider, {attr:{'class': 'form-control', 'style':'height:50px'}})}}
                                                 </div>
                                             </div>
-                                             <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="replenishment_quantity">Quantité à réapprovisionner</label>
-                                                    {{form_row(form.quantity, {attr:{'class': 'form-control', 'style':'height:50px'}})}}
-                                                </div>
-                                            </div>
-                                             <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="replenishment_shop">Magasin concerné</label>
-                                                    {{form_row(form.shop, {attr:{'class': 'form-control', 'style':'height:50px'}})}}
-                                                </div>
-                                            </div>
+                                              {% for shop in shops %}
+                                                  <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="product_provider">Quantité à réapprovisionner dans {{shop.name}}</label>
+                                                        <input type="number" class="form-control" name="shopQuantity[{{shop.id}}][]" min="0" style="height:50px" />
+                                                    </div>
+                                                 </div> 
+                                            {% endfor %}
                                         </div>
                                       </div>
                                         <div class="col-md-6">

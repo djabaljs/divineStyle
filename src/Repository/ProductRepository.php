@@ -58,4 +58,15 @@ class ProductRepository extends ServiceEntityRepository
             ;
         return $qb->getQuery()->getResult();
     }
+
+    public function findProducts()
+    {
+        $qb = $this->createQueryBuilder('p');
+
+        $qb 
+            ->select('p.name')
+            ->distinct()
+            ;
+        return $qb->getQuery()->getResult();
+    }
 }
