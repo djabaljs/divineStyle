@@ -43,12 +43,12 @@ class Provider
     private $email;
 
     /**
-     * @ORM\OneToMany(targetEntity=ProviderProduct::class, mappedBy="provider")
+     * @ORM\OneToMany(targetEntity=ProviderProduct::class, mappedBy="provider", cascade={"remove"}, orphanRemoval=true)
      */
     private $providerProducts;
 
     /**
-     * @ORM\OneToMany(targetEntity=Product::class, mappedBy="provider")
+     * @ORM\OneToMany(targetEntity=Product::class, mappedBy="provider", cascade={"remove"}, orphanRemoval=true)
      */
     private $products;
 

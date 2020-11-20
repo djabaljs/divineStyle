@@ -122,28 +122,49 @@ class AdminController extends AbstractController
      */
     public function products(WoocommerceApiService $apiService)
     {
-        // $products = $this->manager->getRepository(Product::class)->findAll();
-        // $sameProductName = [];
-        // $productArray = [];
-        // $productQuantities = [];
+        $products = $this->manager->getRepository(Product::class)->findAll();
 
-        // foreach($products as $key => $product){
+        $sameProductName = [];
+        $sameProductArray = [];
+        $sameProductQuantity = [];
+
+        foreach($products as $key => $product){
            
-        //     if(!in_array($product->getName(), $sameProductName)){
-        //         $sameProductName[] = $product->getName();
-        //         $productArray[$product->getId()] = $product;
-        //         $productQuantities[$product->getId()]= $product->getQuantity();
-        //     }else{
-        //         $productQuantities[$product->getId()] = $product->getQuantity();
-        //     }
+            if(!in_array($product->getName(), $sameProductName)){
 
-        //     if($productA)
-        // }
+                $sameProductName[] = $product->getName();
+                $sameProductArray[$product->getId()] = $product;
 
-        // dd($sameProductName, $productArray,$productQuantities);
-        // dd(array_unique($products, SORT_REGULAR));
+                if(isset($sameProductQuantity[$product->getSlug()])){
+                    $sameProductQuantity[$product->getSlug()] += $product->getQuantity();
+                }else{
+                    $sameProductQuantity[$product->getSlug()] = $product->getQuantity();
+
+                }
+
+            }else{
+                if(isset($sameProductQuantity[$product->getSlug()])){
+                    $sameProductQuantity[$product->getSlug()] += $product->getQuantity();
+                }else{
+                    $sameProductQuantity[$product->getSlug()] = $product->getQuantity();
+
+                }
+            }
+
+        }
+
+        $products = null;
+
+        foreach($sameProductArray as $product){
+           
+            if($sameProductQuantity[$product->getSlug()]){
+                $product->setQuantity($sameProductQuantity[$product->getSlug()]);
+                $products[] = $product;
+            }
+        }
+
         return $this->render('admin/products/products/index.html.twig', [
-            'products' =>  $this->manager->getRepository(Product::class)->findAll()
+            'products' =>  $products
         ]);
     }
 
@@ -357,18 +378,18 @@ class AdminController extends AbstractController
     {
         $products = $this->manager->getRepository(Product::class)->findBy(['slug' => $product->getSlug()]);
 
-        $productCopy = $product;
+        $productCopy = clone($product);
+
         if(empty($products)){
             throw $this->createNotFoundException("Ce produit n'existe pas!");
         }
+
         $this->manager->getConnection()->beginTransaction();
         $this->manager->getConnection()->setAutoCommit(false);
 
-        $productC = null;
         try{
 
             foreach($products as $product){
-                $productC = $product;
                 $this->manager->remove($product);
             }
 
@@ -377,9 +398,9 @@ class AdminController extends AbstractController
 
             $this->addFlash("success", "Produit supprimé du magasin ".$productCopy->getShop()." !");
         }catch(\Exception $e){
-
+           throw $e;
         }
-        $this->api->delete('products', $productC);
+        $this->api->delete('products', $productCopy);
 
         return  $this->redirectToRoute("admin_products");
     }
@@ -630,8 +651,8 @@ class AdminController extends AbstractController
 
         if($form->isSubmitted() && $form->isValid())
         {
-            $this->manger->persist($provider);
-            $this->manger->flush($provider);
+            $this->manager->persist($provider);
+            $this->manager->flush($provider);
 
             $this->addFlash("success", "Fournisseur enregistré avec succès!");
             
@@ -691,6 +712,8 @@ class AdminController extends AbstractController
 
         $this->manager->remove($provider);
         $this->manager->flush();
+
+        $this->addFlash("success", "Fournisseur supprimé avec succès!");
 
         return $this->redirectToRoute('admin_providers');
     }

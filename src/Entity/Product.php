@@ -116,8 +116,7 @@ class Product
     public $lengthArrays;
 
     /**
-     * @ORM\OneToMany(targetEntity=OrderProduct::class, mappedBy="products")
-     * @ORM\JoinColumn(onDelete="CASCADE")
+     * @ORM\OneToMany(targetEntity=OrderProduct::class, mappedBy="products", cascade={"persist","remove"}, orphanRemoval=true)
      */
     private $orderProducts;
 
