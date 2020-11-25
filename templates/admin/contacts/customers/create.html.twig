@@ -43,10 +43,7 @@
                     <!-- button  -->
                     <!-- ============================================================== -->
                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                        <button class="btn btn-success">
-                            <i class="fas fa-list"></i>
-                            <a href="{{path('admin_customers')}}" style="color:#fff">Liste des clients</a>
-                        </button>
+                            <a href="{{path('manager_customers')}}"  class="btn btn-success" style="color:#fff"><i class="fas fa-list"></i> Liste des clients</a>
                    </div>
                     <!-- ============================================================== -->
                     <!-- button  -->
@@ -91,6 +88,12 @@
                                         <div class="form-group">
                                             <label for="email">Email</label>
                                             {{form_row(form.email, {attr:{'class': 'form-control', 'placeholder':'Email client','id':'email','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="email">Date d'anniversaire</label>
+                                            {{form_row(form.birthDay, {attr:{'class': 'form-control', 'placeholder':'Date d\'anniversaire','id':'email','style':'height:50px'}})}}
                                         </div>
                                     </div>
                                      <div class="col-md-8">

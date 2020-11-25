@@ -2,8 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\Fund;
 use App\Entity\Shop;
 use App\Entity\Order;
+use App\Form\FundType;
 use App\Entity\Billing;
 use App\Entity\Invoice;
 use App\Entity\Payment;
@@ -11,10 +13,12 @@ use App\Entity\Product;
 use App\Entity\Category;
 use App\Entity\Customer;
 use App\Entity\Delivery;
+use App\Entity\Versement;
 use App\Form\BillingType;
 use App\Form\CustomerType;
 use App\Form\DeliveryType;
 use App\Entity\OrderSearch;
+use App\Form\VersementType;
 use App\Entity\OrderProduct;
 use App\Form\OrderSearchShopType;
 use App\Repository\ShopRepository;
@@ -68,6 +72,8 @@ class ManagerController extends AbstractController
         $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsSuccessfully($this->shop);
         $deliveriesIsNotSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsNotSuccessfully($this->shop);
 
+        $fundOperations = $this->manager->getRepository(Fund::class)->findBy(['manager' => $this->getUser()]);
+
         
         $deliveries = $this->manager->getRepository(Delivery::class)->shopDeliveries($this->shop);
 
@@ -80,9 +86,22 @@ class ManagerController extends AbstractController
    
         $totalPaid = 0;
         $totalAmount = 0;
-        foreach($payments as $payment){
+        $d = 0;
+        foreach($payments as $key => $payment){
+
             $totalPaid += $payment->getAmountPaid();
             $totalAmount += $payment->getAmount();
+        }
+
+
+        foreach($fundOperations as $fundOperation){
+            
+            if($fundOperation->getTransactionType()->getId() == 1){
+                $totalPaid += $fundOperation->getAmount();
+                $d += $fundOperation->getAmount();
+            }elseif($fundOperation->getTransactionType()->getId() == 2){
+                $totalPaid -= $fundOperation->getAmount();
+            }
         }
 
         $shop = $this->manager->getRepository(Shop::class)->find($this->shop);
@@ -213,8 +232,6 @@ class ManagerController extends AbstractController
      */
     public function productordersCreate(Request $request, SessionInterface $session, InvoiceService $invoiceService): Response
     {
-        
-        $invoice = $this->manager->getRepository(Invoice::class)->find(26);
 
         if($request->isXmlHttpRequest()){
            $response = '';
@@ -231,7 +248,7 @@ class ManagerController extends AbstractController
                                     'name'=>$product->getName(), 
                                     'code'=>$product->getId(), 
                                     'quantity'=>$request->get("quantity"), 
-                                    'price'=>$product->getSellingPrice()
+                                    'price'=> $product->getOnSaleAmount() != null ? $product->getOnSaleAmount() : $product->getSellingPrice()
                                      ]
                                 ];
                               
@@ -248,7 +265,8 @@ class ManagerController extends AbstractController
                                             'name'=>$product->getName(), 
                                             'code'=>$product->getId(), 
                                             'quantity'=>$request->get("quantity"), 
-                                            'price'=>$product->getSellingPrice()
+                                             'price'=> $product->getOnSaleAmount() != null ? $product->getOnSaleAmount() : $product->getSellingPrice()
+
                                         ]);
 
                                         $session->set('cart_item', $items);
@@ -256,7 +274,11 @@ class ManagerController extends AbstractController
                                         $i = 1;
                                             $response .= '<tr id="element-'.$product->getId().'">';
                                                 $response .= '<td>'.$product->getName().'</td>';
-                                                $response .= '<td>'.number_format($product->getSellingPrice()).'</td>';
+                                                if(is_null($product->getOnSaleAmount())){
+                                                    $response .= '<td>'.number_format($product->getSellingPrice()).'</td>';
+                                                   }else{
+                                                    $response .= '<td>'.number_format($product->getOnSaleAmount()).'</td>';
+                                                   }
                                                 $response .= '<td>'.$request->get('quantity').'</td>';
                                                 $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
                                             $response .= '</tr>';
@@ -272,7 +294,11 @@ class ManagerController extends AbstractController
                                     $i = 1;
                                     $response .= '<tr id="element-'.$product->getId().'">';
                                         $response .= '<td>'.$product->getName().'</td>';
-                                        $response .= '<td>'.number_format($product->getSellingPrice()).'</td>';
+                                        if(is_null($product->getOnSaleAmount())){
+                                            $response .= '<td>'.number_format($product->getSellingPrice()).'</td>';
+                                           }else{
+                                            $response .= '<td>'.number_format($product->getOnSaleAmount()).'</td>';
+                                           }
                                         $response .= '<td>'.$request->get('quantity').'</td>';
                                         $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
                                     $response .= '</tr>';
@@ -347,6 +373,7 @@ class ManagerController extends AbstractController
         $billing = new Billing();
         $invoice = new Invoice();
         $payment = new Payment();
+        $customer = new Customer();
 
         $today = date("Ymd");
         $rand = strtoupper(substr(uniqid(sha1(time())),0,4));
@@ -363,6 +390,17 @@ class ManagerController extends AbstractController
                 $this->manager->getConnection()->setAutoCommit(false);
 
             try{
+
+                if($billing->getCustomerType() == 1){
+                    $customer->setFirstname($billing->getCustomerFistname());
+                    $customer->setLastname($billing->getCustomerLastname());
+                    $customer->setPhone($billing->getCustomerPhone());
+                    $customer->setEmail($billing->getCustomerEmail());
+                    $customer->setBirthDay($billing->getCustomerBirthDay());
+                    $customer->setShops($this->shop);
+                }else{
+                    $customer = $billing->getCustomer();
+                }
 
                 $total = 0;
 
@@ -386,11 +424,15 @@ class ManagerController extends AbstractController
                     $productsx[] = $product;
                 }
 
+         
                 
                 $order->setSaleTotal($total);
                 $order->setOrderNumber($unique);
 
+                $customer->addOrder($order);
+
                 $this->manager->persist($order);
+                $this->manager->persist($customer);
 
                 if($billing->getDeliveryMan()){
                     $delivery = new Delivery();
@@ -430,20 +472,27 @@ class ManagerController extends AbstractController
                     $deliveryAmount = $billing->getDeliveryAmount();
                 }
 
+                if(!is_null($billing->getDiscount())){
+                    $total = $total - $billing->getDiscount();
+                }
+
             
                 $invoice->setOrders($order);
                 $invoice->setAmount($total);
+                $invoice->setDiscount($billing->getDiscount() != null ? $billing->getDiscount() : 0);
                 $invoice->setInvoiceNumber($unique);
-
+              
                 $this->manager->persist($invoice);
-
-    
 
 
                 $payment->setInvoice($invoice);
                 $payment->setPaymentType($billing->getPaymentType());
-                $payment->setAmountPaid($billing->getAmountPaid());
-                $payment->setAmount($invoice->getAmount() -($billing->getAmountPaid() + $deliveryAmount));
+                $payment->setAmountPaid($total);
+                if(is_null($billing->getDiscount())){
+                  $payment->setAmount(0);
+                }else{
+                    $payment->setAmount(0);
+                }
 
                 $this->manager->persist($payment);
 
@@ -660,10 +709,9 @@ class ManagerController extends AbstractController
      */
     public function customers()
     {
-        $customers = $this->manager->getRepository(Customer::class)->findBy(['shops' => $this->shop]);
 
         return $this->render("manager/contacts/customers/index.html.twig", [
-            'customers' => $this->manager->getRepository(Customer::class)->findBy(['shops' => $this->shop])
+            'customers' => $this->manager->getRepository(Customer::class)->findBy(['shops' => $this->shop],['createdAt' => 'DESC'])
         ]);
     }
 
@@ -786,6 +834,136 @@ class ManagerController extends AbstractController
             'customer' => $this->manager->getRepository(Customer::class)->find($customer),
             'payments' => $this->manager->getRepository(Payment::class)->customerOrders($customer)
         ]);
+    }
+
+
+     /**
+     * @Route("/versements", name="manager_versements", methods={"GET"})
+     * @return Response
+     */
+    public function versements()
+    {
+        return $this->render('manager/operations/versements/index.html.twig', [
+            'versements' => $this->manager->getRepository(Versement::class)->findBy(['manager' => $this->getUser()]),
+        ]);
+    }
+
+     /**
+     * @Route("/versements/create", name="manager_versements_create", methods={"GET", "POST"})
+     * @return Response
+     */
+    public function versementsCreate(Request $request)
+    {
+        $versement = new Versement();
+
+        $form = $this->createForm(VersementType::class, $versement);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $versement->setManager($this->getUser());
+
+            $this->manager->persist($versement);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Le versement a été effectué!");
+
+            return $this->redirectToRoute('manager_versements');
+        }
+
+        return $this->render('manager/operations/versements/create.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
+
+
+
+     /**
+     * @Route("/fund/operations", name="manager_fund_operations", methods={"GET"})
+     * @return Response
+     */
+    public function fundOperations()
+    {
+        return $this->render('manager/operations/fund/index.html.twig', [
+            'operations' => $this->manager->getRepository(Fund::class)->findBy(['manager' => $this->getUser()]),
+        ]);
+    }
+
+     /**
+     * @Route("/fund/operations/create", name="manager_fund_operations_create", methods={"GET", "POST"})
+     * @return Response
+     */
+    public function fundOperationsCreate(Request $request)
+    {
+        $operation = new Fund();
+
+        $form = $this->createForm(FundType::class, $operation);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $operation->setManager($this->getUser());
+
+            $this->manager->persist($operation);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Opération enregistrée !");
+
+            return $this->redirectToRoute('manager_fund_operations_create');
+        }
+
+        return $this->render('manager/operations/fund/create.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
+
+      /**
+     * @Route("/fund/operations/{id}/update", name="manager_fund_operations_update", methods={"GET", "POST"})
+     * @return Response
+     */
+    public function fundOperationsUpdate(Request $request, Fund $operation)
+    {
+
+        if(is_null($operation)){
+            $this->addFlash("danger", "Cette operation n'existe pas");
+        }
+
+        $form = $this->createForm(FundType::class, $operation);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $operation->setManager($this->getUser());
+
+            $this->manager->persist($operation);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Opération modifiée !");
+
+            return $this->redirectToRoute('manager_fund_operations_update', ['id' => $operation->getId()]);
+        }
+
+        return $this->render('manager/operations/fund/update.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
+
+     /**
+     * @Route("/fund/operations/{id}/delete", name="manager_fund_operations_delete", methods={"GET"})
+     * @return Response
+    */
+    public function fundOperationsDelete(Fund $operation)
+    {
+        if(is_null($operation)){
+            $this->addFlash("danger", "Cette operation n'existe pas");
+        }
+
+        $this->manager->remove($operation);
+        $this->manager->flush();
+
+        $this->addFlash('success', 'Opération supprimée!');
+
+        return $this->redirectToRoute("manager_fund_operations");
     }
 
 }

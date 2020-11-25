@@ -30,7 +30,6 @@ class BillingType extends AbstractType
             ->add('paymentType', EntityType::class, [
                 'class' => PaymentType::class,
                 'choice_label' => 'name',
-                'required' => false,
                 'placeholder' => 'Selectionner la méthode de paiement',
                 'label' => false
             ])
@@ -51,20 +50,28 @@ class BillingType extends AbstractType
                     return $qb;
                 },
                 'label' => false,
+                'required' => false,
                 'placeholder' => 'Selectionner un client',
             ])
-            ->add('amountPaid', IntegerType::class, [
-                'label' => false,
-                'required' => false,
-                'attr' => [
-                'placeholder' => 'Montant à payer',
-                ]
-            ])
+            // ->add('amountPaid', IntegerType::class, [
+            //     'label' => false,
+            //     'required' => false,
+            //     'attr' => [
+            //     'placeholder' => 'Montant à payer',
+            //     ]
+            // ])
             ->add('deliveryAmount', NumberType::class, [
                 'label' => false,
                 'required' => false,
                 'attr' => [
                 'placeholder' => 'Montant de livraison',
+                ]
+            ])
+            ->add('discount', NumberType::class, [
+                'label' => false,
+                'required' => false,
+                'attr' => [
+                'placeholder' => 'Remise',
                 ]
             ])
             ->add('recipient', TextType::class, [
@@ -90,6 +97,49 @@ class BillingType extends AbstractType
                     'Moi même' => 0,
                     'Autre' => 1,
                 ],
+            ])
+            ->add('customerType', ChoiceType::class, [
+                'label' => false,
+                'required' => false,
+                'placeholder' => 'Sélectionner un type client',
+                'choices'  => [
+                    'Ancien client' => 0,
+                    'Nouveau client' => 1,
+                ],
+            ])
+            ->add('customerFistname', TextType::class, [
+                'label' => false,
+                'required' => false,
+                'attr' => [
+                'placeholder' => 'Nom du client',
+                ]
+            ])
+            ->add('customerLastname', TextType::class, [
+                'label' => false,
+                'attr' => [
+                'placeholder' => 'Prénom du client',
+                ]
+            ])
+            ->add('customerPhone', TextType::class, [
+                'label' => false,
+                'required' => false,
+                'attr' => [
+                'placeholder' => 'Téléphone du client',
+                ]
+            ])
+            ->add('customerEmail', TextType::class, [
+                'label' => false,
+                'required' => false,
+                'attr' => [
+                'placeholder' => 'Email du client',
+                ]
+            ])
+            ->add('customerBirthDay', TextType::class, [
+                'label' => false,
+                'required' => false,
+                'attr' => [
+                'placeholder' => 'Date d\'anniversaire du client',
+                ]
             ])
             ->add('deliveryAddress', TextareaType::class, [
                 'label' => false,

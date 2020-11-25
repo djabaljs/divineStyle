@@ -9,6 +9,7 @@ class Billing{
 
     private $amountPaid;
 
+    private $discount;
 
     private $deliveryMan;
     
@@ -25,6 +26,13 @@ class Billing{
     private $recipientPhone;
 
     private $choice;
+
+    private $customerType;
+    private $customerFistname;
+    private $customerLastname;
+    private $customerPhone;
+    private $customerEmail;
+    private $customerBirthDay;
 
     /**
      * Get the value of paymentType
@@ -223,6 +231,165 @@ class Billing{
     public function setChoice($choice)
     {
         $this->choice = $choice;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of discount
+     */ 
+    public function getDiscount()
+    {
+        return $this->discount;
+    }
+
+    /**
+     * Set the value of discount
+     *
+     * @return  self
+     */ 
+    public function setDiscount($discount)
+    {
+        $this->discount = $discount;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of customerFistname
+     */ 
+    public function getCustomerFistname()
+    {
+        return $this->customerFistname;
+    }
+
+    /**
+     * Set the value of customerFistname
+     *
+     * @return  self
+     */ 
+    public function setCustomerFistname($customerFistname)
+    {
+        $this->customerFistname = $customerFistname;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of clientType
+     */ 
+    public function getClientType()
+    {
+        return $this->clientType;
+    }
+
+    /**
+     * Set the value of clientType
+     *
+     * @return  self
+     */ 
+    public function setClientType($clientType)
+    {
+        $this->clientType = $clientType;
+
+        return $this;
+    }
+    /**
+     * Get the value of customerPhone
+     */ 
+    public function getCustomerPhone()
+    {
+        return $this->customerPhone;
+    }
+
+    /**
+     * Set the value of customerPhone
+     *
+     * @return  self
+     */ 
+    public function setCustomerPhone($customerPhone)
+    {
+        $this->customerPhone = $customerPhone;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of customerEmail
+     */ 
+    public function getCustomerEmail()
+    {
+        return $this->customerEmail;
+    }
+
+    /**
+     * Set the value of customerEmail
+     *
+     * @return  self
+     */ 
+    public function setCustomerEmail($customerEmail)
+    {
+        $this->customerEmail = $customerEmail;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of customerBirthDay
+     */ 
+    public function getCustomerBirthDay()
+    {
+        return $this->customerBirthDay;
+    }
+
+    /**
+     * Set the value of customerBirthDay
+     *
+     * @return  self
+     */ 
+    public function setCustomerBirthDay($customerBirthDay)
+    {
+        $this->customerBirthDay = $customerBirthDay;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of customerType
+     */ 
+    public function getCustomerType()
+    {
+        return $this->customerType;
+    }
+
+    /**
+     * Set the value of customerType
+     *
+     * @return  self
+     */ 
+    public function setCustomerType($customerType)
+    {
+        $this->customerType = $customerType;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of customerLastname
+     */ 
+    public function getCustomerLastname()
+    {
+        return $this->customerLastname;
+    }
+
+    /**
+     * Set the value of customerLastname
+     *
+     * @return  self
+     */ 
+    public function setCustomerLastname($customerLastname)
+    {
+        $this->customerLastname = $customerLastname;
 
         return $this;
     }

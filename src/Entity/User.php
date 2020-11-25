@@ -114,6 +114,16 @@ class User implements UserInterface
      */
     private $attributes;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Versement::class, mappedBy="manager")
+     */
+    private $versements;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Fund::class, mappedBy="manager")
+     */
+    private $funds;
+
 
     public function __construct()
     {
@@ -126,6 +136,8 @@ class User implements UserInterface
         $this->widths = new ArrayCollection();
         $this->heights = new ArrayCollection();
         $this->attributes = new ArrayCollection();
+        $this->versements = new ArrayCollection();
+        $this->funds = new ArrayCollection();
     }
 
 
@@ -566,6 +578,68 @@ class User implements UserInterface
             // set the owning side to null (unless already changed)
             if ($attribute->getRegister() === $this) {
                 $attribute->setRegister(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Versement[]
+     */
+    public function getVersements(): Collection
+    {
+        return $this->versements;
+    }
+
+    public function addVersement(Versement $versement): self
+    {
+        if (!$this->versements->contains($versement)) {
+            $this->versements[] = $versement;
+            $versement->setManager($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVersement(Versement $versement): self
+    {
+        if ($this->versements->contains($versement)) {
+            $this->versements->removeElement($versement);
+            // set the owning side to null (unless already changed)
+            if ($versement->getManager() === $this) {
+                $versement->setManager(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Fund[]
+     */
+    public function getFunds(): Collection
+    {
+        return $this->funds;
+    }
+
+    public function addFund(Fund $fund): self
+    {
+        if (!$this->funds->contains($fund)) {
+            $this->funds[] = $fund;
+            $fund->setManager($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFund(Fund $fund): self
+    {
+        if ($this->funds->contains($fund)) {
+            $this->funds->removeElement($fund);
+            // set the owning side to null (unless already changed)
+            if ($fund->getManager() === $this) {
+                $fund->setManager(null);
             }
         }
 

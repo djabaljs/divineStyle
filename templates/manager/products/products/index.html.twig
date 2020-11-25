@@ -76,6 +76,7 @@
                                                 <th>Noms</th>
                                                 <th>Catégories</th>
                                                 <th>Prix  de vente</th>
+                                                <th>Prix  promo</th>
                                                 <th>Qt en stock</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -96,6 +97,11 @@
                                                 {{product.category.name}}
                                                 </td>
                                                 <td>{{product.sellingPrice|format_currency('XOF')}}</td>
+                                                {% if product.onSaleAmount is not null %}
+                                                <td>{{product.getOnSaleAmount|format_currency('XOF')}}</td>
+                                                {% else %}
+                                                <td>{{ 0|format_currency('XOF')}}</td>
+                                                {% endif %}
                                                 <td {% if product.minimumStock == product.quantity or product.quantity == 0  %} style="background:red;color:#FFF"{% else %} style="background:green; color:#FFF"{% endif %}>
                                                  {{ product.quantity }}
                                                 </td>
@@ -112,6 +118,7 @@
                                                 <th>Noms</th>
                                                 <th>Catégories</th>
                                                 <th>Prix  de vente</th>
+                                                <th>Prix  promo</th>
                                                 <th>Qt en stock</th>
                                                 <th>Actions</th>
                                             </tr>

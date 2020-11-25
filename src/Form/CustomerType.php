@@ -4,10 +4,11 @@ namespace App\Form;
 
 use App\Entity\Customer;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\EmailType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\EmailType;
 
 class CustomerType extends AbstractType
 {
@@ -27,6 +28,14 @@ class CustomerType extends AbstractType
             ->add('email', EmailType::class, [
                 'label' => false,
                 'required' => false
+            ])
+            ->add('birthDay', DateType::class, [
+                'label' => false,
+                'attr' => [
+                    'placeholder' => 'Date d\'anniversaire'
+                ],
+                'widget' => 'single_text',
+                'input'  => 'datetime_immutable'
             ])
         ;
     }

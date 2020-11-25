@@ -46,7 +46,7 @@ security:
           - { path: ^/user/admin/dashboard, roles: ROLE_ADMIN }
           - { path: ^/user/manager/dashboard, roles: ROLE_MANAGER }
           - { path: ^/user/delivery-man/dashboard, roles: ROLE_DELIVERY_MAN }
-          - { path: ^/user/super-admin/dashboard, roles: ROLE_SUPER_ADMIN }
+          - { path: ^/user/admin/dashboard, roles: ROLE_SUPER_ADMIN }
 
 
 

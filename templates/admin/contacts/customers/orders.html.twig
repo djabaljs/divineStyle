@@ -10,7 +10,7 @@
 {% endblock %}
 {% block body %}
 <div class="container-fluid dashboard-content ">
-      <!-- ================admin======================================= -->
+      <!-- ============================================================== -->
                 <!-- pageheader -->
                 <!-- ============================================================== -->
                 <div class="row">
@@ -64,8 +64,8 @@
                                             <tr>
                                                 <th>N°</th>
                                                 <th>N° commande</th>
-                                                <th>Montant Payer</th>
-                                                <th>Reste à Payer</th>
+                                                <th>Montant</th>
+                                                <th>Remise</th>
                                                 <th>Date</th>
                                                 <th>Heure</th>
                                                 <th>Actions</th>
@@ -77,7 +77,11 @@
                                                 <td>{{loop.index}}</td>
                                                 <td>{{payment.invoice.orders.orderNumber}}</td>
                                                 <td>{{payment.invoice.orders.saleTotal| format_currency('XOF') }}</td>
-                                                <td>{{payment.amount| format_currency('XOF') }}</td>
+                                                 {% if payment.invoice.discount is not null %}
+                                                <td>{{payment.invoice.discount|format_currency('XOF')}}</td>
+                                                {% else %}
+                                                <td>{{ 0|format_currency('XOF')}}</td>
+                                                {% endif %}
                                                 <td>{{payment.invoice.orders.createdAt|date('Y-m-d')}}</td>
                                                 <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
                                                  <td>
@@ -93,8 +97,8 @@
                                               <tr>
                                                 <th>N°</th>
                                                 <th>N° commande</th>
-                                                <th>Montant Payer</th>
-                                                <th>Reste à Payer</th>
+                                                <th>Montant</th>
+                                                <th>Remise</th>
                                                 <th>Date</th>
                                                 <th>Heure</th>
                                                 <th>Actions</th>

@@ -32,7 +32,7 @@ class SecurityController extends AbstractController
         } elseif (in_array('ROLE_DELIVERY_MAN', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles())) {
             return $this->redirectToRoute('delivery_man_dashboard');
         } elseif (in_array('ROLE_SUPER_ADMIN', $user->getRoles()) && in_array('ROLE_USER', $user->getRoles())) {
-            return $this->redirectToRoute('super_admin_dashboard');
+            return $this->redirectToRoute('admin_dashboard');
         }
         }
         // get the login error if there is one

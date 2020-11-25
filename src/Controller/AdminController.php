@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Fund;
 use App\Entity\Shop;
 use App\Entity\User;
 use App\Entity\Color;
@@ -9,6 +10,7 @@ use App\Entity\Order;
 use App\Entity\Width;
 use App\Entity\Height;
 use App\Entity\Length;
+use App\Form\FundType;
 use App\Form\ShopType;
 use App\Form\UserType;
 use App\Entity\Billing;
@@ -24,6 +26,7 @@ use App\Entity\Provider;
 use App\Form\HeightType;
 use App\Form\LengthType;
 use App\Entity\Attribute;
+use App\Entity\Versement;
 use App\Form\BillingType;
 use App\Form\ProductType;
 use App\Form\CategoryType;
@@ -35,6 +38,7 @@ use App\Entity\DeliveryMan;
 use App\Entity\OrderSearch;
 use App\Entity\PaymentType;
 use App\Form\AttributeType;
+use App\Form\VersementType;
 use App\Entity\OrderProduct;
 use App\Form\ShopUpdateType;
 use App\Entity\Replenishment;
@@ -43,6 +47,7 @@ use App\Form\PaymentTypeType;
 use App\Entity\ProviderProduct;
 use App\Form\AdminDeliveryType;
 use App\Form\AdministratorType;
+use App\Form\ProductUpdateType;
 use App\Form\ReplenishmentType;
 use App\Repository\UserRepository;
 use App\Form\OrderSearchByShopType;
@@ -89,7 +94,7 @@ class AdminController extends AbstractController
         $payments = $this->manager->getRepository(Payment::class)->findAll();
         $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->findBy(['status' => 1]);
         $deliveries = $this->manager->getRepository(Delivery::class)->findAll();
-
+        $fundOperations = $this->manager->getRepository(Fund::class)->findAll();
         $deliveryAmount = 0;
         
         foreach($deliveries as $delivery){
@@ -99,9 +104,21 @@ class AdminController extends AbstractController
    
         $totalPaid = 0;
         $totalAmount = 0;
-        foreach($payments as $payment){
+        foreach($payments as $key => $payment){
+
             $totalPaid += $payment->getAmountPaid();
             $totalAmount += $payment->getAmount();
+        }
+
+
+
+        foreach($fundOperations as $fundOperation){
+            
+            if($fundOperation->getTransactionType()->getId() == 1){
+                $totalPaid += $fundOperation->getAmount();
+            }elseif($fundOperation->getTransactionType()->getId() == 2){
+                $totalPaid -= $fundOperation->getAmount();
+            }
         }
 
         return $this->render('admin/dashboard.html.twig', [
@@ -208,6 +225,9 @@ class AdminController extends AbstractController
                             $lengthArrays[$key] = $length->getName();
                         }
 
+                        if(is_null($product->getOnSaleAmount()) || $product->getOnSaleAmount() == 0.0){
+                            $productC->setOnSaleAmount(null);
+                        }
                         $product->colorArrays = $colorArrays;
                         $product->lengthArrays = $lengthArrays;
 
@@ -299,15 +319,12 @@ class AdminController extends AbstractController
      */
     public function updateProduct(Request $request, Product $product): Response
     {   
-        $color = new Color();
-        $length = new Length();
 
-        $product = $this->manager->getRepository(Product::class)->findOneBy(['slug' => $product->getSlug()]);
-        
+
         if(is_null($product))
             throw $this->createNotFoundException("Ce produit n'existe pas");
         
-        $form = $this->createForm(ProductType::class, $product);
+        $form = $this->createForm(ProductUpdateType::class, $product);
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
@@ -315,31 +332,7 @@ class AdminController extends AbstractController
             
             if($request->get('shopQuantity')){
 
-                $isVariable = false;
-                if($product->getIsVariable()){
-
-                    $colors = $this->manager->getRepository(Color::class)->getProductColors($product);
-                    $lengths = $this->manager->getRepository(Length::class)->getProductLengths($product);
-
-                    foreach($product->getColors() as $key => $color){
-                        if(!in_array($color, $colors)){
-                            $colors[] = $color;
-                        }
-
-                    }
-
-                    foreach($product->getLengths() as $key => $length){
-                        if(!in_array($length, $lengths)){
-                            $lengths[] = $length;
-                        }
-
-                    }
-
-                }
-                
-                // $product->setColors($colors);
-                // $product->setLengths($lengths)
-                // dd($product);
+              
                 $totalQuantity = 0;
                 foreach($request->get('shopQuantity') as $key => $quantities){
                         foreach($quantities as $quantity){
@@ -347,21 +340,57 @@ class AdminController extends AbstractController
                         $totalQuantity += $quantity;
                         if($key != 0){
                             $shop = $this->manager->getRepository(Shop::class)->find($key);
+
                                 foreach($shop->getProducts() as $productC){
                                     if($product->getSlug() == $productC->getSlug()){
-
-                                        $category = $this->manager->getRepository(Category::class)->find($request->get('category'));
 
                                         $slugify = new Slugify();
                         
                                         $productC->setSlug($slugify->slugify($product->getName()));
-                                        $productC->setCategory($category);
                                         $productC->setQuantity($quantity);
                                         $productC->setName($product->getName());
-                                      
+                                        $productC->setProvider($product->getProvider());
+                                        $productC->setMinimumStock($product->getMinimumStock());
+                                        $productC->setSellingPrice($product->getSellingPrice());
+                                        $productC->setBuyingPrice($product->getBuyingPrice());
+                                        $productC->setOnSaleAmount($product->getOnSaleAmount());
+
+                                        if(is_null($product->getOnSaleAmount()) || $product->getOnSaleAmount() == 0.0){
+                                            $productC->setOnSaleAmount(null);
+                                        }
+
                                         $this->manager->persist($productC);
                                         $this->manager->flush(); 
 
+                                    }else{
+
+                                         $products = $this->manager->getRepository(Product::class)->findAll();
+
+                                         foreach($products as $productx){
+
+                                            $slugify = new Slugify();
+                                            $productx->setName($product->getName());
+                                            $productx->setSlug($slugify->slugify($product->getName()));
+                                            $productC->setQuantity($quantity);
+                                            $productC->setProvider($product->getProvider());
+                                            $productC->setMinimumStock($product->getMinimumStock());
+                                            $productC->setSellingPrice($product->getSellingPrice());
+                                            $productC->setBuyingPrice($product->getBuyingPrice());
+                                            $productC->setOnSaleAmount($product->getOnSaleAmount());
+
+                                            if(is_null($product->getOnSaleAmount())){
+                                                $productC->setOnSaleAmount(null);
+                                            }
+
+                                 
+
+
+                                            $this->manager->persist($productx);
+                                            $this->manager->flush(); 
+                                         }
+
+                                          
+    
                                     }
                                 }
                         }
@@ -371,8 +400,7 @@ class AdminController extends AbstractController
               
                 $product->setQuantity($totalQuantity);
        
-                // $this->api->put('products',$product);
-
+                $this->api->put('products',$product);
 
                 $this->addFlash("success", "Produit modifié avec succès!");
 
@@ -564,7 +592,7 @@ class AdminController extends AbstractController
     public function customers()
     {
         return $this->render("admin/contacts/customers/index.html.twig", [
-            'customers' => $this->manager->getRepository(Customer::class)->findAll()
+            'customers' => $this->manager->getRepository(Customer::class)->findBy([],['createdAt' => 'DESC'])
         ]);
     }
 
@@ -1702,7 +1730,7 @@ class AdminController extends AbstractController
                                     'name'=>$product->getName(), 
                                     'code'=>$product->getId(), 
                                     'quantity'=>$request->get("quantity"), 
-                                    'price'=>$product->getSellingPrice()
+                                    'price'=> $product->getOnSaleAmount() != null ? $product->getOnSaleAmount() : $product->getSellingPrice()
                                      ]
                                 ];
                               
@@ -1719,7 +1747,7 @@ class AdminController extends AbstractController
                                             'name'=>$product->getName(), 
                                             'code'=>$product->getId(), 
                                             'quantity'=>$request->get("quantity"), 
-                                            'price'=>$product->getSellingPrice()
+                                            'price'=> $product->getOnSaleAmount() != null ? $product->getOnSaleAmount() : $product->getSellingPrice()
                                         ]);
 
                                         $session->set('cart_item', $items);
@@ -1727,7 +1755,11 @@ class AdminController extends AbstractController
                                         $i = 1;
                                             $response .= '<tr id="element-'.$product->getId().'">';
                                                 $response .= '<td>'.$product->getName().'</td>';
-                                                $response .= '<td>'.number_format($product->getSellingPrice()).'</td>';
+                                                if(is_null($product->getOnSaleAmount())){
+                                                 $response .= '<td>'.number_format($product->getSellingPrice()).'</td>';
+                                                }else{
+                                                 $response .= '<td>'.number_format($product->getOnSaleAmount()).'</td>';
+                                                }
                                                 $response .= '<td>'.$request->get('quantity').'</td>';
                                                 $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
                                             $response .= '</tr>';
@@ -1743,7 +1775,11 @@ class AdminController extends AbstractController
                                     $i = 1;
                                     $response .= '<tr id="element-'.$product->getId().'">';
                                         $response .= '<td>'.$product->getName().'</td>';
-                                        $response .= '<td>'.number_format($product->getSellingPrice()).'</td>';
+                                        if(is_null($product->getOnSaleAmount())){
+                                            $response .= '<td>'.number_format($product->getSellingPrice()).'</td>';
+                                           }else{
+                                            $response .= '<td>'.number_format($product->getOnSaleAmount()).'</td>';
+                                           }
                                         $response .= '<td>'.$request->get('quantity').'</td>';
                                         $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
                                     $response .= '</tr>';
@@ -2541,6 +2577,120 @@ class AdminController extends AbstractController
         $this->addFlash("success", "Administrateur supprimé avec succès");
 
         return $this->redirectToRoute("admin_administrators");
+    }
+
+
+      /**
+     * @Route("/versements", name="admin_versements", methods={"GET"})
+     * @return Response
+     */
+    public function versements()
+    {
+        return $this->render('admin/operations/versements/index.html.twig', [
+            'versements' => $this->manager->getRepository(Versement::class)->findAll(),
+        ]);
+    }
+
+     /**
+     * @Route("/versements/{id}/update", name="admin_versements_update", methods={"GET", "POST"})
+     * @return Response
+     */
+    public function versementsUpdate(Request $request, Versement $versement)
+    {
+
+        $form = $this->createForm(VersementType::class, $versement);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $this->manager->persist($versement);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Le versement a été modifié!");
+
+            return $this->redirectToRoute('admin_versements');
+        }
+
+        return $this->render('admin/operations/versements/update.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
+
+
+    /**
+     * @Route("/versements/{id}/delete", name="admin_versements_delete", methods={"GET"})
+     * @return Response
+    */
+    public function versementsDelete(Versement $versement)
+    {
+        if(is_null($versement)){
+            $this->addFlash("danger", "Ce versement n'existe pas");
+        }
+
+        $this->manager->remove($versement);
+        $this->manager->flush();
+
+        $this->addFlash('success', 'Versement supprimé!');
+
+        return $this->redirectToRoute("admin_versements");
+    }
+
+         /**
+     * @Route("/fund/operations", name="admin_fund_operations", methods={"GET"})
+     * @return Response
+     */
+    public function fundOperations()
+    {
+        return $this->render('admin/operations/fund/index.html.twig', [
+            'operations' => $this->manager->getRepository(Fund::class)->findBy([],['createdAt' => 'DESC']),
+        ]);
+    }
+
+      /**
+     * @Route("/fund/operations/{id}/update", name="admin_fund_operations_update", methods={"GET", "POST"})
+     * @return Response
+     */
+    public function fundOperationsUpdate(Request $request, Fund $operation)
+    {
+
+        if(is_null($operation)){
+            $this->addFlash("danger", "Cette operation n'existe pas");
+        }
+
+        $form = $this->createForm(FundType::class, $operation);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $this->manager->persist($operation);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Opération modifiée !");
+
+            return $this->redirectToRoute('admin_fund_operations_update', ['id' => $operation->getId()]);
+        }
+
+        return $this->render('admin/operations/fund/update.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
+
+     /**
+     * @Route("/fund/operations/{id}/delete", name="admin_fund_operations_delete", methods={"GET"})
+     * @return Response
+    */
+    public function fundOperationsDelete(Fund $operation)
+    {
+        if(is_null($operation)){
+            $this->addFlash("danger", "Cette operation n'existe pas");
+        }
+
+        $this->manager->remove($operation);
+        $this->manager->flush();
+
+        $this->addFlash('success', 'Opération supprimée!');
+
+        return $this->redirectToRoute("admin_fund_operations");
     }
 
 }

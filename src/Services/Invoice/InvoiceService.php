@@ -3,12 +3,14 @@
 
 namespace App\Services\Invoice;
 
+use App\Form\PaymentTypeType;
 use App\Repository\DeliveryRepository;
 use App\Repository\InvoiceRepository;
 use Mpdf\Mpdf;
 use Symfony\Component\Asset\PathPackage;
 use App\Repository\OrderProductRepository;
 use App\Repository\PaymentRepository;
+use App\Repository\PaymentTypeRepository;
 use Symfony\Component\Asset\VersionStrategy\StaticVersionStrategy;
 
 
@@ -46,9 +48,17 @@ class InvoiceService{
     protected $deliveryRepository;
 
 
+    /**
+     * @var paymentTypeRepository();
+     */
+
+    protected $paymentTypeRepository;
 
 
-     public function __construct(OrderProductRepository $orderProductRepository, PaymentRepository $paymentRepository, DeliveryRepository $deliveryRepository)
+
+
+
+     public function __construct(OrderProductRepository $orderProductRepository, PaymentRepository $paymentRepository, DeliveryRepository $deliveryRepository, PaymentTypeRepository $paymentTypeRepository)
      {
          $this->mpdf = new Mpdf([
             'margin_left' => 20,
@@ -60,6 +70,7 @@ class InvoiceService{
          $this->orderProductRepository = $orderProductRepository;
          $this->paymentRepository = $paymentRepository;
          $this->deliveryRepository = $deliveryRepository;
+         $this->paymentTypeRepository = $paymentTypeRepository;
      }
 
 
@@ -73,66 +84,62 @@ class InvoiceService{
         $shop = $invoice->getOrders()->getShop();
         $customer = $invoice->getOrders()->getCustomer();
         $payment = $this->paymentRepository->findOneBy(['invoice' => $invoice]);
+   
         $paymentType = $payment->getPaymentType()->getId();
+        $paymentTypes = $this->paymentTypeRepository->findAll();
         $delivery = $this->deliveryRepository->findOneBy(['order' => $invoice->getOrders()]);
         $date = date_format($invoice->getCreatedAt(), 'd/m/Y');
         $hour = date_format($invoice->getCreatedAt(), 'H:m');
-
+        $discount = $invoice->getDiscount() != null ? $invoice->getDiscount() : 0;
         $content = '';
 
+      
        foreach($orders as $key => $order){
          $key += 1;
          $content .= '<tr>';
          $content .= '<td>'.$key.'</td>';
          $content .= '<td>'.$order->getProducts()->getName().'</td>';
-         $content .= '<td>'.number_format($order->getProducts()->getSellingPrice()).'</td>';
+         if(is_null($order->getProducts()->getOnSaleAmount())){
+            $content .= '<td>'.number_format($order->getProducts()->getSellingPrice() - $discount).'</td>';
+         }else{
+            $content .= '<td>'.number_format($order->getProducts()->getOnSaleAmount()).'</td>';
+         }
          $content .= '<td>'.$order->getQuantity().'</td>';
-         $content .= '<td>'. number_format($order->getQuantity() * $order->getProducts()->getSellingPrice()) .'</td>';
+         if(is_null($order->getProducts()->getOnSaleAmount()) || $order->getProducts()->getOnSaleAmount() == 0.0){
+            $content .= '<td align=right>'. number_format($order->getQuantity() * $order->getProducts()->getSellingPrice() - $discount) .'</td>';
+         }else{
+            $content .= '<td align=right>'. number_format($order->getQuantity() * $order->getProducts()->getOnSaleAmount()) .'</td>';
+         }
          $content .= '</tr>';
 
        }
-
-     
 
        $deliveryAmount  = 0;
        $deliveryBody ='';
 
        if(!is_null($delivery)){
-           $deliveryAmount = $delivery->getAmountPaid();
-           $deliveryBody = '
-           <tr>
-           <td width="45%"><span style="font-size: 7pt; color: #555555; font-family: sans;">INFORMATIONS DE LA LIVRAISON:</span><br /><br />Nom &
-                Prénoms:  '.$delivery->getRecipient().'<br />Contacts:'   .$delivery->getRecipientPhone().'<br />Commune:   '.$delivery->getAddress().'<br /></td>
-           </tr>
-           ';
-       }
-
-       $paymentBody = '';
-       if($paymentType === 4){
-           $paymentBody ='
-                Mode de paiement: <input type="checkbox" checked="checked">Espèce <input type="checkbox">Carte de crédit <input
-                type="checkbox">Chèque<br/><br/>
-                Avance: '.number_format($payment->getAmountPaid()).' <br/><br/>
-                Reste à payer: '.number_format($payment->getAmount()).' <br/><br/>
-                NB: Les vêtements ne sont ni repris, ni échangés
-           ';
-       }elseif($paymentType === 5){
-            $paymentBody = '
-                Mode de paiement: <input type="checkbox">Espèce <input type="checkbox">Carte de crédit <input
-                type="checkbox" checked="checked">Chèque<br/><br/>
-                Avance: '.number_format($payment->getAmountPaid()).' <br/><br/>
-                Reste à payer: '.number_format($payment->getAmount()).' <br/><br/>
-                NB: Les vêtements ne sont ni repris, ni échangés
+        $deliveryAmount = $delivery->getAmountPaid();
+        $deliveryBody = '
+        <tr>
+        <td width="45%"><span style="font-size: 7pt; color: #555555; font-family: sans;">INFORMATIONS DE LA LIVRAISON:</span><br /><br />Nom &
+             Prénoms:  '.$delivery->getRecipient().'<br />Contacts:'   .$delivery->getRecipientPhone().'<br />Commune:   '.$delivery->getAddress().'<br /></td>
+        </tr>
         ';
-       }elseif($paymentType === 6){
-        $paymentBody = '
-            Mode de paiement: <input type="checkbox">Espèce <input type="checkbox" checked="checked">Carte de crédit <input
-            type="checkbox">Chèque<br/><br/>
-            Avance: '.number_format($payment->getAmountPaid()).' <br/><br/>
-                Reste à payer: '.number_format($payment->getAmount()).' <br/><br/>
-                NB: Les vêtements ne sont ni repris, ni échangés
-            ';
         }
+
+       $paymentBody = 'Mode de paiement:  ';
+       foreach($paymentTypes as $paymentTypex){
+          if($paymentTypex->getId() === $paymentType){
+            $paymentBody .= ' <input type="checkbox" checked="checked">'.$paymentTypex->getName().' ';
+          }else{
+            $paymentBody .= '<input type="checkbox">'.$paymentTypex->getName().' ';
+          }
+       }
+       $paymentBody .= '<br/><br/>
+        Avance: '.number_format(($payment->getAmountPaid() + $deliveryAmount) - $discount).' <br/><br/>
+        Reste à payer: '.number_format($payment->getAmount()).' <br/><br/>
+        NB: Les vêtements ne sont ni repris, ni échangés
+       ';
 
        $this->html = '
         <html>
@@ -229,14 +236,14 @@ class InvoiceService{
                    
                     <tr>
                         <td class="blanktotal" colspan="3" rowspan="4">
-                        <br /><br /><br /><br /><br /><br /><br />  '.$paymentBody.'><br /><br /><br /><br /><br /><br />
+                        <br /><br /><br /><br /><br /><br /><br />  '.$paymentBody.'<br /><br /><br /><br /><br /><br />
                         </td>
                         <td class="totals">Sous-total:</td>
                         <td class="totals cost">'.number_format($invoice->getOrders()->getSaleTotal()).'</td>
                     </tr>
                     <tr>
-                        <td class="totals">Taxe:</td>
-                        <td class="totals cost">'.number_format(0).'</td>
+                        <td class="totals">Remise:</td>
+                        <td class="totals cost">'.number_format($discount).'</td>
                     </tr>
                     <tr>
                         <td class="totals">Livraison:</td>
