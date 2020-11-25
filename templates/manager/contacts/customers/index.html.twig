@@ -95,7 +95,8 @@
                                                 <td>{{customer.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
                                                 <td>
                                                 <a href="{{path('manager_customers_update', {id: customer.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                                <a href="{{path('manager_customers_delete', {id: customer.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                                                <a href="{{path('manager_customer_orders', {id: customer.id})}}" class="btn btn-success"><i class="fas fa-file"></i></a>
+                                                {# <a href="{{path('manager_customers_delete', {id: customer.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a> #}
                                                 </td>
                                             </tr>
                                            {% endfor %}

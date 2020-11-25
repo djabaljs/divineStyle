@@ -14,7 +14,9 @@ use App\Entity\Delivery;
 use App\Form\BillingType;
 use App\Form\CustomerType;
 use App\Form\DeliveryType;
+use App\Entity\OrderSearch;
 use App\Entity\OrderProduct;
+use App\Form\OrderSearchShopType;
 use App\Repository\ShopRepository;
 use App\Repository\PaymentRepository;
 use App\Services\Invoice\InvoiceService;
@@ -61,8 +63,8 @@ class ManagerController extends AbstractController
   {
   
 
-        $payments = $this->manager->getRepository(Payment::class)->shopOrdersLastFiveSuccessfully($this->shop);
-        
+        $fivePayments = $this->manager->getRepository(Payment::class)->shopOrdersLastFiveSuccessfully($this->shop);
+        $payments = $this->manager->getRepository(Payment::class)->shopOrdersSuccessfully($this->shop);
         $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsSuccessfully($this->shop);
         $deliveriesIsNotSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsNotSuccessfully($this->shop);
 
@@ -89,6 +91,7 @@ class ManagerController extends AbstractController
             'totalPaid' => $totalPaid,
             'deliveryIsSuccessfully' => $deliveriesSuccessfully,
             'deliveryIsNotSuccessfully' => $deliveriesIsNotSuccessfully,
+            'fivePayments' => $fivePayments,
             'payments' => $payments,
             'deliveries' => $deliveries,
             'customers' => $shop->getCustomers(),
@@ -360,27 +363,33 @@ class ManagerController extends AbstractController
                 $this->manager->getConnection()->setAutoCommit(false);
 
             try{
+
                 $total = 0;
 
                 $order->setNumber('123');
                 $order->setShop($this->shop);
                 $order->setCustomer($billing->getCustomer());
                 $order->setManager($this->getUser());
-
+                $productsx = [];
                 foreach($session->get('cart_item', []) as $item){
                     $orderProduct = new OrderProduct();
 
                     $total += $item['price'] * $item['quantity'];
+
                     $product = $this->manager->getRepository(Product::class)->find($item['code']);
+                    
                     $product->setQuantity($product->getQuantity() > 0 ? $product->getQuantity() - $item['quantity'] : 0);
                     $orderProduct->setProducts($product);
                     $orderProduct->setQuantity($item['quantity']);
-                    
                     $order->addOrderProduct($orderProduct);
+                    
+                    $productsx[] = $product;
                 }
 
+                
                 $order->setSaleTotal($total);
                 $order->setOrderNumber($unique);
+
                 $this->manager->persist($order);
 
                 if($billing->getDeliveryMan()){
@@ -397,6 +406,7 @@ class ManagerController extends AbstractController
                 $unique = $today . $rand;
                 
                 $deliveryAmount = 0;
+
                 if(!is_null(($billing->getDeliveryMan()))){
                     
                     $delivery->setOrder($order);
@@ -434,27 +444,49 @@ class ManagerController extends AbstractController
                 $payment->setPaymentType($billing->getPaymentType());
                 $payment->setAmountPaid($billing->getAmountPaid());
                 $payment->setAmount($invoice->getAmount() -($billing->getAmountPaid() + $deliveryAmount));
+
                 $this->manager->persist($payment);
 
-                $quantity = 0;
-                foreach($session->get('cart_item',[]) as $item){
-                    $productsC = $this->manager->getRepository(Product::class)->findBy(['slug' => $product->getSlug()]);
-                    foreach($productsC as $product){
-                        $quantity += $product->getQuantity();
-                        if($item['code'] == $product->getId()){
-                           $product->setQuantity($product->getQuantity());
-                           $this->manager->persist($product);
-                        }
-                    }
-                    $productC = clone($product);
 
-                    $productC->setQuantity($quantity);
-
-                    $this->api->putQ('products', $productC);
+                foreach($productsx as $product){
+                    $this->manager->persist($product);
                 }
-                
+
                 $this->manager->flush();
                 $this->manager->commit();
+
+                                
+                $sameProducts = [];
+                $sameProductsName = [];
+                $products = [];
+
+                foreach($session->get('cart_item',[]) as $item){
+                    
+                    $products = $this->manager->getRepository(Product::class)->findBy(['name' => $item['name']]);
+                    foreach($products as $product){
+
+                        if(!in_array($product->getSlug(), $sameProductsName)){
+    
+                            $sameProductsName[] = $product->getSlug();
+    
+                            $sameProducts[$product->getSlug()] = $product;
+    
+                        }else{
+                           
+                            $productx =  $sameProducts[$product->getSlug()];
+    
+                            $productx->setQuantity($productx->getQuantity()  + $product->getQuantity());
+
+                            $sameProducts[$product->getSlug()] = $productx;
+                        }
+                    }
+                }
+
+
+                foreach($sameProducts as $product){
+                    $this->api->putQ('products', $product);
+                }
+
                 $session->remove('cart_item');
 
                 $logo = $request->getUriForPath('/concept/assets/images/logo.jpg');
@@ -628,6 +660,8 @@ class ManagerController extends AbstractController
      */
     public function customers()
     {
+        $customers = $this->manager->getRepository(Customer::class)->findBy(['shops' => $this->shop]);
+
         return $this->render("manager/contacts/customers/index.html.twig", [
             'customers' => $this->manager->getRepository(Customer::class)->findBy(['shops' => $this->shop])
         ]);
@@ -711,6 +745,47 @@ class ManagerController extends AbstractController
         $this->manager->flush();
 
         return $this->redirectToRoute('manager_customers');
+    }
+
+      /**
+     * @Route("/reports", name="manager_reports", methods={"GET", "POST"})
+     * @method report
+     * @param Request $request
+     * @return Response
+     */
+    public function reports(Request $request)
+    {
+        // $chart = new Chart();
+        $orderSearch = new OrderSearch();
+        $results = [];
+
+        $form = $this->createForm(OrderSearchShopType::class, $orderSearch);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $results = $this->manager->getRepository(Payment::class)->searchPayments($this->shop,$orderSearch->getStart(),$orderSearch->getEnd(),$orderSearch->getPaymentType());
+        }
+
+
+        return $this->render('manager/reports/index.html.twig', [
+            'results' => $results,
+            'form' => $form->createView()
+        ]);
+    }
+
+
+    /**
+     * @Route("/customer/{id}/orders", name="manager_customer_orders", methods={"GET"})
+     * @param Request $request
+     * @return Response
+     */
+    public function customersOrders(Customer $customer)
+    {
+         
+        return $this->render('manager/contacts/customers/orders.html.twig', [
+            'customer' => $this->manager->getRepository(Customer::class)->find($customer),
+            'payments' => $this->manager->getRepository(Payment::class)->customerOrders($customer)
+        ]);
     }
 
 }

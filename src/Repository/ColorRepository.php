@@ -3,8 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\Color;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use App\Entity\Product;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @method Color|null find($id, $lockMode = null, $lockVersion = null)
@@ -47,4 +48,16 @@ class ColorRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    public function getProductColors(Product $product)
+    {
+        $qb = $this->createQueryBuilder('c');
+        $qb 
+            ->innerJoin('c.products', 'p')
+            ->where('p = :product')
+            ->setParameter('product', $product)
+            ;
+
+        return $qb->getQuery()->getResult();
+    }
 }

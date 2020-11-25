@@ -102,7 +102,8 @@ class Product
     private $minimumStock;
 
     /**
-     * @ORM\ManyToMany(targetEntity="Color", mappedBy="products")
+     * @ORM\ManyToMany(targetEntity="Color", mappedBy="products", cascade={"persist"})
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $colors;
 
@@ -128,6 +129,7 @@ class Product
 
     /**
      * @ORM\ManyToOne(targetEntity=Provider::class, inversedBy="products", cascade={"persist"})
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $provider;
 
@@ -359,6 +361,17 @@ class Product
         return $this;
     }
 
+    public function setLengths($length)
+    {
+        foreach($this->getLengths() as $key =>  $length){
+            if(in_array($length, $this->getLengths())){
+                $this->$lengths[$key] = $product;
+            }
+        }
+
+        return $this->lengths;
+    }
+
     public function setColors($colors) {
        $colorArrays = [];
 
@@ -367,22 +380,7 @@ class Product
        }
 
         $this->colors = new ArrayCollection($colorArrays);
-        // foreach($this->colors as $id => $color) {
-          
-        //     if(!isset($colors[$id])) {
-        //         //remove from old because it doesn't exist in new
-        //         $this->colors->remove($id);
-        //     }
-        //     else {
-        //         //the product already exists do not overwrite
-        //         unset($colors[$id]);
-        //     }
-        // }
-
-        // //add products that exist in new but not in old
-        // foreach($colors as $id => $color) {
-        //     $this->color[$id] = $color;
-        // }    
+ 
     }
 
     public function getOrder(): ?Order

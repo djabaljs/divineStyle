@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Shop;
 use App\Entity\Payment;
+use App\Entity\Customer;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
@@ -137,10 +138,10 @@ class PaymentRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('p');
         $qb 
-            ->where('p.amountPaid != 0')
+            ->where('p.amountPaid = 0')
             ->innerJoin('p.invoice', 'i')
             ->innerJoin('i.orders', 'o')
-            ->where('o.shop = :shop')
+            ->andWhere('o.shop = :shop')
             ->setParameter('shop', $shop)
             ->orderBy('p.createdAt', 'DESC')
             ;
@@ -173,21 +174,84 @@ class PaymentRepository extends ServiceEntityRepository
         ;
         $end = $end->format(('Y-m-d')." 23:59:59");
         ;
-        // dd($start, $end);
-        return $this->createQueryBuilder('p')
-                    ->where('p.createdAt BETWEEN :start AND :end')
-                    ->andWhere('p.paymentType = :paymentType')
-                    ->setParameter('start', $start)
-                    ->setParameter('end', $end)
-                    ->setParameter('paymentType', $paymentType)
-                    ->innerJoin('p.invoice', 'i')
-                    ->innerJoin('i.orders', 'o')
-                    ->andWhere('o.shop = :shop')
-                    ->setParameter('shop', $shop)
-                    ->orderBy('p.createdAt', 'DESC')
-                    ->getQuery()
-                    ->getResult()
-                    ;
 
+
+        if(is_null($shop) && is_null($paymentType)){
+            
+            return $this->createQueryBuilder('p')
+            ->where('p.createdAt BETWEEN :start AND :end')
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->innerJoin('p.invoice', 'i')
+            ->innerJoin('i.orders', 'o')
+            ->orderBy('p.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult()
+            ;
+
+        }elseif(is_null($shop) && !is_null($paymentType)){
+
+            return $this->createQueryBuilder('p')
+            ->where('p.createdAt BETWEEN :start AND :end')
+            ->andWhere('p.paymentType = :paymentType')
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->setParameter('paymentType', $paymentType)
+            ->innerJoin('p.invoice', 'i')
+            ->innerJoin('i.orders', 'o')
+            ->orderBy('p.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult()
+            ;
+        }
+
+        if(is_null($paymentType)){
+
+            return $this->createQueryBuilder('p')
+            ->where('p.createdAt BETWEEN :start AND :end')
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->innerJoin('p.invoice', 'i')
+            ->innerJoin('i.orders', 'o')
+            ->andWhere('o.shop = :shop')
+            ->setParameter('shop', $shop)
+            ->orderBy('p.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult()
+            ;
+
+        }else{
+
+            return $this->createQueryBuilder('p')
+            ->where('p.createdAt BETWEEN :start AND :end')
+            ->andWhere('p.paymentType = :paymentType')
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->setParameter('paymentType', $paymentType)
+            ->innerJoin('p.invoice', 'i')
+            ->innerJoin('i.orders', 'o')   
+            ->andWhere('o.shop = :shop')
+            ->setParameter('shop', $shop)
+            ->orderBy('p.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult()
+            ;
+        }
+       
+
+    }
+    
+    public function customerOrders(Customer $customer)
+    {
+        $qb = $this->createQueryBuilder('p');
+        $qb 
+            ->innerJoin('p.invoice', 'i')
+            ->innerJoin('i.orders', 'o')
+            ->where('o.customer = :customer')
+            ->setParameter('customer', $customer)
+            ->orderBy('o.createdAt', 'DESC')
+        ;
+
+        return $qb->getQuery()->getResult();
     }
 }

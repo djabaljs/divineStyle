@@ -85,7 +85,20 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $qb
             ->where('u.roles LIKE :roles')
             ->setParameter('roles', '%"ROLE_MANAGER"%')
-            ->orderBy('u.id', 'ASC')
+            ->orderBy('u.id', 'DESC')
+        ;
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function findAdministrators()
+    {
+        $qb = $this->createQueryBuilder('u');
+
+        $qb
+            ->where('u.roles LIKE :roles')
+            ->setParameter('roles', '%"ROLE_ADMIN"%')
+            ->orderBy('u.id', 'DESC')
         ;
 
         return $qb->getQuery()->getResult();

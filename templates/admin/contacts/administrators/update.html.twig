@@ -55,8 +55,8 @@
                     <!-- button  -->
                     <!-- ============================================================== -->
                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                            <a class="btn btn-info" href="{{path('admin_shops')}}" style="color:#fff"><i class="fas fa-list"></i> Liste des magasins</a>
-                            <a class="btn btn-success" href="{{path('admin_shop_create')}}" style="color:#fff"><i class="fas fa-save"></i> Enregistrer des magasins</a>
+                            <a class="btn btn-info" href="{{path('admin_administrators')}}" style="color:#fff"><i class="fas fa-list"></i> Liste des administrateurs</a>
+                            <a class="btn btn-success" href="{{path('admin_administrators_create')}}" style="color:#fff"><i class="fas fa-save"></i> Enregistrer des administrateurs</a>
                    </div>
                     <!-- ============================================================== -->
                     <!-- button  -->
@@ -76,46 +76,45 @@
                         <div class="card">
                             
                             <div class="card-header">
-                                <h5 class="mb-0">Modification de magasin</h5>
+                                <h5 class="mb-0">Modification de l'administrateur</h5>
                             </div>
                             <div class="card-body">
-                               {{form_start(form)}}
+                                 {{form_start(form)}}
                                     <div class="col-md-8">
                                         <div class="form-group">
-                                            <label for="name">Nom</label>
-                                            {{form_row(form.name, {attr:{'class': 'form-control', 'placeholder':'Nom du magasin','id':'name','style':'height:50px'}})}}
+                                            <label for="user_firstname">Nom</label>
+                                            {{form_row(form.firstname, {attr:{'class': 'form-control', 'placeholder':'Nom du personnel','id':'firstname','style':'height:50px'}})}}
                                         </div>
                                     </div>
                                       <div class="col-md-8">
                                         <div class="form-group">
-                                            <label for="address">Adresse</label>
-                                            {{form_row(form.address, {attr:{'class': 'form-control', 'placeholder':'Adresse du magasin','id':'address','style':'height:50px'}})}}
+                                            <label for="user_lastname">Prénom(s)</label>
+                                            {{form_row(form.lastname, {attr:{'class': 'form-control', 'placeholder':'Prénom(s) du personnel','id':'lastname','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="user_email">Email</label>
+                                            {{form_row(form.email, {attr:{'class': 'form-control', 'placeholder':'Email du personnel','id':'email','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="user_phone">Téléphone</label>
+                                            {{form_row(form.phone, {attr:{'class': 'form-control', 'placeholder':'Téléphone du presonnel','id':'phone','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="user_address">Adresse</label>
+                                                {{form_row(form.address, {attr:{'class': 'form-control', 'placeholder':'Personnels du magasin', 'id': 'address'}})}}
                                         </div>
                                     </div>
                                      <div class="col-md-8">
-                                        <div class="form-group">
-                                            <label for="address">Téléphone</label>
-                                            {{form_row(form.phone, {attr:{'class': 'form-control', 'placeholder':'Téléphone du magasin','id':'address','style':'height:50px'}})}}
+                                       <div class="form-group">
+                                            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
                                         </div>
                                     </div>
-                                    <div class="col-md-8">
-                                        <div class="form-group">
-                                            <label for="manager">Gestionnaire du magasin</label>
-                                            {{form_row(form.manager, {attr:{'class': 'form-control', 'placeholder':'Gestionnaire du magasin','id':'manager','style':'height:50px'}})}}
-                                        </div>
-                                    </div>
-                                    {# <div class="col-md-8">
-                                        <div class="form-group">
-                                            <label for="staff">Personnels</label>
-                                                {{form_row(form.staffs, {attr:{'class': 'form-control', 'placeholder':'Personnels du magasin'}})}}
-                                        </div>
-                                    </div> #}
-                                    <div class="col-md-8">
-                                        <div class="form-group">
-                                          <button type="submit" class="btn btn-warning"><i class="fas fa-edit"></i> Modifier</button>
-                                        </div>
-                                    </div>
-
                                 {{form_end(form)}}
                             </div>
                         </div>
@@ -128,68 +127,5 @@
 </div>
 {% endblock %}
 {% block javascripts %}
-    <script src="{{asset('concept/assets/vendor/multi-select/js/jquery.multi-select.js')}}"></script>
-    <script src="{{asset('concept/assets/libs/js/main-js.js')}}"></script>
-    <script src="{{asset('concept/assets/libs/js/jquery.quicksearch.js')}}"></script>
 
-    <script>
-        var dataSelects = [];
-        var dataDeselects = [];
-
-    $('#shop_update_staffs').multiSelect({
-      
-        selectableHeader: "<input type='text' class='search-input form-control' autocomplete='off' placeholder='Cherchez...'>",
-        selectionHeader: "<input type='text' class='search-input form-control' autocomplete='off' placeholder='Cherchez...'>",
-        afterInit: function(ms){
-            var that = this,
-                $selectableSearch = that.$selectableUl.prev(),
-                $selectionSearch = that.$selectionUl.prev(),
-                selectableSearchString = '#'+that.$container.attr('id')+' .ms-elem-selectable:not(.ms-selected)',
-                selectionSearchString = '#'+that.$container.attr('id')+' .ms-elem-selection.ms-selected';
-
-            that.qs1 = $selectableSearch.quicksearch(selectableSearchString)
-            .on('keydown', function(e){
-            if (e.which === 40){
-                that.$selectableUl.focus();
-                return false;
-            }
-            });
-
-            that.qs2 = $selectionSearch.quicksearch(selectionSearchString)
-            .on('keydown', function(e){
-            if (e.which == 40){
-                that.$selectionUl.focus();
-                return false;
-            }
-            });
-        },
-        afterSelect: function(values){
-            this.qs1.cache();
-            this.qs2.cache();
-
-            dataSelects.push(values);
-            $('#data').val(dataSelects);
-
-        },
-        afterDeselect: function(values){
-            this.qs1.cache();
-            this.qs2.cache();
-
-            dataDeselects.push(values);
-
-            $('#data').val(dataDeselects);
-        }
-        
-            });
-        
-        function removeItemOnce(arr, value) {
-        var index = arr.indexOf(value);
-        if (index > -1) {
-            arr.splice(index, 1);
-        }
-        return arr;
-        }
-
-    </script>
-    
 {% endblock %}

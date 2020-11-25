@@ -69,4 +69,27 @@ class ProductRepository extends ServiceEntityRepository
             ;
         return $qb->getQuery()->getResult();
     }
+
+
+
+    public function productsDistinct()
+    {
+        $qb = $this->createQueryBuilder('p');
+        $qb
+            ->orderBy('p.createdAt', 'DESC')
+        ;
+        
+       $products =  $qb->getQuery()->getResult();
+
+       $sameName = [];
+       $sameProduct = [];
+       foreach($products as $product){
+           if(!in_array($product->getName(), $sameName)){
+               $sameName[] = $product->getName();
+               $sameProduct[] = $product;
+           }
+       }
+
+       return $sameProduct;
+    }
 }

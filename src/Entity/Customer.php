@@ -44,11 +44,12 @@ class Customer
 
     /**
      * @ORM\ManyToOne(targetEntity=Shop::class, inversedBy="customers")
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $shops;
 
     /**
-     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="customer")
+     * @ORM\OneToMany(targetEntity=Order::class, mappedBy="customer", cascade={"remove"}, orphanRemoval=true)
      */
     private $orders;
 

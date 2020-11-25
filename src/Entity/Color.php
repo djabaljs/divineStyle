@@ -28,7 +28,8 @@ class Color
     private $name;
     
     /**
-     * @ORM\ManyToMany(targetEntity="Product", inversedBy="colors"))
+     * @ORM\ManyToMany(targetEntity="Product", inversedBy="colors"), cascade={"persist"})
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $products;
 

@@ -450,7 +450,7 @@ class WoocommerceApiService  extends AbstractController
                     
                     $statusCode = $response->getStatusCode();
                     // $statusCode = 200
-                   
+
                     if($statusCode === 200){
 
                         $contentType = $response->getHeaders()['content-type'][0];
@@ -468,8 +468,7 @@ class WoocommerceApiService  extends AbstractController
                     }
                   
                 }catch(\Exception $e){
-              $this->addFlash("danger",$e->getMessage());
-                   
+                    $this->addFlash("danger",$e->getMessage());
                 }
             break;
                 

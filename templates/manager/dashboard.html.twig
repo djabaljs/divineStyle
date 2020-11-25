@@ -119,7 +119,7 @@
                                     <div class="card-body">
                                         <h5 class="text-muted">Total des commandes</h5>
                                         <div class="metric-value d-inline-block">
-                                            <h1 class="mb-1">{{payments|length}}</h1>
+                                            <h1 class="mb-1">{{fivePayments|length}}</h1>
                                         </div>
                                         <div class="metric-label d-inline-block float-right text-danger font-weight-bold">
                                             {# <span class="icon-circle-small icon-box-xs text-danger bg-danger-light bg-danger-light "><i class="fa fa-fw fa-arrow-down"></i></span><span class="ml-1">4%</span> #}
@@ -136,9 +136,9 @@
                             <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12 col-12">
                                 <div class="card border-3 border-top border-top-primary">
                                     <div class="card-body">
-                                        <h5 class="text-muted">Livraisons effectuées</h5>
+                                        <h5 class="text-muted">Livraisons non effectuées</h5>
                                         <div class="metric-value d-inline-block">
-                                            <h1 class="mb-1">{{deliveryIsSuccessfully|length}}/{{deliveryIsNotSuccessfully|length}}</h1>
+                                            <h1 class="mb-1">{{deliveryIsNotSuccessfully|length}}</h1>
                                         </div>
                                         <div class="metric-label d-inline-block float-right text-danger font-weight-bold">
                                             {# <span class="icon-circle-small icon-box-xs text-danger bg-danger-light bg-danger-light "><i class="fa fa-fw fa-arrow-down"></i></span><span class="ml-1">4%</span> #}
@@ -157,7 +157,7 @@
 
                                           <!-- recent orders  -->
                             <!-- ============================================================== -->
-                            <div class="col-xl-9 col-lg-12 col-md-6 col-sm-12 col-12">
+                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                                 <div class="card">
                                     <h5 class="card-header">Dernières commandes</h5>
                                     <div class="card-body p-0">
@@ -175,7 +175,7 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                              {% for payment in payments %}
+                                              {% for payment in fivePayments %}
                                                     <tr>
                                                         <td>{{loop.index}}</td>
                                                         <td>{{payment.invoice.orders.orderNumber}}</td>
@@ -192,36 +192,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- ============================================================== -->
-                            <!-- end recent orders  -->
-
-    
-                            <!-- ============================================================== -->
-                            <!-- ============================================================== -->
-                            <!-- customer acquistion  -->
-                            <!-- ============================================================== -->
-                            <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 col-12">
-                                <div class="card">
-                                    <h5 class="card-header">L'achat du client</h5>
-                                    <div class="card-body">
-                                        <div class="ct-chart ct-golden-section" style="height: 354px;"></div>
-                                        <div class="text-center">
-                                            <span class="legend-item mr-2">
-                                                    <span class="fa-xs text-primary mr-1 legend-tile"><i class="fa fa-fw fa-square-full"></i></span>
-                                            <span class="legend-text">Retour </span>
-                                            </span>
-                                            <span class="legend-item mr-2">
-
-                                                    <span class="fa-xs text-secondary mr-1 legend-tile"><i class="fa fa-fw fa-square-full"></i></span>
-                                            <span class="legend-text">Première fois</span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- ============================================================== -->
-                            <!-- end customer acquistion  -->
-                            <!-- ============================================================== -->
                         </div>
                         {# <div class="row">
                             <!-- ============================================================== -->

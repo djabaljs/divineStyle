@@ -6,6 +6,8 @@ use App\Entity\Shop;
 use App\Entity\Product;
 use App\Entity\Provider;
 use App\Entity\Replenishment;
+use App\Repository\ProductRepository;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -20,6 +22,9 @@ class ReplenishmentType extends AbstractType
             ->add('product', EntityType::class, [
                 'class' => Product::class,
                 'choice_label' => 'name',
+                'query_builder' => function(ProductRepository $productRepository){
+                  return $productRepository->productsDistinct();
+                },
                 'label' => false,
                 'placeholder' => 'Produit à réapprovisionner',
                 'attr' => [

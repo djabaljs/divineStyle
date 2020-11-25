@@ -28,7 +28,7 @@ class PaymentType
     private $name;
 
     /**
-     * @ORM\OneToMany(targetEntity=Payment::class, mappedBy="paymentType")
+     * @ORM\OneToMany(targetEntity=Payment::class, mappedBy="paymentType", cascade={"remove"})
      */
     private $payments;
 

@@ -14,6 +14,11 @@
                 </button>
                 <div class="collapse navbar-collapse " id="navbarSupportedContent">
                     <ul class="navbar-nav ml-auto navbar-right-top">
+                        {% if is_granted('ROLE_ADMIN') %}
+                        <li class="nav-item dropdown nav-user">
+                            <a class="nav-link nav-user-img" href="{{path("update_software")}}"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRnCxL0f9j7HyoqlM8j1IZuxe-5_itIMdHpHA&usqp=CAU" alt="" class="user-avatar-md rounded-circle"></a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item dropdown nav-user">
                             <a class="nav-link nav-user-img" href="#" id="navbarDropdownMenuLink2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="{{asset('concept/assets/images/avatar-1.jpg')}}" alt="" class="user-avatar-md rounded-circle"></a>
                             <div class="dropdown-menu dropdown-menu-right nav-user-dropdown" aria-labelledby="navbarDropdownMenuLink2">
@@ -26,6 +31,7 @@
                                 <a class="dropdown-item" href="{{path('app_logout')}}"><i class="fas fa-power-off mr-2"></i>Déconnexion</a>
                             </div>
                         </li>
+         
                     </ul>
                 </div>
             </nav>

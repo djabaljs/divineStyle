@@ -12,17 +12,11 @@ use Symfony\Component\Validator\Constraints\Date;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 
-class OrderSearchType extends AbstractType
+class OrderSearchShopType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('shop', EntityType::class, [
-                'class' =>  Shop::class,
-                'choice_label' => 'name',
-                'placeholder' => 'Magasin',
-                'label' => false,
-            ])
             ->add('start', DateType::class, [
                 'label' => false,
                 'attr' => [
@@ -44,6 +38,7 @@ class OrderSearchType extends AbstractType
                 'choice_label' => 'name',
                 'placeholder' => 'Type de paiment',
                 'label' => false,
+                'required' => false,
             ])
         ;
     }

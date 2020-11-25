@@ -39,12 +39,13 @@ use App\Entity\OrderProduct;
 use App\Form\ShopUpdateType;
 use App\Entity\Replenishment;
 use App\Form\DeliveryManType;
-use App\Form\OrderSearchType;
 use App\Form\PaymentTypeType;
-use App\Services\Chart\Chart;
 use App\Entity\ProviderProduct;
+use App\Form\AdminDeliveryType;
+use App\Form\AdministratorType;
 use App\Form\ReplenishmentType;
 use App\Repository\UserRepository;
+use App\Form\OrderSearchByShopType;
 use App\Repository\PaymentRepository;
 use App\Repository\ProductRepository;
 use App\Repository\DeliveryRepository;
@@ -84,6 +85,7 @@ class AdminController extends AbstractController
     public function dashboard(PaymentRepository $paymentRepository, DeliveryRepository $deliveryRepository): Response
     {
 
+
         $payments = $this->manager->getRepository(Payment::class)->findAll();
         $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->findBy(['status' => 1]);
         $deliveries = $this->manager->getRepository(Delivery::class)->findAll();
@@ -122,7 +124,7 @@ class AdminController extends AbstractController
      */
     public function products(WoocommerceApiService $apiService)
     {
-        $products = $this->manager->getRepository(Product::class)->findAll();
+        $products = $this->manager->getRepository(Product::class)->findBy([],['createdAt' => 'DESC']);
 
         $sameProductName = [];
         $sameProductArray = [];
@@ -185,85 +187,83 @@ class AdminController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
-            
-           if($request->get('shopQuantity')){
-            
-          
-
-            $product->setRegister($this->getUser());
-            $slugify = new Slugify();
-            $product->setSlug($slugify->slugify($product->getName()));
-            
-            $colorArrays = [];
-            $lengthArrays = [];
-
-            foreach($product->getColors() as  $color){
-                $colorArrays[] = $color->getName();
-            }
-            foreach($product->getLengths() as $key => $length){
-                $lengthArrays[$key] = $length->getName();
-            }
-
-            $product->colorArrays = $colorArrays;
-            $product->lengthArrays = $lengthArrays;
-
-
-            $totalQuantity = 0;
-            foreach($request->get('shopQuantity') as $key => $quantities){
-              foreach($quantities as $quantity){
-                
-                $totalQuantity += (int)$quantity;
-                if($key != 0 && $quantity != 0){
-                    $productC = new Product();
-                    $productC = clone($product);
-                    $shop = $this->manager->getRepository(Shop::class)->find($key);
-                    $productC->setQuantity($quantity);
-                    $shop->addProduct($productC);
-                    $this->manager->persist($shop);
-                }
-              }
-
-            }
-       
-            $product->setQuantity($totalQuantity);
-           
-            $response =  $this->api->post("products", $product);
-           
-          
-
-            // $this->manager->persist($product);
-
-            if($product->getIsVariable()){
-                $this->manager->persist($color);
-                $this->manager->persist($length);
-            }
-
-        
+         
+            $this->manager->getConnection()->beginTransaction();
+            $this->manager->getConnection()->setAutoCommit(false);
 
             try{
-                $products = $this->manager->getRepository(Product::class)->findBy(['slug' => $product->getSlug()]);
-             
-                foreach($products as $product){
-                    $product->setWcProductId($response['id']);
+                if($request->get('shopQuantity')){
 
-                    $this->manager->persist($product);
+                        $product->setRegister($this->getUser());
+                        $slugify = new Slugify();
+                        $product->setSlug($slugify->slugify($product->getName()));
+                        
+                        $colorArrays = [];
+                        $lengthArrays = [];
+
+                        foreach($product->getColors() as  $color){
+                            $colorArrays[] = $color->getName();
+                        }
+                        foreach($product->getLengths() as $key => $length){
+                            $lengthArrays[$key] = $length->getName();
+                        }
+
+                        $product->colorArrays = $colorArrays;
+                        $product->lengthArrays = $lengthArrays;
+
+                        $totalQuantity = 0;
+                        $products = [];
+                        foreach($request->get('shopQuantity') as $key => $quantities){
+                            foreach($quantities as $quantity){
+                                if($key != 0 && $quantity != 0){
+                                    $totalQuantity += intval($quantity);
+                                    $productC = clone($product);
+                                    $shop = $this->manager->getRepository(Shop::class)->find($key);
+                                    $productC->setQuantity($quantity);
+                                    $productC->setShop($shop);
+                                    $products[] = $productC;
+                                }
+                            }
+                        }
+
+                        
+
+                        $product->setQuantity($totalQuantity);
+                
+                        $response =  $this->api->post("products", $product);
+                        
+
+                        $isVariable = false;
+                        if($product->getIsVariable()){
+
+                            $color->addProduct($product);
+                            $length->addProduct($product);
+                            
+                            $this->manager->persist($color);
+                            $this->manager->persist($length);
+                            $isVariable = true;
+                        }
+
+                        foreach($products as $product){
+                            if($isVariable){
+                              $product->setWcProductId($response['id'] - 1);
+                            }else{
+                              $product->setWcProductId($response['id']);
+                            }
+                            $this->manager->persist($product);
+                        }
+
+                        $this->manager->flush();
+                        $this->manager->commit();
+
+                        $this->addFlash("success", "Produit créé et envoyé dans le magasin ".$product->getShop()." avec succès!");
+
+                        return $this->redirectToRoute("admin_products_create");
                 }
             }catch(\Exception $e){
-                $product->setWcProductId(null);
+                throw $e;
             }
             
-            if($product->getIsVariable()){
-                $color->addProduct($product);
-                $length->addProduct($product);
-            }
-
-            $this->manager->flush();
-
-            $this->addFlash("success", "Produit créé et envoyé dans le magasin ".$product->getShop()." avec succès!");
-
-            return $this->redirectToRoute("admin_products_create");
-           }
-
         }
 
         return $this->render('admin/products/products/create.html.twig', [
@@ -315,7 +315,31 @@ class AdminController extends AbstractController
             
             if($request->get('shopQuantity')){
 
-                    
+                $isVariable = false;
+                if($product->getIsVariable()){
+
+                    $colors = $this->manager->getRepository(Color::class)->getProductColors($product);
+                    $lengths = $this->manager->getRepository(Length::class)->getProductLengths($product);
+
+                    foreach($product->getColors() as $key => $color){
+                        if(!in_array($color, $colors)){
+                            $colors[] = $color;
+                        }
+
+                    }
+
+                    foreach($product->getLengths() as $key => $length){
+                        if(!in_array($length, $lengths)){
+                            $lengths[] = $length;
+                        }
+
+                    }
+
+                }
+                
+                // $product->setColors($colors);
+                // $product->setLengths($lengths)
+                // dd($product);
                 $totalQuantity = 0;
                 foreach($request->get('shopQuantity') as $key => $quantities){
                         foreach($quantities as $quantity){
@@ -786,7 +810,7 @@ class AdminController extends AbstractController
      */
     public function updateShop(Request $request, Shop $shop)
     {
-
+        // dd($shop);
         $datas = [];
 
         $shop = $this->manager->getRepository(Shop::class)->find($shop->getId());
@@ -1169,7 +1193,7 @@ class AdminController extends AbstractController
      */
     public function paymentTypes()
     {
-        return $this->render('admin/payment_types/index.html.twig', [
+        return $this->render('admin/options/payment_types/index.html.twig', [
             'paymentTypes' => $this->manager->getRepository(PaymentType::class)->findAll()
         ]);
     }
@@ -2045,7 +2069,6 @@ class AdminController extends AbstractController
 
                           if($key == $product->getShop()->getId()){
                           $totalQuantity += $product->getQuantity();
-                          // $oldQuantity += $product->getQuantity();
                           $product->setQuantity($providerQuantities[$key] + $product->getQuantity());
                           $this->manager->persist($product);
                           
@@ -2056,9 +2079,6 @@ class AdminController extends AbstractController
                      $totalQuantity += $providerQuantities[$key];
                      $providerQuantity += $providerQuantities[$key];
                 }
-
-
-                // $product = $this->manager->getRepository(Product::class)->findOneBy(["slug" => $replenishment->getProduct()->getSlug()]);
 
                 
                 $providerProduct->setProduct($product);
@@ -2077,7 +2097,7 @@ class AdminController extends AbstractController
                 
 
         
-                // return $this->redirectToRoute('admin_products_replenishment');
+                return $this->redirectToRoute('admin_products_replenishment');
              
                 }catch(\Exception $e){
                     $this->manager->rollback();
@@ -2117,7 +2137,7 @@ class AdminController extends AbstractController
     {
         $delivery = new Delivery();
 
-        $form = $this->createForm(DeliveryType::class, $delivery);
+        $form = $this->createForm(AdminDeliveryType::class, $delivery);
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
@@ -2142,15 +2162,14 @@ class AdminController extends AbstractController
      */
     public function ordersDeliveriesUpdate(Request $request, Delivery $delivery)
     {
-        $delivery = $this->manager->getRepository(Delivery::class)->find($delivery);
-
+       
         if(is_null($delivery)){
             $this->addFlash("danger","Cette livraison n'existe pas!");
             return $this->redirectToRoute('admin_orders_deliveries');
         }
 
 
-        $form = $this->createForm(DeliveryType::class, $delivery);
+        $form = $this->createForm(AdminDeliveryType::class, $delivery);
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
@@ -2204,7 +2223,7 @@ class AdminController extends AbstractController
         $orderSearch = new OrderSearch();
         $results = [];
 
-        $form = $this->createForm(OrderSearchType::class, $orderSearch);
+        $form = $this->createForm(OrderSearchByShopType::class, $orderSearch);
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
@@ -2337,4 +2356,191 @@ class AdminController extends AbstractController
             'shop' => $shop
         ]);
     }
+
+       /**
+     * @Route("/update/software", name="update_software", methods={"GET"})
+     * @method reportShop
+     * @param Shop $shop
+     * @return Response
+     */
+    public function updateSoftWare(Request $request)
+    {
+       $wProducts =  $this->api->getAll('products');
+       $products = $this->manager->getRepository(Product::class)->findAll();
+        
+       $this->manager->getConnection()->beginTransaction();
+       $this->manager->getConnection()->setAutoCommit(false);
+
+       try{
+            foreach($products as $product){
+           
+                foreach($wProducts as $wProduct){
+                 
+                    if($wProduct['id'] == $product->getWcProductId()){
+                        
+                        $product->setImageUrls($wProduct['images']);
+                        
+                        $this->manager->persist($product);
+                        
+                    }
+                }
+               
+            }
+
+            $this->manager->flush();
+            $this->manager->commit();
+
+            $this->addFlash("success", "Mise à jour terminée!");
+
+          return   $this->redirectToRoute("admin_dashboard");
+
+       }catch(\Exception $e){
+
+
+        $this->addFlash("danger", "Une erreur est survenue lors de la mise à jour!");
+
+        return $this->redirectToRoute("admin_dashboard");
+
+       }
+
+       
+       return $this->redirectToRoute("admin_dashboard");
+
+    }
+
+    /**
+     * @Route("/wc/orders", name="admin_wc_orders", methods={"GET"})
+     * @method reportShop
+     * @param Shop $shop
+     * @return Response
+     */
+    public function wcOrders()
+    {
+        $array = [];
+        
+        try{
+             $wcOrders = $this->api->getAll('orders');
+             foreach($wcOrders as $wcOrder){
+                if($wcOrder['status'] == "processing" || $wcOrder['satus'] == "completed"){
+                    $array[] = $wcOrder;
+                }
+            }
+    
+        }catch(\Exception $e){
+            throw $e;
+        }
+
+        
+        return $this->render('admin/products/wc/orders/index.html.twig', [
+            'orders' => $array
+        ]);
+    }
+
+    /**
+     * @Route("/customer/{id}/orders", name="admin_customer_orders", methods={"GET"})
+     * @param Request $request
+     * @return Response
+     */
+    public function customersOrders(Customer $customer)
+    {
+         
+        return $this->render('admin/contacts/customers/orders.html.twig', [
+            'customer' => $this->manager->getRepository(Customer::class)->find($customer),
+            'payments' => $this->manager->getRepository(Payment::class)->customerOrders($customer)
+        ]);
+    }
+
+
+               
+    /**
+     * @Route("/administrators", name="admin_administrators", methods={"GET"})
+     * @method administrators
+     * @return Response
+     */
+    public function administrators()
+    {
+        return $this->render('admin/contacts/administrators/index.html.twig', [
+            'administrators' => $this->manager->getRepository(User::class)->findAdministrators()
+        ]);
+    }
+
+  
+     /**
+     * @Route("/administrators/create", name="admin_administrators_create", methods={"GET", "POST"})
+     * @param Request $request
+     * @param UserPasswordEncoderInterface $passwordEncoder
+     * @return Response
+     */
+
+    public function administratorsCreate(Request $request, UserPasswordEncoderInterface $passwordEncoder)
+    {
+        $admin = new User();
+
+        $form = $this->createForm(AdministratorType::class, $admin);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $passwordHash = $passwordEncoder->encodePassword($admin, '123456');
+            $admin->setPassword($passwordHash);
+            $admin->setRoles(["ROLE_ADMIN"]);
+            $this->manager->persist($admin);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Administrateur crée!");
+
+            $this->redirectToRoute('admin_administrators_create');
+        }
+
+        return $this->render('admin/contacts/administrators/create.html.twig',[
+            'form' => $form->createView()
+        ]);
+    }
+
+     /**
+     * @Route("/administrators/update/{id}", name="admin_administrators_update", methods={"GET", "POST"})
+     * @param Request $request
+     * @param UserPasswordEncoderInterface $passwordEncoder
+     * @param User $staff
+     * @return Response
+     */
+
+    public function administratorsUpdate(Request $request, UserPasswordEncoderInterface $passwordEncoder, User $admin)
+    {
+        $form = $this->createForm(AdministratorType::class, $admin);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $passwordHash = $passwordEncoder->encodePassword($admin, '123456');
+            $admin->setPassword($passwordHash);
+            $this->manager->persist($admin);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Administrateur modifié!");
+
+
+        }
+
+        return $this->render('admin/contacts/administrators/update.html.twig',[
+            'form' => $form->createView()
+        ]);
+    }
+       /**
+     * @Route("/payment-types/delete/{id}", name="admin_administrators_delete", methods={"GET"})
+     * @method paymentTypesDelete
+     * @return Response
+     */
+    public function administratorsRemove(Request $request, User $user)
+    {
+
+        if(is_null($user))
+             throw $this->createNotFoundException('Cet administrateur n\'existe pas!');
+
+        $this->manager->remove($user);
+        $this->manager->flush();
+
+        $this->addFlash("success", "Administrateur supprimé avec succès");
+
+        return $this->redirectToRoute("admin_administrators");
+    }
+
 }

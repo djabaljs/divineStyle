@@ -3,8 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\Length;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use App\Entity\Product;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @method Length|null find($id, $lockMode = null, $lockVersion = null)
@@ -47,4 +48,16 @@ class LengthRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    public function getProductLengths(Product $product)
+    {
+        $qb = $this->createQueryBuilder('l');
+        $qb 
+            ->innerJoin('l.products', 'p')
+            ->where('p = :product')
+            ->setParameter('product', $product)
+            ;
+
+        return $qb->getQuery()->getResult();
+    }
 }

@@ -46,8 +46,8 @@
                     <!-- button  -->
                     <!-- ============================================================== -->
                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                            <a class="btn btn-info" href="{{path('admin_products')}}" style="color:#fff"><i class="fas fa-list"></i> Liste des produits</a>
-                            <a class="btn btn-success" href="{{path('admin_products_create')}}" style="color:#fff"><i class="fas fa-save"></i> Enregistrer des produits</a>
+                            <a class="btn btn-info" href="{{path('admin_payment_types')}}" style="color:#fff"><i class="fas fa-list"></i> Liste des types de paiment</a>
+                            <a class="btn btn-success" href="{{path('admin_payment_types_create')}}" style="color:#fff"><i class="fas fa-save"></i> Enregistrer des types de paiment</a>
                    </div>
                     <!-- ============================================================== -->
                     <!-- button  -->
@@ -67,9 +67,9 @@
                         <div class="card">
                             
                             <div class="card-header">
-                                <h5 class="mb-0">Modification de produit</h5>
+                                <h5 class="mb-0">Modification de type de paiment</h5>
                             </div>
-                            {# <div class="card-body">
+                         <div class="card-body">
                                     {{form_start(form)}}
                                     <div class="row">
                                         <div class="col-md-6">
@@ -79,90 +79,15 @@
                                                     {{form_row(form.name, {attr:{'class': 'form-control', 'placeholder':'Nom du produit','style':'height:50px'}})}}
                                                 </div>
                                             </div>
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="product_unit_price">Prix d'achat</label>
-                                                    {{form_row(form.buyingPrice, {attr:{'class': 'form-control', 'style':'height:50px'}})}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="email">Prix de vente</label>
-                                                    {{form_row(form.sellingPrice, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="product_quantity">Quantité</label>
-                                                    {{form_row(form.quantity, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                </div>
-                                            </div>
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="product_category">Catégorie</label>
-                                                        <input type="hidden" name="category" value="{{update}}">
-                                                        {{form_row(form.category,  {attr:{'class': 'form-control','disabled':'true'}})}}
-                                                </div>
-                                            </div>
-                                           
-                                           
                                         </div>
-                                        <div class="col-md-6">
-                                                <div class="col-md-12 ">
-                                                    <div class="form-group">
-                                                        <label for="product_isVariable">Type de produit</label>
-                                                        {{form_row(form.isVariable)}}
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-12 element">
-                                                    <div class="form-group">
-                                                        <label for="product_lengths">Taille</label>
-                                                        {{form_row(form.lengths, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                    </div>
-                                                </div>
-                                                {# <div class="col-md-12">
-                                                    <div class="form-group">
-                                                        <label for="product_width">Largeur</label>
-                                                        {{form_row(form.width, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-12">
-                                                    <div class="form-group">
-                                                        <label for="product_height">Hauteur</label>
-                                                        {{form_row(form.height, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                    </div>
-                                                </div> #}
-                                                 <div class="col-md-12 element">
-                                                    <div class="form-group">
-                                                        <label for="product_colors">Couleur</label>
-                                                        {{form_row(form.colors, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-12">
-                                                    <div class="form-group">
-                                                        <label for="product_minimumStock">Stock minimum</label>
-                                                        {{form_row(form.minimumStock, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                    </div>
-                                                </div>
-                                                 <div class="col-md-12">
-                                                    <div class="form-group">
-                                                        <label for="product_provider">Fournisseur</label>
-                                                        {{form_row(form.provider, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                    </div>
-                                                 </div>  
-                                                 <div class="col-md-12">
-                                                    <div class="form-group">
-                                                        <label for="product_quantity">Magasin</label>
-                                                        {{form_row(form.shop, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                    </div>
-                                            </div>
-                                            </div>
-                                      </div>
-                                    <div class="form-group">
-                                     <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
+                                    </div>
+                                    <div class="col-md-6">
+                                         <div class="form-group">
+                                            <button type="submit" class="btn btn-warning"><i class="fas fa-edit"></i> Modifier</button>
+                                         </div>
                                     </div>
                                 {{form_end(form)}}
-                            </div> #}
+                            </div> 
                         </div>
                     </div>
                     <!-- ============================================================== -->

@@ -96,15 +96,18 @@
                                             {{form_row(form.manager, {attr:{'class': 'form-control', 'placeholder':'Gestionnaire du magasin','id':'manager','style':'height:50px'}})}}
                                         </div>
                                     </div>
-                                    <div class="col-md-8">
+                                    {# <div class="col-md-8">
                                         <div class="form-group">
                                             <label for="staff">Personnels</label>
                                                 {{form_row(form.staffs, {attr:{'class': 'form-control', 'placeholder':'Personnels du magasin'}})}}
                                         </div>
+                                    </div> #}
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                          <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                     <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
-                                    </div>
+
                                 {{form_end(form)}}
                             </div>
                         </div>

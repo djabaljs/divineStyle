@@ -28,7 +28,8 @@ class ProviderProduct
     private $provider;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Product::class, inversedBy="providerProducts", cascade={"remove"})
+     * @ORM\ManyToOne(targetEntity=Product::class, inversedBy="providerProducts")
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $product;
 

@@ -37,25 +37,26 @@ class ShopType extends AbstractType
                     return $er->createQueryBuilder('q')
                         ->where('q.roles LIKE :roles')
                         ->setParameter('roles', '%"ROLE_MANAGER"%')
-                        ->orderBy('q.id', 'ASC');
+                        ->andWhere('q.shops IS NULL')
+                        ->orderBy('q.id', 'DESC');
 
                 },
        
             ])
-            ->add('staffs', EntityType::class, [
-                'label' => false,
-                'multiple' => true,
-                'required'=>false,
-                'mapped'=>false,
-                'class' => User::class,
-                'query_builder' => function(\Doctrine\ORM\EntityRepository $er) {
-                    return $er->createQueryBuilder('q')
-                        ->where('q.roles LIKE :roles')
-                        ->setParameter('roles', '%"ROLE_STAFF"%')
-                        // ->andWhere('q.shop IS NULL')
-                        ->orderBy('q.id', 'ASC');
-                }
-            ]);
+            // ->add('staffs', EntityType::class, [
+            //     'label' => false,
+            //     'multiple' => true,
+            //     'required'=>false,
+            //     'mapped'=>false,
+            //     'class' => User::class,
+            //     'query_builder' => function(\Doctrine\ORM\EntityRepository $er) {
+            //         return $er->createQueryBuilder('q')
+            //             ->where('q.roles LIKE :roles')
+            //             ->setParameter('roles', '%"ROLE_STAFF"%')
+            //             ->andWhere('q.shops IS NULL')
+            //             ->orderBy('q.id', 'DESC');
+            //     }
+            // ]);
         ;
     }
 

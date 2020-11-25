@@ -51,6 +51,9 @@
                                           <li class="nav-item">
                                             <a class="nav-link" href="{{path("admin_products_commands")}}">Commandes</a>
                                         </li>
+                                          <li class="nav-item">
+                                            <a class="nav-link" href="{{path("admin_wc_orders")}}">Commandes en ligne</a>
+                                        </li>
                                     </ul>
                                 </div>
                             </li>
@@ -70,6 +73,10 @@
                                            <li class="nav-item">
                                             <a class="nav-link" href="{{path("admin_staffs")}}">Personnel</a>
                                         </li>
+                                         </li>
+                                           <li class="nav-item">
+                                            <a class="nav-link" href="{{path("admin_administrators")}}">Administrateurs</a>
+                                        </li>
                                     </ul>
                                 </div>
                             </li>
@@ -81,7 +88,7 @@
                                             <a class="nav-link" href="{{path("admin_orders_deliveries")}}">Livraison</a>
                                         </li>
                                            <li class="nav-item">
-                                            <a class="nav-link" href="{{path('admin_products_replenishment')}}">Seuil de réapprovisionnement</a>
+                                            <a class="nav-link" href="{{path('admin_products_replenishment')}}">Réapprovisionnement</a>
                                         </li>
                                     </ul>
                                 </div>
@@ -99,9 +106,9 @@
                                         <li class="nav-item">
                                             <a class="nav-link" href="{{path("admin_products_attributes")}}">Attributs de produit</a>
                                             <a class="nav-link" href="{{path("admin_payment_types")}}">Types de paiement</a>
-                                            <a class="nav-link" href="{{path("admin_products_widths")}}">Largeurs des produits</a>
+                                            {# <a class="nav-link" href="{{path("admin_products_widths")}}">Largeurs des produits</a>
                                             <a class="nav-link" href="{{path("admin_products_heights")}}">Hauteurs des produits</a>
-                                            <a class="nav-link" href="{{path("admin_products_colors")}}">Couleurs des produits</a>
+                                            <a class="nav-link" href="{{path("admin_products_colors")}}">Couleurs des produits</a> #}
                                         </li>
                                     </ul>
                                 </div>
@@ -185,7 +192,7 @@
                                 </div>
                             </li> #}
                             <li class="nav-item">
-                                <a class="nav-link" href="pages/general-table.html"><i class="fab fa-fw fas fa-chart-line" aria-hidden="true"></i>Rapports</a>
+                                <a class="nav-link" href="{{path("manager_reports")}}"><i class="fab fa-fw fas fa-chart-line" aria-hidden="true"></i>Rapports</a>
                             </li>
                               <li class="nav-item">
                                 <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-6" aria-controls="submenu-6"><i class="fas fa-fw fa-user"></i>Compte</a>

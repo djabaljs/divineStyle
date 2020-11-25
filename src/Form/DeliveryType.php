@@ -2,17 +2,18 @@
 
 namespace App\Form;
 
+use App\Entity\Order;
 use App\Entity\Delivery;
 use App\Entity\DeliveryMan;
-use App\Entity\Order;
 use Doctrine\ORM\EntityRepository;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class DeliveryType extends AbstractType
 {
@@ -47,6 +48,10 @@ class DeliveryType extends AbstractType
                     'placeholder' => 'Téléphone du récepteur'
                 ]
             ])
+            ->add('status', CheckboxType::class, [
+                'label' => false,
+                'required' => false,
+            ])
             ->add('deliveryMan', EntityType::class, [
                 'label' => false,
                 'class' => DeliveryMan::class,
@@ -57,13 +62,13 @@ class DeliveryType extends AbstractType
             ->add('order',EntityType::class, [
                 'label' => false,
                 'class' => Order::class,
-                'choice_label' => 'orderNumber',
                 'query_builder' => function (EntityRepository $er){
                     $qb =  $er->createQueryBuilder('o');
                     $qb
                         ->where('o.shop = :shop')
                         ->setParameter('shop', $this->shop)
-                    ;
+                       ->orderBy('o.createdAt', 'DESC');
+
                     return $qb;
                 },
                 'placeholder' => 'Commande',
