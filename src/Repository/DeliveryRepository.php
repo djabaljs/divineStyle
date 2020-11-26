@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Shop;
 use App\Entity\Delivery;
+use App\Entity\DeliveryMan;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
@@ -110,4 +111,14 @@ class DeliveryRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    // public function deliveryManDeliveries(DeliveryMan $deliveryMan)
+    // {
+    //     $qb = $this->createQueryBuilder('d');
+    //     $qb
+    //         ->where('d.deliveryMan = :deliveryMan')
+    //         ->setParameter('deliveryMan', $deliveryMan)
+    //         ->le
+    //         ;
+    // }
 }

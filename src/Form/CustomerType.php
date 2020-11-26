@@ -29,13 +29,13 @@ class CustomerType extends AbstractType
                 'label' => false,
                 'required' => false
             ])
-            ->add('birthDay', DateType::class, [
+            ->add('birthDay', TextType::class, [
                 'label' => false,
                 'attr' => [
                     'placeholder' => 'Date d\'anniversaire'
                 ],
-                'widget' => 'single_text',
-                'input'  => 'datetime_immutable'
+                // 'widget' => 'single_text',
+                // 'input'  => 'datetime_immutable'
             ])
         ;
     }

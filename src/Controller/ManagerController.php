@@ -104,6 +104,8 @@ class ManagerController extends AbstractController
             }
         }
 
+        $totalPaid += $deliveryAmount;
+
         $shop = $this->manager->getRepository(Shop::class)->find($this->shop);
         return $this->render('manager/dashboard.html.twig', [
             'totalAmount' => $totalAmount,
@@ -964,6 +966,54 @@ class ManagerController extends AbstractController
         $this->addFlash('success', 'Opération supprimée!');
 
         return $this->redirectToRoute("manager_fund_operations");
+    }
+
+
+
+     /**
+     * @Route("/cancel/order/{id}", name="manager_cancel_order", methods={"GET"})
+     * @return Response
+    */
+    public function cancelOrder(Order $order)
+    {
+       $orderProducts = $order->getOrderProducts();
+       $products = $this->manager->getRepository(Product::class)->findAll();
+       $invoice = $this->manager->getRepository(Invoice::class)->findBy(['orders' => $order]);
+       $payment = $this->manager->getRepository(Payment::class)->findBy(['invoice' => $invoice]);
+       $productsx = [];
+
+       $this->manager->getConnection()->beginTransaction();
+       $this->manager->getConnection()->setAutoCommit(false);
+
+       try{
+            foreach($orderProducts as $oP){
+                foreach($products as $product){
+                    if($oP->getProductOrder()->getShop() === $product->getShop()){
+                    if($oP->getProducts() === $product){
+                        $product->setQuantity($product->getQuantity() + $oP->getQuantity());
+                        $productsx[] = $product;
+                    }
+                }
+            }
+
+            foreach($productsx as $productx){
+                $this->manager->persist($productx);
+            }
+
+            $payment->setStatus(false);
+            $this->manager->persist($payment);
+
+            $this->manager->flush();
+            $this->manager->commit();
+
+            $this->addFlash("success","Vente annulée!");
+         }
+       }catch(\Exception $e){
+            throw $e;
+       }
+      
+
+       return $this->redirectToRoute('manager_producrs_orders');
     }
 
 }

@@ -226,7 +226,7 @@ class AdminController extends AbstractController
                         }
 
                         if(is_null($product->getOnSaleAmount()) || $product->getOnSaleAmount() == 0.0){
-                            $productC->setOnSaleAmount(null);
+                            $product->setOnSaleAmount(null);
                         }
                         $product->colorArrays = $colorArrays;
                         $product->lengthArrays = $lengthArrays;
@@ -245,8 +245,6 @@ class AdminController extends AbstractController
                                 }
                             }
                         }
-
-                        
 
                         $product->setQuantity($totalQuantity);
                 
@@ -768,6 +766,20 @@ class AdminController extends AbstractController
         $this->addFlash("success", "Fournisseur supprimé avec succès!");
 
         return $this->redirectToRoute('admin_providers');
+    }
+
+
+    /**
+     * @Route("/providers/{id}/products", name="admin_providers_products", methods={"GET"})
+     * @param Exception $e
+     * @return Response
+     */
+    public function providersProducts(Provider $provider)
+    {
+        return $this->render("admin/contacts/providers/products.html.twig", [
+            'products' => $this->manager->getRepository(Product::class)->findBy(['provider' => $provider]),
+            'provider' => $provider
+        ]);
     }
 
      /**
@@ -1387,6 +1399,18 @@ class AdminController extends AbstractController
         return $this->redirectToRoute("admin_delivery_mans");
     }
 
+    /**
+     * @Route("/delivery-mans/{id}/deliveries", name="admin_delivery_mans_deliveries", methods={"GET"})
+     * @method deliveryMansDeliveries
+     * @return Response
+     */
+    public function deliveryMansDeliveries(DeliveryMan $deliveryMan)
+    {
+        return $this->render('admin/contacts/delivery_mans/orders.html.twig', [
+            'deliveries' => $this->manager->getRepository(Delivery::class)->findBy(['deliveryMan' => $deliveryMan]),
+            'mans' => $deliveryMan
+        ]);
+    }
 
 
     /**
