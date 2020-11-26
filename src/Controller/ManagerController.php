@@ -978,8 +978,8 @@ class ManagerController extends AbstractController
     {
        $orderProducts = $order->getOrderProducts();
        $products = $this->manager->getRepository(Product::class)->findAll();
-       $invoice = $this->manager->getRepository(Invoice::class)->findBy(['orders' => $order]);
-       $payment = $this->manager->getRepository(Payment::class)->findBy(['invoice' => $invoice]);
+       $invoice = $this->manager->getRepository(Invoice::class)->findOneBy(['orders' => $order]);
+       $payment = $this->manager->getRepository(Payment::class)->findOneBy(['invoice' => $invoice]);
        $productsx = [];
 
        $this->manager->getConnection()->beginTransaction();
@@ -1013,7 +1013,7 @@ class ManagerController extends AbstractController
        }
       
 
-       return $this->redirectToRoute('manager_producrs_orders');
+       return $this->redirectToRoute('manager_products_orders');
     }
 
 }
