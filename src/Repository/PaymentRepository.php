@@ -56,6 +56,7 @@ class PaymentRepository extends ServiceEntityRepository
         $qb 
             ->where('p.amountPaid != 0')
             ->orderBy('p.createdAt', 'DESC')
+            // ->andWhere('p.status ==')
             ;
 
         return $qb->getQuery()
@@ -111,7 +112,8 @@ class PaymentRepository extends ServiceEntityRepository
             ->innerJoin('p.invoice', 'i')
             ->innerJoin('i.orders', 'o')
             ->where('o.shop = :shop')
-            ->setParameter('shop', $shop);
+            ->setParameter('shop', $shop)
+            ->orderBy('p.createdAt', 'DESC')
             ;
 
         return $qb->getQuery()->getResult();
@@ -121,10 +123,11 @@ class PaymentRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('p');
         $qb 
-            ->where('p.amountPaid != 0')
+            ->andWhere('p.amountPaid != 0')
+            ->andWhere('p.status = TRUE')
             ->innerJoin('p.invoice', 'i')
             ->innerJoin('i.orders', 'o')
-            ->where('o.shop = :shop')
+            ->andWhere('o.shop = :shop')
             ->setParameter('shop', $shop)
             ->orderBy('p.createdAt', 'DESC')
             ;
@@ -180,6 +183,7 @@ class PaymentRepository extends ServiceEntityRepository
             
             return $this->createQueryBuilder('p')
             ->where('p.createdAt BETWEEN :start AND :end')
+            ->andWhere('p.status = TRUE')
             ->setParameter('start', $start)
             ->setParameter('end', $end)
             ->innerJoin('p.invoice', 'i')
@@ -193,6 +197,7 @@ class PaymentRepository extends ServiceEntityRepository
 
             return $this->createQueryBuilder('p')
             ->where('p.createdAt BETWEEN :start AND :end')
+            ->andWhere('p.status = TRUE')
             ->andWhere('p.paymentType = :paymentType')
             ->setParameter('start', $start)
             ->setParameter('end', $end)
@@ -209,6 +214,7 @@ class PaymentRepository extends ServiceEntityRepository
 
             return $this->createQueryBuilder('p')
             ->where('p.createdAt BETWEEN :start AND :end')
+            ->andWhere('p.status = TRUE')
             ->setParameter('start', $start)
             ->setParameter('end', $end)
             ->innerJoin('p.invoice', 'i')
@@ -224,6 +230,7 @@ class PaymentRepository extends ServiceEntityRepository
 
             return $this->createQueryBuilder('p')
             ->where('p.createdAt BETWEEN :start AND :end')
+            ->andWhere('p.status = TRUE')
             ->andWhere('p.paymentType = :paymentType')
             ->setParameter('start', $start)
             ->setParameter('end', $end)

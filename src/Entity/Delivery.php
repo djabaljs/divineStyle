@@ -51,7 +51,7 @@ class Delivery
     private $recipient;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $recipientPhone;
 
@@ -137,7 +137,7 @@ class Delivery
         return $this->recipientPhone;
     }
 
-    public function setRecipientPhone(string $recipientPhone): self
+    public function setRecipientPhone(?string $recipientPhone): self
     {
         $this->recipientPhone = $recipientPhone;
 

@@ -86,9 +86,7 @@ class ManagerController extends AbstractController
    
         $totalPaid = 0;
         $totalAmount = 0;
-        $d = 0;
         foreach($payments as $key => $payment){
-
             $totalPaid += $payment->getAmountPaid();
             $totalAmount += $payment->getAmount();
         }
@@ -98,7 +96,6 @@ class ManagerController extends AbstractController
             
             if($fundOperation->getTransactionType()->getId() == 1){
                 $totalPaid += $fundOperation->getAmount();
-                $d += $fundOperation->getAmount();
             }elseif($fundOperation->getTransactionType()->getId() == 2){
                 $totalPaid -= $fundOperation->getAmount();
             }
@@ -166,7 +163,7 @@ class ManagerController extends AbstractController
     {   
 
         return $this->render("manager/products/orders/index.html.twig",  [
-            'payments' => $paymentRepository->shopOrdersSuccessfully($this->shop)
+            'payments' => $paymentRepository->shopPayments($this->shop)
         ]);
     }
 
@@ -442,7 +439,8 @@ class ManagerController extends AbstractController
                     $delivery->setDeliveryMan($billing->getDeliveryMan());
                     $delivery->setAddress($billing->getDeliveryAddress());
                     $delivery->setOrder($order);
-
+                    
+                    $delivery->setRecipientPhone($billing->getCustomer()->getPhone());
                     $this->manager->persist($delivery);
                 }
 
@@ -996,13 +994,43 @@ class ManagerController extends AbstractController
                     }
                 }
             }
-
+            
             foreach($productsx as $productx){
                 $this->manager->persist($productx);
             }
+           
 
             $payment->setStatus(false);
             $this->manager->persist($payment);
+
+            $productArray = [];
+            $slugArray = [];
+            
+            $products = [];
+            foreach($productsx as $productx){
+                $products = $this->manager->getRepository(Product::class)->findBy(['slug' => $productx->getSlug()]);
+            }
+          
+            foreach($products as $product){
+                if(!in_array($product->getSlug(), $slugArray)){
+                    $slugArray[] = $product->getSlug();
+                    $productArray[$product->getSlug()] = $productx;
+
+                }else{
+                    // dd($product, $productArray);
+                    $productx = $productArray[$product->getSlug()];
+                    // // $productx->setQuantity($productx->getQuantity() + $product->getQuantity());
+                    // $productArray[$product->getSlug()] = $productx;
+                    // dd($productArray);
+                    dd($products, $productx);
+                }
+            }
+
+            dd($productArray);
+             
+            foreach($productArray as $product){
+                $this->api->putQ('products', $product);
+            }
 
             $this->manager->flush();
             $this->manager->commit();

@@ -99,14 +99,14 @@ class InvoiceService{
          $content .= '<tr>';
          $content .= '<td>'.$key.'</td>';
          $content .= '<td>'.$order->getProducts()->getName().'</td>';
-         if(is_null($order->getProducts()->getOnSaleAmount())){
-            $content .= '<td>'.number_format($order->getProducts()->getSellingPrice() - $discount).'</td>';
+         if(is_null($order->getProducts()->getOnSaleAmount()) || $order->getProducts()->getOnSaleAmount() == 0.0){
+            $content .= '<td>'.number_format($order->getProducts()->getSellingPrice()).'</td>';
          }else{
             $content .= '<td>'.number_format($order->getProducts()->getOnSaleAmount()).'</td>';
          }
          $content .= '<td>'.$order->getQuantity().'</td>';
          if(is_null($order->getProducts()->getOnSaleAmount()) || $order->getProducts()->getOnSaleAmount() == 0.0){
-            $content .= '<td align=right>'. number_format($order->getQuantity() * $order->getProducts()->getSellingPrice() - $discount) .'</td>';
+            $content .= '<td align=right>'. number_format($order->getQuantity() * $order->getProducts()->getSellingPrice()) .'</td>';
          }else{
             $content .= '<td align=right>'. number_format($order->getQuantity() * $order->getProducts()->getOnSaleAmount()) .'</td>';
          }
@@ -136,7 +136,7 @@ class InvoiceService{
           }
        }
        $paymentBody .= '<br/><br/>
-        Avance: '.number_format(($payment->getAmountPaid() + $deliveryAmount) - $discount).' <br/><br/>
+        Avance: '.number_format($payment->getAmountPaid()).' <br/><br/>
         Reste à payer: '.number_format($payment->getAmount()).' <br/><br/>
         NB: Les vêtements ne sont ni repris, ni échangés
        ';
