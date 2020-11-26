@@ -490,6 +490,7 @@ class ManagerController extends AbstractController
                 $payment->setInvoice($invoice);
                 $payment->setPaymentType($billing->getPaymentType());
                 $payment->setAmountPaid($total);
+                $payment->setStatus(true);
                 if(is_null($billing->getDiscount())){
                   $payment->setAmount(0);
                 }else{
