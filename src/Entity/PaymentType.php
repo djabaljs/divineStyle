@@ -32,6 +32,11 @@ class PaymentType
      */
     private $payments;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $deleted;
+
     public function __construct()
     {
        $this->payments = new ArrayCollection();
@@ -83,6 +88,18 @@ class PaymentType
                 $payment->setPaymentType(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getDeleted(): ?bool
+    {
+        return $this->deleted;
+    }
+
+    public function setDeleted(bool $deleted): self
+    {
+        $this->deleted = $deleted;
 
         return $this;
     }

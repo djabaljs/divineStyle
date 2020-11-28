@@ -113,4 +113,9 @@ class Payment
 
         return $this;
     }
+
+    public function __toString()
+    {
+        return $this->getInvoice()->getOrders()->getOrderNumber().'--'.$this->getInvoice()->getOrders()->getCustomer();
+    }
 }

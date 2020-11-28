@@ -97,23 +97,44 @@
                                                     {{form_row(form.onSaleAmount, {attr:{'class': 'form-control','style':'height:50px'}})}}
                                                 </div>
                                             </div>
-                                             
+                                            
                                         </div>
-                                        <div class="col-md-6">
-                                         {% for shop in shops %}
-                                                 {% for productC in shop.products %}
-                                                    {% if productC.slug == product.slug %}
-                                                         <div class="col-md-12">
+                                                 <div class="col-md-6">
+                                                {% set shopArray = [] %}
+                                                {% set nameArray = [] %}
+                                                {% for key, shop in shops %}
+                                                 {% if shop.name not in nameArray %}
+                                                    {% set nameArray = nameArray|merge({(key): shop.name}) %}
+                                                    {% set shopArray = shopArray|merge({(key): shop}) %}
+                                                 {% endif %}
+                                                {% endfor %}
+                                              
+                                                {% for shop in shopArray %}
+                                                     {% if product in shopArray %}
+                                                        <div class="col-md-12">
                                                             <div class="form-group">
                                                                 <label for="product_provider">Quantité {{shop.name}}</label>
-                                                                <input type="number" class="form-control" name="shopQuantity[{{shop.id}}][]" value="{{productC.quantity}}" min="0" style="height:50px" />
+                                                                <input type="number" class="form-control" name="shopQuantity[{{shop.id}}][]" value="{{product.quantity}}" min="0" style="height:50px" />
                                                             </div>
                                                         </div> 
-                                                    {% endif %}
-                                                 {% endfor %}
-                                                 
-                                            {% endfor %}
+                                                     {% else %}
+                                                          <div class="col-md-12">
+                                                            <div class="form-group">
+                                                                <label for="product_provider">Quantité {{shop.name}}</label>
+                                                                <input type="number" class="form-control" name="shopQuantity[{{shop.id}}][]" value="{{product.quantity}}" min="0" style="height:50px" />
+                                                            </div>
+                                                        </div> 
+                                                     {% endif %}
+                                                {% endfor %}
                                                 <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="product_update_lengths">Fournisseur</label>
+                                                        {{form_row(form.lengths, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="product_update_colors">Fournisseur</label>
+                                                        {{form_row(form.colors, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                    </div>
                                                     <div class="form-group">
                                                         <label for="product_minimumStock">Stock minimum</label>
                                                         {% if form.minimumStock is not null  %}
@@ -151,11 +172,11 @@
 {% block javascripts %}
  <script src="{{asset('concept/assets/vendor/select2/js/select2.min.js')}}"></script>
  <script>
-    $('#product_lengths').select2({
+    $('#product_update_lengths').select2({
         placeholder: "Tailles disponibles",
         allowClear: true
     });
-    $('#product_colors').select2({
+    $('#product_update_colors').select2({
         placeholder: "Couleurs disponibles",
         allowClear: true
     });

@@ -49,8 +49,11 @@
                                             <a class="nav-link" href="{{path("admin_products_orders")}}">Ventes</a>
                                         </li>
                                           <li class="nav-item">
-                                            <a class="nav-link" href="{{path("admin_products_commands")}}">Commandes</a>
+                                            <a class="nav-link" href="{{path("admin_orders_deliveries")}}">Livraison</a>
                                         </li>
+                                          {# <li class="nav-item">
+                                            <a class="nav-link" href="{{path("admin_products_commands")}}">Commandes</a>
+                                        </li> #}
                                           <li class="nav-item">
                                             <a class="nav-link" href="{{path("admin_wc_orders")}}">Commandes en ligne</a>
                                         </li>
@@ -84,9 +87,6 @@
                                 <a class="nav-link" href="#" data-toggle="collapse" aria-expanded="false" data-target="#submenu-4" aria-controls="submenu-4"><i class="fab fa-fw fa fa-truck"></i>Gestion des stocks</a>
                                 <div id="submenu-4" class="collapse submenu" style="">
                                     <ul class="nav flex-column">
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="{{path("admin_orders_deliveries")}}">Livraison</a>
-                                        </li>
                                            <li class="nav-item">
                                             <a class="nav-link" href="{{path('admin_products_replenishment')}}">Réapprovisionnement</a>
                                         </li>
@@ -192,10 +192,10 @@
                                            <li class="nav-item">
                                             <a class="nav-link" href="{{path('manager_fund_operations')}}">Opérations de caisse</a>
                                         </li>
-                                         {# </li>
+                                         </li>
                                            <li class="nav-item">
-                                            <a class="nav-link" href="{{path('admin_products_replenishment')}}">Retour de marchandises</a>
-                                        </li> #}
+                                            <a class="nav-link" href="{{path('manager_orders_return')}}">Retour de marchandises</a>
+                                        </li>
                                     </ul>
                                 </div>
                             </li>

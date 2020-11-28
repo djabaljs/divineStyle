@@ -4,6 +4,8 @@ namespace App\Form;
 
 use App\Entity\Shop;
 use App\Entity\Color;
+use App\Entity\Width;
+use App\Entity\Height;
 use App\Entity\Length;
 use App\Entity\Product;
 use App\Entity\Category;
@@ -39,6 +41,21 @@ class ProductUpdateType extends AbstractType
             ->add('onSaleAmount', NumberType::class, [
                 'label' => false,
                 'required' => false,
+            ])
+            ->add('colors', EntityType::class, [
+                'label' => false,
+                'class' => Color::class,
+                'required'=>false,
+                'multiple' => true,
+
+            ])
+            ->add('lengths', EntityType::class, [
+                'label' => false,
+                'class' => Length::class,
+                'multiple' => true,
+                'required'=>false,
+                'mapped'=>true,
+
             ])
             // ->add('quantity', IntegerType::class, [
             //     'label' => false,

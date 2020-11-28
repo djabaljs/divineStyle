@@ -105,13 +105,31 @@ class PaymentRepository extends ServiceEntityRepository
                 ->getResult();
     }
 
+    public function shopPaymentsByStatus(Shop $shop, $status)
+    {
+      
+        $qb = $this->createQueryBuilder('p');
+        $qb
+            ->andWhere('p.status = :status')
+            ->setParameter('status', $status)
+            ->innerJoin('p.invoice', 'i')
+            ->innerJoin('i.orders', 'o')
+            ->andWhere('o.shop = :shop')
+            ->setParameter('shop', $shop)
+            ->orderBy('p.createdAt', 'DESC')
+            ;
+        return $qb->getQuery()->getResult();
+
+    }
+
     public function shopPayments(Shop $shop)
     {
         $qb = $this->createQueryBuilder('p');
         $qb
+            // ->where('p.status = TRUE')
             ->innerJoin('p.invoice', 'i')
             ->innerJoin('i.orders', 'o')
-            ->where('o.shop = :shop')
+            ->andWhere('o.shop = :shop')
             ->setParameter('shop', $shop)
             ->orderBy('p.createdAt', 'DESC')
             ;
@@ -154,14 +172,17 @@ class PaymentRepository extends ServiceEntityRepository
                 ->getResult();
     }
 
-    public function findPaymentsByWeek()
+    public function findShopPaymentsByWeek(Shop $shop)
     {
         $start_week = date("Y-m-d",strtotime('monday this week'));
-        $end_week = date("Y-m-d",strtotime('saturday this week'));
+        $end_week = date("Y-m-d",strtotime('sunday this week'));
         return $this->createQueryBuilder('p')
+                    ->andWhere('p.status = TRUE')
                     ->innerJoin('p.invoice', 'i')
                     ->innerJoin('i.orders', 'o')
-                    ->where('p.createdAt >= :start')
+                    ->andWhere('o.shop = :shop')
+                    ->setParameter('shop', $shop)
+                    ->andWhere('p.createdAt >= :start')
                     ->andWhere('p.createdAt <= :end')
                     ->setParameter('start',$start_week)                      
                     ->setParameter('end',$end_week)

@@ -57,19 +57,22 @@ class DeliveryType extends AbstractType
                 'class' => DeliveryMan::class,
                 'placeholder' => 'Livreur',
                 'attr' => [
-                ]
+                ],
+                'query_builder' => function(EntityRepository $er){
+                    return $er->createQueryBuilder('d')
+                               ->where('d.deleted = FALSE')
+                        ;
+                }
             ])
             ->add('order',EntityType::class, [
                 'label' => false,
                 'class' => Order::class,
                 'query_builder' => function (EntityRepository $er){
-                    $qb =  $er->createQueryBuilder('o');
-                    $qb
-                        ->where('o.shop = :shop')
-                        ->setParameter('shop', $this->shop)
+                   return $er->createQueryBuilder('o')
+                       ->andWhere('o.shop = :shop')
+                       ->setParameter('shop', $this->shop)
                        ->orderBy('o.createdAt', 'DESC');
 
-                    return $qb;
                 },
                 'placeholder' => 'Commande',
                 'attr' => [

@@ -59,6 +59,11 @@ class Category
      */
     private $register;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $deleted;
+
     public function __construct()
     {
         $this->products = new ArrayCollection();
@@ -173,6 +178,18 @@ class Category
     public function setRegister(?User $register): self
     {
         $this->register = $register;
+
+        return $this;
+    }
+
+    public function getDeleted(): ?bool
+    {
+        return $this->deleted;
+    }
+
+    public function setDeleted(bool $deleted): self
+    {
+        $this->deleted = $deleted;
 
         return $this;
     }

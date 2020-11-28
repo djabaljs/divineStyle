@@ -124,6 +124,16 @@ class User implements UserInterface
      */
     private $funds;
 
+    /**
+     * @ORM\OneToMany(targetEntity=OrderReturn::class, mappedBy="manager")
+     */
+    private $orderReturns;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $deleted;
+
 
     public function __construct()
     {
@@ -138,6 +148,7 @@ class User implements UserInterface
         $this->attributes = new ArrayCollection();
         $this->versements = new ArrayCollection();
         $this->funds = new ArrayCollection();
+        $this->orderReturns = new ArrayCollection();
     }
 
 
@@ -646,5 +657,54 @@ class User implements UserInterface
         return $this;
     }
 
+    /**
+     * @return Collection|OrderReturn[]
+     */
+    public function getOrderReturns(): Collection
+    {
+        return $this->orderReturns;
+    }
 
+    public function addOrderReturn(OrderReturn $orderReturn): self
+    {
+        if (!$this->orderReturns->contains($orderReturn)) {
+            $this->orderReturns[] = $orderReturn;
+            $orderReturn->setManager($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrderReturn(OrderReturn $orderReturn): self
+    {
+        if ($this->orderReturns->contains($orderReturn)) {
+            $this->orderReturns->removeElement($orderReturn);
+            // set the owning side to null (unless already changed)
+            if ($orderReturn->getManager() === $this) {
+                $orderReturn->setManager(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Get the value of deleted
+     */ 
+    public function getDeleted()
+    {
+        return $this->deleted;
+    }
+
+    /**
+     * Set the value of deleted
+     *
+     * @return  self
+     */ 
+    public function setDeleted($deleted)
+    {
+        $this->deleted = $deleted;
+
+        return $this;
+    }
 }

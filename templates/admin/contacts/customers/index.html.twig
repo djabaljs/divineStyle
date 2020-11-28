@@ -7,6 +7,12 @@
     <link rel="stylesheet" type="text/css" href="{{asset('concept/assets/vendor/datatables/css/buttons.bootstrap4.css')}}">
     <link rel="stylesheet" type="text/css" href="{{asset('concept/assets/vendor/datatables/css/select.bootstrap4.css')}}">
     <link rel="stylesheet" type="text/css" href="{{asset('concept/assets/vendor/datatables/css/fixedHeader.bootstrap4.css')}}">
+    <style>
+        .modal-content{
+            background: red;
+            color: #fff;
+        }
+    </style>
 {% endblock %}
 {% block body %}
 <div class="container-fluid dashboard-content ">
@@ -98,6 +104,29 @@
                                                 <td>
                                                 <a href="{{path('admin_customers_update', {id: customer.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
                                                 <a href="{{path('admin_customer_orders', {id: customer.id})}}" class="btn btn-success"><i class="fas fa-file"></i></a>
+                                                  <a href="#" class="btn btn-danger" data-toggle="modal" data-target="#customerMoadl{{customer.id}}">
+                                                            <i class="fas fa-file"></i>
+                                                        </a>
+                                                   
+                                                    <div class="modal fade" id="customerMoadl{{customer.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog" role="document">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title text-uppercase" style="color:#ffff;" id="customerMoadl{{customer.id}}">{{customer}}</h5>
+                                                                    <a href="#" class="close" data-dismiss="modal" aria-label="Close">
+                                                                        <span aria-hidden="true">&times;</span>
+                                                                    </a>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <p>Voulez-vous vraiment supprimer {{customer}}? Toutes les données liées à ce client seront définitivement supprimées!</p>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <a href="#" class="btn btn-primary" data-dismiss="modal" style="color:#fff;">Annuler</a>
+                                                                    <a href="{{path('admin_customers_delete', {id: customer.id})}}" class="btn btn-danger" style="color:#fff;">Supprimer</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                             </tr>
                                            {% endfor %}

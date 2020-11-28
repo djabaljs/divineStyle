@@ -17,12 +17,15 @@ use App\Entity\Versement;
 use App\Form\BillingType;
 use App\Form\CustomerType;
 use App\Form\DeliveryType;
+use App\Entity\OrderReturn;
 use App\Entity\OrderSearch;
 use App\Form\VersementType;
 use App\Entity\OrderProduct;
+use App\Form\OrderReturnType;
 use App\Form\OrderSearchShopType;
 use App\Repository\ShopRepository;
 use App\Repository\PaymentRepository;
+use App\Services\Invoice\ReturnInvoice;
 use App\Services\Invoice\InvoiceService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -74,7 +77,6 @@ class ManagerController extends AbstractController
 
         $fundOperations = $this->manager->getRepository(Fund::class)->findBy(['manager' => $this->getUser()]);
 
-        
         $deliveries = $this->manager->getRepository(Delivery::class)->shopDeliveries($this->shop);
 
         $deliveryAmount = 0;
@@ -104,6 +106,14 @@ class ManagerController extends AbstractController
         $totalPaid += $deliveryAmount;
 
         $shop = $this->manager->getRepository(Shop::class)->find($this->shop);
+
+        $orderReturns = $this->manager->getRepository(OrderReturn::class)->findBy(['manager' => $this->getUser()]);
+
+        $orderReturnAmount = 0;
+        foreach($orderReturns as $orderReturn){
+            $orderReturnAmount += $orderReturn->getAmount();
+        }
+     
         return $this->render('manager/dashboard.html.twig', [
             'totalAmount' => $totalAmount,
             'totalPaid' => $totalPaid,
@@ -113,7 +123,8 @@ class ManagerController extends AbstractController
             'payments' => $payments,
             'deliveries' => $deliveries,
             'customers' => $shop->getCustomers(),
-            'products' => $shop->getProducts()
+            'products' => $shop->getProducts(),
+            'orderReturnAmount' => $orderReturnAmount
 
         ]);
     }
@@ -125,7 +136,7 @@ class ManagerController extends AbstractController
     public function products()
     {
         return $this->render('manager/products/products/index.html.twig', [
-            'products' => $this->manager->getRepository(Product::class)->findBy(['shop' => $this->shop])
+            'products' => $this->manager->getRepository(Product::class)->findBy(['shop' => $this->shop, 'deleted' => 0])
         ]);
     }
 
@@ -633,6 +644,7 @@ class ManagerController extends AbstractController
 
         if($form->isSubmitted() && $form->isValid()){
 
+            $delivery->setDeleted(false);
             $this->manager->persist($delivery);
             $this->manager->flush();
 
@@ -661,7 +673,7 @@ class ManagerController extends AbstractController
         }
 
 
-        $form = $this->createForm(DeliveryType::class, $delivery);
+        $form = $this->createForm(DeliveryType::class, $delivery, ['shop' => $this->shop]);
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
@@ -712,7 +724,7 @@ class ManagerController extends AbstractController
     {
 
         return $this->render("manager/contacts/customers/index.html.twig", [
-            'customers' => $this->manager->getRepository(Customer::class)->findBy(['shops' => $this->shop],['createdAt' => 'DESC'])
+            'customers' => $this->manager->getRepository(Customer::class)->findBy(['shops' => $this->shop, 'deleted' => 0],['createdAt' => 'DESC'])
         ]);
     }
 
@@ -804,21 +816,20 @@ class ManagerController extends AbstractController
      */
     public function reports(Request $request)
     {
-        // $chart = new Chart();
-        $orderSearch = new OrderSearch();
-        $results = [];
+        // // $chart = new Chart();
+        // $orderSearch = new OrderSearch();
+        // $results = [];
 
-        $form = $this->createForm(OrderSearchShopType::class, $orderSearch);
-        $form->handleRequest($request);
+        // $form = $this->createForm(OrderSearchShopType::class, $orderSearch);
+        // $form->handleRequest($request);
 
-        if($form->isSubmitted() && $form->isValid()){
-            $results = $this->manager->getRepository(Payment::class)->searchPayments($this->shop,$orderSearch->getStart(),$orderSearch->getEnd(),$orderSearch->getPaymentType());
-        }
-
+        // if($form->isSubmitted() && $form->isValid()){
+        //     $results = $this->manager->getRepository(Payment::class)->searchPayments($this->shop,$orderSearch->getStart(),$orderSearch->getEnd(),$orderSearch->getPaymentType());
+        // }
 
         return $this->render('manager/reports/index.html.twig', [
-            'results' => $results,
-            'form' => $form->createView()
+            'results' => $this->manager->getRepository(Payment::class)->findShopPaymentsByWeek($this->shop),
+            // 'form' => $form->createView()
         ]);
     }
 
@@ -832,7 +843,7 @@ class ManagerController extends AbstractController
     {
          
         return $this->render('manager/contacts/customers/orders.html.twig', [
-            'customer' => $this->manager->getRepository(Customer::class)->find($customer),
+            'customer' => $this->manager->getRepository(Customer::class)->findOneBy(['id' => $customer, 'deleted' => 0], ['createdAt' => 'DESC']),
             'payments' => $this->manager->getRepository(Payment::class)->customerOrders($customer)
         ]);
     }
@@ -988,55 +999,53 @@ class ManagerController extends AbstractController
             foreach($orderProducts as $oP){
                 foreach($products as $product){
                     if($oP->getProductOrder()->getShop() === $product->getShop()){
-                    if($oP->getProducts() === $product){
-                        $product->setQuantity($product->getQuantity() + $oP->getQuantity());
-                        $productsx[] = $product;
+                        if($product->getId() === $oP->getProducts()->getId()){
+                            $product->setQuantity($product->getQuantity() + $oP->getQuantity());
+                            $productsx[] = $product;
+                        }
                     }
                 }
             }
-            
-            foreach($productsx as $productx){
-                $this->manager->persist($productx);
-            }
            
-
             $payment->setStatus(false);
             $this->manager->persist($payment);
 
-            $productArray = [];
-            $slugArray = [];
-            
-            $products = [];
+
             foreach($productsx as $productx){
-                $products = $this->manager->getRepository(Product::class)->findBy(['slug' => $productx->getSlug()]);
+                $this->manager->persist($productx);
             }
-          
-            foreach($products as $product){
-                if(!in_array($product->getSlug(), $slugArray)){
-                    $slugArray[] = $product->getSlug();
-                    $productArray[$product->getSlug()] = $productx;
-
-                }else{
-                    // dd($product, $productArray);
-                    $productx = $productArray[$product->getSlug()];
-                    // // $productx->setQuantity($productx->getQuantity() + $product->getQuantity());
-                    // $productArray[$product->getSlug()] = $productx;
-                    // dd($productArray);
-                    dd($products, $productx);
-                }
-            }
-
-            dd($productArray);
-             
-            foreach($productArray as $product){
-                $this->api->putQ('products', $product);
-            }
-
             $this->manager->flush();
             $this->manager->commit();
 
+            
+            $productArray = [];
+            $slugArray = [];
+
+            foreach($productsx as $productx){
+                $products = $this->manager->getRepository(Product::class)->findBy(['slug' => $productx->getSlug()]);
+
+                foreach($products as $product){
+                    if(!in_array($product->getSlug(), $slugArray)){
+                        $slugArray[] = $product->getSlug();
+                        $productArray[$product->getSlug()] = $product;
+    
+                    }else{
+                        $productx = $productArray[$product->getSlug()];
+                        $productx->setQuantity($productx->getQuantity() + $product->getQuantity());
+                        $productArray[$product->getSlug()] = $productx;
+                    }
+                }
+            }
+          
+         
+            foreach($productArray as $product){
+                $this->api->putQ('products', $product);
+                // dd($productArray);
+            }
+
+
             $this->addFlash("success","Vente annulée!");
-         }
+            
        }catch(\Exception $e){
             throw $e;
        }
@@ -1045,4 +1054,122 @@ class ManagerController extends AbstractController
        return $this->redirectToRoute('manager_products_orders');
     }
 
+    /**
+     * @Route("/order/return", name="manager_orders_return", methods={"GET"})
+     * @return Response
+    */
+    public function ordersReturn()
+    {
+        return $this->render('manager/products/orders/return/index.html.twig', [
+            'orders' =>  $this->manager->getRepository(OrderReturn::class)->findBy([],['createdAt' => 'DESC'])
+        ]);
+    }
+
+    /**
+     * @Route("/order/return/create", name="manager_orders_return_create", methods={"GET", "POST"})
+     * @return Response
+    */
+    public function ordersReturnCreate(Request $request)
+    {
+        $order = new OrderReturn();
+
+        $form = $this->createForm(OrderReturnType::class, $order,  ["shop" => $this->shop]);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $order->setManager($this->getUser());
+
+            $order->setAmount($order->getFirstOrder()->getAmountPaid() - $order->getLastOrder()->getAmountPaid());
+            if($order->getAmount() <= 0){
+              $this->addFlash("warning", "Le total de l'ancienne vente doit est inferieur au total de la nouvelle vente!");
+              return $this->redirectToRoute('manager_orders_return_create');
+            }
+            $this->manager->persist($order);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Retour de marchandise crée!");
+
+            return $this->redirectToRoute("manager_order_return_create");
+        }
+
+        return $this->render('manager/products/orders/return/create.html.twig', [
+            'form' => $form->createView()  
+        ]);
+    }
+
+    /**
+     * @Route("/order/return/{id}/update", name="manager_orders_return_update", methods={"GET","POST"})
+     * @return Response
+    */
+    public function ordersReturnUpdate(Request $request, OrderReturn $order)
+    {
+        if(is_null($order)){
+            $this->addFlash("danger", "Ce retour de marchandise n'existe pas!");
+        }
+
+        $form = $this->createForm(OrderReturnType::class, $order, ['shop' => $this->shop]);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $order->setAmount($order->getFirstOrder()->getAmountPaid() - $order->getLastOrder()->getAmountPaid());
+            if($order->getAmount() <= 0){
+              $this->addFlash("warning", "Le total de l'ancienne vente doit est inferieur au total de la nouvelle vente!");
+              return $this->redirectToRoute('manager_orders_return_create');
+            }
+
+            $this->manager->persist($order);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Retour de marchandise modifié!");
+
+            return $this->redirectToRoute("manager_orders_return_update", ['id' => $order->getId()]);
+        }
+
+        return $this->render('manager/products/orders/return/update.html.twig', [
+            'form' => $form->createView()  
+        ]);
+    }
+
+     /**
+     * @Route("/order/return/{id}/delete", name="manager_orders_return_delete", methods={"GET"})
+     * @return Response
+    */
+    public function ordersReturnDelete(OrderReturn $order)
+    {
+        if(is_null($order)){
+            $this->addFlash("danger", "Ce retour de marchandise n'existe pas!");
+        }
+
+        $this->manager->remove($order);
+        $this->manager->flush();
+
+        $this->addFlash("success", "Retour de marchandise supprimé");
+
+        return $this->redirectToRoute("manager_order_return");
+    }
+
+    /**
+     * @Route("/order/return/invoice/{id}", name="manager_orders_return_invoice", methods={"GET"})
+     * @return Response
+    */
+    public function orderReturnInvoice(OrderReturn $order, ReturnInvoice $returnInvoice)
+    {
+        if(is_null($order)){
+            $this->addFlash("danger", "Ce retour de marchandise n'existe pas");
+            return $this->redirectToRoute("manager_order_return");
+        }
+
+        // dd($order);
+        $firstInvoice = $order->getFirstOrder()->getInvoice();
+        $lastInvoice = $order->getLastOrder()->getInvoice();
+
+        if(!is_null($firstInvoice) && !is_null($lastInvoice)){
+            $returnInvoice->generateInvoice($firstInvoice, $lastInvoice);
+        }
+
+        return $this->render('manager/products/orders/return/index.html.twig', [
+            'orders' =>  $this->manager->getRepository(OrderReturn::class)->findBy([],['createdAt' => 'DESC'])
+        ]);
+    }
 }

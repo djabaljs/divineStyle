@@ -62,20 +62,6 @@ class ProductType extends AbstractType
                 'mapped'=>true,
 
             ])
-            // ->add('width', EntityType::class, [
-            //     'label' => false,
-            //     'class' => Width::class,
-            //     'required' => false,
-            //     'placeholder' => 'Selectionner la largeur'
-
-            // ])
-            // ->add('height', EntityType::class, [
-            //     'label' => false,
-            //     'class' => Height::class,
-            //     'required' => false,
-            //     'placeholder' => 'Selectionner la hauteur'
-
-            // ])
             ->add('colors', EntityType::class, [
                 'label' => false,
                 'class' => Color::class,

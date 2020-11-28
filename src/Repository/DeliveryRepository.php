@@ -81,6 +81,8 @@ class DeliveryRepository extends ServiceEntityRepository
             ->innerJoin('d.order', 'o')
             ->where('o.shop = :shop')
             ->setParameter('shop', $shop)
+            ->innerJoin('o.shop', 's')
+            ->andWhere('s.deleted = FALSE')
             ->orderBy("o.createdAt", "DESC")
             ;
         return $qb->getQuery()->getResult();
@@ -90,10 +92,12 @@ class DeliveryRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('d');
         $qb
-            ->where('d.status IS NOT NULL')
+            ->andWhere('d.status = TRUE')
             ->innerJoin('d.order', 'o')
-            ->where('o.shop = :shop')
+            ->andWhere('o.shop = :shop')
             ->setParameter('shop', $shop)
+            ->innerJoin('o.shop', 's')
+            ->andWhere('s.deleted = FALSE')
             ;
 
         return $qb->getQuery()->getResult();
@@ -103,10 +107,12 @@ class DeliveryRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('d');
         $qb
-            ->where('d.status IS NULL')
+            ->where('d.status = FALSE')
             ->innerJoin('d.order', 'o')
-            ->where('o.shop = :shop')
+            ->andWhere('o.shop = :shop')
             ->setParameter('shop', $shop)
+            ->innerJoin('o.shop', 's')
+            ->andWhere('s.deleted = FALSE')
             ;
 
         return $qb->getQuery()->getResult();

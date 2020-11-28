@@ -65,6 +65,11 @@ class Shop
      */
     private $phone;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $deleted;
+
 
     public function __construct()
     {
@@ -255,6 +260,18 @@ class Shop
     public function setPhone(string $phone): self
     {
         $this->phone = $phone;
+
+        return $this;
+    }
+
+    public function getDeleted(): ?bool
+    {
+        return $this->deleted;
+    }
+
+    public function setDeleted(bool $deleted): self
+    {
+        $this->deleted = $deleted;
 
         return $this;
     }

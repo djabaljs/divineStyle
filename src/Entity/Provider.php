@@ -57,6 +57,11 @@ class Provider
      */
     private $pseudo;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $deleted;
+
     public function __construct()
     {
         $this->providerProducts = new ArrayCollection();
@@ -120,7 +125,7 @@ class Provider
 
     public function __toString()
     {
-        return $this->getFirstname().' '.$this->getLastname();
+        return $this->getPseudo();
     }
 
     /**
@@ -193,6 +198,18 @@ class Provider
     public function setPseudo(string $pseudo): self
     {
         $this->pseudo = $pseudo;
+
+        return $this;
+    }
+
+    public function getDeleted(): ?bool
+    {
+        return $this->deleted;
+    }
+
+    public function setDeleted(bool $deleted): self
+    {
+        $this->deleted = $deleted;
 
         return $this;
     }

@@ -55,6 +55,11 @@ class Delivery
      */
     private $recipientPhone;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $deleted;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -140,6 +145,18 @@ class Delivery
     public function setRecipientPhone(?string $recipientPhone): self
     {
         $this->recipientPhone = $recipientPhone;
+
+        return $this;
+    }
+
+    public function getDeleted(): ?bool
+    {
+        return $this->deleted;
+    }
+
+    public function setDeleted(bool $deleted): self
+    {
+        $this->deleted = $deleted;
 
         return $this;
     }

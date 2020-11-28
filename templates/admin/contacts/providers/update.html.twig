@@ -69,6 +69,14 @@
                             </div>
                             <div class="card-body">
  {{form_start(form)}}
+ 
+
+  <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="provider_pseudo">Pseudo</label>
+                                            {{form_row(form.pseudo, {attr:{'class': 'form-control', 'placeholder':'Pseudo','id':'firstname','style':'height:50px'}})}}
+                                        </div>
+                                    </div>
                                     <div class="col-md-8">
                                         <div class="form-group">
                                             <label for="provider_firstname">Nom</label>

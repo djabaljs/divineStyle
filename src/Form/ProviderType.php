@@ -25,6 +25,9 @@ class ProviderType extends AbstractType
                 'label' => false,
                 'required' => false
             ])
+            ->add('pseudo', TextType::class, [
+                'label' => false,
+            ])
             ->add('email', EmailType::class, [
                 'label' => false,
                 'required' => false

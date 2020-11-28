@@ -104,9 +104,9 @@
                             <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12 col-12">
                                 <div class="card border-3 border-top border-top-primary">
                                     <div class="card-body">
-                                        <h5 class="text-muted">Montant dû</h5>
+                                        <h5 class="text-muted">Avoir</h5>
                                         <div class="metric-value d-inline-block">
-                                            <h1 class="mb-1">{{amount|format_currency('XOF')}}</h1>
+                                            <h1 class="mb-1">{{orderReturnAmount|format_currency('XOF')}}</h1>
                                         </div>
                                         <div class="metric-label d-inline-block float-right text-danger font-weight-bold">
                                             {# <span class="icon-circle-small icon-box-xs text-danger bg-danger-light bg-danger-light "><i class="fa fa-fw fa-arrow-down"></i></span><span class="ml-1">4%</span> #}
@@ -157,9 +157,10 @@
 
                                           <!-- recent orders  -->
                             <!-- ============================================================== -->
+                               <!-- ============================================================== -->
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                                 <div class="card">
-                                    <h5 class="card-header">Dernières commandes</h5>
+                                    <h5 class="card-header">Dernières ventes</h5>
                                     <div class="card-body p-0">
                                         <div class="table-responsive">
                                             <table class="table">
@@ -169,6 +170,8 @@
                                                         <th class="border-0">N°commande</th>
                                                         <th class="border-0">Client</th>
                                                         <th class="border-0">Montant</th>
+                                                        <th class="border-0">Remise</th>
+                                                        <th class="border-0">Statut</th>
                                                         <th class="border-0">Date</th>
                                                         <th class="border-0">Heure</th>
                                                     </tr>
@@ -179,7 +182,13 @@
                                                         <td>{{loop.index}}</td>
                                                         <td>{{payment.invoice.orders.orderNumber}}</td>
                                                         <td>{{payment.invoice.orders.customer}}</td>
-                                                        <td>{{payment.amount| format_currency('XOF') }}</td>
+                                                        <td>{{payment.invoice.orders.saleTotal| format_currency('XOF') }}</td>
+                                                        <td>{{payment.invoice.discount| format_currency('XOF') }}</td>
+                                                        {% if payment.status %}
+                                                        <td>PAYÉ</td>
+                                                        {% else %}
+                                                        <td>ANNULÉ</td>
+                                                        {% endif %}
                                                         <td>{{payment.invoice.orders.createdAt|date('Y-m-d')}}</td>
                                                         <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
                                                     </tr>

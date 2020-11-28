@@ -35,6 +35,7 @@ use App\Form\DeliveryType;
 use App\Form\ProviderType;
 use Cocur\Slugify\Slugify;
 use App\Entity\DeliveryMan;
+use App\Entity\OrderReturn;
 use App\Entity\OrderSearch;
 use App\Entity\PaymentType;
 use App\Form\AttributeType;
@@ -91,7 +92,7 @@ class AdminController extends AbstractController
     {
 
 
-        $payments = $this->manager->getRepository(Payment::class)->findAll();
+        $payments = $this->manager->getRepository(Payment::class)->findBy(['status' => 1]);
         $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->findBy(['status' => 1]);
         $deliveries = $this->manager->getRepository(Delivery::class)->findAll();
         $fundOperations = $this->manager->getRepository(Fund::class)->findAll();
@@ -121,6 +122,14 @@ class AdminController extends AbstractController
             }
         }
 
+        $orderReturns =  $this->manager->getRepository(OrderReturn::class)->findAll();
+        
+        $orderReturnAmount = 0;
+
+        foreach($orderReturns as $orderReturn){
+            $orderReturnAmount += $orderReturn->getAmount();
+        }
+
         return $this->render('admin/dashboard.html.twig', [
             'orders' => $this->manager->getRepository(Order::class)->findLastFiveProducts(),
             'customers' => $this->manager->getRepository(Customer::class)->findAll(),
@@ -131,6 +140,7 @@ class AdminController extends AbstractController
             'payments' => $paymentRepository->ordersLastFiveSuccessfully(),
             'deliverySuccessFully' =>  $deliveryRepository->isSuccessFully(),
             'deliveryIsNotSuccessFully' =>  $deliveryRepository->isNotSuccessFully(),
+            'orderReturnAmount' => $orderReturnAmount
         ]);
 
     }
@@ -141,8 +151,9 @@ class AdminController extends AbstractController
      */
     public function products(WoocommerceApiService $apiService)
     {
-        $products = $this->manager->getRepository(Product::class)->findBy([],['createdAt' => 'DESC']);
+        $products = $this->manager->getRepository(Product::class)->findBy(['deleted' => 0],['createdAt' => 'DESC']);
 
+        
         $sameProductName = [];
         $sameProductArray = [];
         $sameProductQuantity = [];
@@ -176,10 +187,11 @@ class AdminController extends AbstractController
 
         foreach($sameProductArray as $product){
            
-            if($sameProductQuantity[$product->getSlug()]){
+            if($sameProductQuantity[$product->getSlug()] >= 0){
                 $product->setQuantity($sameProductQuantity[$product->getSlug()]);
                 $products[] = $product;
             }
+
         }
 
         return $this->render('admin/products/products/index.html.twig', [
@@ -240,6 +252,7 @@ class AdminController extends AbstractController
                                     $productC = clone($product);
                                     $shop = $this->manager->getRepository(Shop::class)->find($key);
                                     $productC->setQuantity($quantity);
+                                    $productC->setDeleted(false);
                                     $productC->setShop($shop);
                                     $products[] = $productC;
                                 }
@@ -262,13 +275,25 @@ class AdminController extends AbstractController
                             $isVariable = true;
                         }
 
-                        foreach($products as $product){
-                            if($isVariable){
-                              $product->setWcProductId($response['id'] - 1);
-                            }else{
-                              $product->setWcProductId($response['id']);
+                        
+                        try{
+                            foreach($products as $product){
+                                if($isVariable){
+                                  $product->setWcProductId($response['id'] - 1);
+                                }else{
+                                  $product->setWcProductId($response['id']);
+                                }
+                                $this->manager->persist($product);
                             }
-                            $this->manager->persist($product);
+                        }catch(\Exception $e){
+                            foreach($products as $product){
+                                if($isVariable){
+                                  $product->setWcProductId(null);
+                                }else{
+                                  $product->setWcProductId(null);
+                                }
+                                $this->manager->persist($product);
+                            }
                         }
 
                         $this->manager->flush();
@@ -319,8 +344,10 @@ class AdminController extends AbstractController
     {   
 
 
-        if(is_null($product))
+        if(is_null($product)){
             throw $this->createNotFoundException("Ce produit n'existe pas");
+        }
+            
         
         $form = $this->createForm(ProductUpdateType::class, $product);
         $form->handleRequest($request);
@@ -329,19 +356,29 @@ class AdminController extends AbstractController
           
             
             if($request->get('shopQuantity')){
-
-              
+               
                 $totalQuantity = 0;
                 foreach($request->get('shopQuantity') as $key => $quantities){
                         foreach($quantities as $quantity){
 
                         $totalQuantity += $quantity;
+
                         if($key != 0){
+
                             $shop = $this->manager->getRepository(Shop::class)->find($key);
 
-                                foreach($shop->getProducts() as $productC){
-                                    if($product->getSlug() == $productC->getSlug()){
+                            $shopProducts = [];
 
+                            foreach($shop->getProducts() as $shopProduct){
+                                $shopProducts[] = $shopProduct;
+                            }
+
+                            if(!empty($shopProducts)){
+
+                                foreach($shop->getProducts() as $productC){
+                        
+                                    if($product->getShop() == $productC->getShop()){
+    
                                         $slugify = new Slugify();
                         
                                         $productC->setSlug($slugify->slugify($product->getName()));
@@ -351,51 +388,61 @@ class AdminController extends AbstractController
                                         $productC->setMinimumStock($product->getMinimumStock());
                                         $productC->setSellingPrice($product->getSellingPrice());
                                         $productC->setBuyingPrice($product->getBuyingPrice());
-                                        $productC->setOnSaleAmount($product->getOnSaleAmount());
-
+    
                                         if(is_null($product->getOnSaleAmount()) || $product->getOnSaleAmount() == 0.0){
                                             $productC->setOnSaleAmount(null);
+                                        }else{
+                                            $productC->setOnSaleAmount($product->getOnSaleAmount());
                                         }
-
+    
                                         $this->manager->persist($productC);
                                         $this->manager->flush(); 
-
-                                    }else{
-
-                                         $products = $this->manager->getRepository(Product::class)->findAll();
-
-                                         foreach($products as $productx){
-
-                                            $slugify = new Slugify();
-                                            $productx->setName($product->getName());
-                                            $productx->setSlug($slugify->slugify($product->getName()));
-                                            $productC->setQuantity($quantity);
-                                            $productC->setProvider($product->getProvider());
-                                            $productC->setMinimumStock($product->getMinimumStock());
-                                            $productC->setSellingPrice($product->getSellingPrice());
-                                            $productC->setBuyingPrice($product->getBuyingPrice());
-                                            $productC->setOnSaleAmount($product->getOnSaleAmount());
-
-                                            if(is_null($product->getOnSaleAmount())){
-                                                $productC->setOnSaleAmount(null);
+    
+                                    }
+                                    else{
+    
+                                            $products = $this->manager->getRepository(Product::class)->findAll();
+    
+                                            foreach($products as $productx){
+    
+                                            if($productx->getWcProductId() == $product->getWcProductId()){
+                                                $slugify = new Slugify();
+                                                $productx->setName($product->getName());
+                                                $productx->setSlug($slugify->slugify($product->getName()));
+                                                $productx->setQuantity($quantity);
+                                                $productx->setProvider($product->getProvider());
+                                                $productx->setMinimumStock($product->getMinimumStock());
+                                                $productx->setSellingPrice($product->getSellingPrice());
+                                                $productx->setBuyingPrice($product->getBuyingPrice());
+    
+                                                if(is_null($product->getOnSaleAmount())){
+                                                    $productx->setOnSaleAmount(null);
+                                                }else{
+                                                    $productx->setOnSaleAmount($product->getOnSaleAmount());
+                                                }
+    
+                                                $this->manager->persist($productx);
+                                                $this->manager->flush(); 
                                             }
-
-                                 
-
-
-                                            $this->manager->persist($productx);
-                                            $this->manager->flush(); 
-                                         }
-
-                                          
+                                            
+                                            }
     
                                     }
                                 }
+                            }else{
+
+                                $nProduct = new  Product();
+                                $nProduct = clone($product);
+                                $nProduct->setQuantity($quantity);
+                                $shop->addProduct($nProduct);
+                                $this->manager->persist($shop);
+                                $this->manager->flush();
+                            }
                         }
                     }
 
                 }
-              
+                
                 $product->setQuantity($totalQuantity);
        
                 $this->api->put('products',$product);
@@ -424,33 +471,31 @@ class AdminController extends AbstractController
      * @param Product $request
      * @return Response
      */
-    public function deleteProduct(Request $request, Product $product): Response
+    public function deleteProduct(Product $product): Response
     {
         $products = $this->manager->getRepository(Product::class)->findBy(['slug' => $product->getSlug()]);
 
-        $productCopy = clone($product);
-
-        if(empty($products)){
+        if(is_null($product)){
             throw $this->createNotFoundException("Ce produit n'existe pas!");
         }
 
         $this->manager->getConnection()->beginTransaction();
         $this->manager->getConnection()->setAutoCommit(false);
-
         try{
 
             foreach($products as $product){
-                $this->manager->remove($product);
+                $product->setDeleted(true);
+                $this->manager->flush($product);
             }
 
             $this->manager->flush();
             $this->manager->commit();
 
-            $this->addFlash("success", "Produit supprimé du magasin ".$productCopy->getShop()." !");
+            $this->addFlash("success", "Produit supprimé du magasin ".$product->getShop()." !");
         }catch(\Exception $e){
            throw $e;
         }
-        $this->api->delete('products', $productCopy);
+        $this->api->delete('products', $product);
 
         return  $this->redirectToRoute("admin_products");
     }
@@ -462,7 +507,7 @@ class AdminController extends AbstractController
     public function categories(): Response
     {
       return  $this->render('admin/products/categories/index.html.twig', [
-            'categories' => $this->manager->getRepository(Category::class)->findAll()
+            'categories' => $this->manager->getRepository(Category::class)->findBy(['deleted' => 0],['createdAt', 'DESC'])
         ]);
     }
 
@@ -572,7 +617,8 @@ class AdminController extends AbstractController
         
         $this->api->delete("categories", $category);
         
-        $this->manager->remove($category);
+        $category->setDeleted(true);
+        $this->manager->persist($category);
         $this->manager->flush();
 
 
@@ -590,7 +636,7 @@ class AdminController extends AbstractController
     public function customers()
     {
         return $this->render("admin/contacts/customers/index.html.twig", [
-            'customers' => $this->manager->getRepository(Customer::class)->findBy([],['createdAt' => 'DESC'])
+            'customers' => $this->manager->getRepository(Customer::class)->findBy(['deleted' => 0],['createdAt' => 'DESC'])
         ]);
     }
 
@@ -668,9 +714,11 @@ class AdminController extends AbstractController
             return $this->redirectToRoute('admin_customers');
         }
 
-        $this->manager->remove($customer);
+        $customer->setDeleted(true);
+        $this->manager->persist($customer);
         $this->manager->flush();
 
+        $this->addFlash("success", "Client supprimé!");
         return $this->redirectToRoute('admin_customers');
     }
 
@@ -683,7 +731,7 @@ class AdminController extends AbstractController
     public function providers()
     {
         return $this->render("admin/contacts/providers/index.html.twig", [
-            'providers' => $this->manager->getRepository(Provider::class)->findAll()
+            'providers' => $this->manager->getRepository(Provider::class)->findBy(['deleted' => 0], ['createdAt' => 'DESC'])
         ]);
     }
 
@@ -700,7 +748,8 @@ class AdminController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid())
-        {
+        {   
+            $provider->setDeleted(false);
             $this->manager->persist($provider);
             $this->manager->flush($provider);
 
@@ -760,7 +809,8 @@ class AdminController extends AbstractController
             return $this->redirectToRoute('admin_providers');
         }
 
-        $this->manager->remove($provider);
+        $provider->setDeleted(true);
+        $this->manager->persist($provider);
         $this->manager->flush();
 
         $this->addFlash("success", "Fournisseur supprimé avec succès!");
@@ -789,7 +839,7 @@ class AdminController extends AbstractController
     public function shops()
     {
         return $this->render('admin/shops/index.html.twig',[
-            'shops' => $this->manager->getRepository(Shop::class)->findAll()
+            'shops' => $this->manager->getRepository(Shop::class)->findBy(['deleted' => 0],['createdAt' => 'DESC'])
         ]);
     }
 
@@ -939,7 +989,8 @@ class AdminController extends AbstractController
             $this->redirectToRoute('admin_shops');
         }
 
-        $this->manager->remove($shop);
+        $shop->setDeleted(true);
+        $this->manager->persist($shop);
         $this->manager->flush();
 
         $this->addFlash("success", "Magasin supprimé");
@@ -1234,7 +1285,7 @@ class AdminController extends AbstractController
     public function paymentTypes()
     {
         return $this->render('admin/options/payment_types/index.html.twig', [
-            'paymentTypes' => $this->manager->getRepository(PaymentType::class)->findAll()
+            'paymentTypes' => $this->manager->getRepository(PaymentType::class)->findBy(['deleted' => 0],['createdAt' => 'DESC'])
         ]);
     }
 
@@ -1303,7 +1354,8 @@ class AdminController extends AbstractController
         if(is_null($paymentType))
              throw $this->createNotFoundException('Ce type de paiement n\'existe pas!');
 
-        $this->manager->remove($paymentType);
+        $paymentType->setDeleted(true);
+        $this->manager->flush($paymentType);
         $this->manager->flush();
 
         $this->addFlash("success", "Méthode de paiement supprimé avec succès");
@@ -1322,7 +1374,7 @@ class AdminController extends AbstractController
     public function deliveryMans()
     {
         return $this->render('admin/contacts/delivery_mans/index.html.twig', [
-            'mans' => $this->manager->getRepository(DeliveryMan::class)->findAll()
+            'mans' => $this->manager->getRepository(DeliveryMan::class)->findBy(['deleted' => 0], ['createdAt' => 'DESC'])
         ]);
     }
 
@@ -1391,7 +1443,8 @@ class AdminController extends AbstractController
         if(is_null($man))
              throw $this->createNotFoundException('Ce livreur  n\'existe pas!');
 
-        $this->manager->remove($man);
+        $man->setDeleted(true);
+        $this->manager->flsuh($man);
         $this->manager->flush();
 
         $this->addFlash("success", "Livreur supprimé avec succès");
@@ -1407,7 +1460,7 @@ class AdminController extends AbstractController
     public function deliveryMansDeliveries(DeliveryMan $deliveryMan)
     {
         return $this->render('admin/contacts/delivery_mans/orders.html.twig', [
-            'deliveries' => $this->manager->getRepository(Delivery::class)->findBy(['deliveryMan' => $deliveryMan]),
+            'deliveries' => $this->manager->getRepository(Delivery::class)->findBy(['deliveryMan' => $deliveryMan, 'deleted' => 0],['createdAt' => 'DESC']),
             'mans' => $deliveryMan
         ]);
     }
@@ -1618,7 +1671,7 @@ class AdminController extends AbstractController
 
             $attribute->setRegister($this->getUser());
            
-            $options = explode('|',$attribute->getText());
+            $options = explode(',',$attribute->getText());
             $attribute->setOptions($options);
             
             $slugify = new Slugify([ 'separator' => '_' ]);
@@ -1649,7 +1702,7 @@ class AdminController extends AbstractController
 
         for($i = 0; $i <= count($attribute->getOptions()) - 1; $i++){
             $text .= $attribute->getOptions()[$i];
-            $text .= '|';
+            $text .= ',';
         }
 
         $text = substr($text, 0, -1);
@@ -1660,7 +1713,7 @@ class AdminController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
-            $options = explode('|',$attribute->getText());
+            $options = explode(',',$attribute->getText());
             $attribute->setOptions($options);
              
             $slugify = new Slugify([ 'separator' => '_' ]);
@@ -2095,8 +2148,20 @@ class AdminController extends AbstractController
     {
        $replenishment = new Replenishment();
        $providerProduct = new ProviderProduct();
+
+       $products = $this->manager->getRepository(Product::class)->findAll();
+
+       $slugArray = [];
+       $productArray = [];
+
+       foreach($products as $product){
+           if(!in_array($product->getSlug(), $slugArray)){
+               $slugArray[] = $product->getSlug();
+               $productArray[] = $product;
+           }
+       }
        
-       $form = $this->createForm(ReplenishmentType::class, $replenishment);
+       $form = $this->createForm(ReplenishmentType::class, $replenishment, ['products' => $productArray]);
        $form->handleRequest($request);
 
        if($form->isSubmitted() && $form->isValid()){
@@ -2290,14 +2355,12 @@ class AdminController extends AbstractController
             $results = $this->manager->getRepository(Payment::class)->searchPayments($orderSearch->getShop(), $orderSearch->getStart(),$orderSearch->getEnd(),$orderSearch->getPaymentType());
         }
 
-        $payments = $this->manager->getRepository(Payment::class)->findPaymentsByWeek();
-
         return $this->render('admin/reports/index.html.twig', [
             'shops' => $this->manager->getRepository(Shop::class)->findBy([],['createdAt' => 'DESC']),
             'i' => 1,
             'categories' => $this->manager->getRepository(Category::class)->findAll(),
             'form' => $form->createView(),
-            'payments' => $this->manager->getRepository(Payment::class)->findAll(),
+            'payments' => $this->manager->getRepository(Payment::class)->findBy(['status' => 1]),
             'results' => $results
         ]);
     }
@@ -2333,6 +2396,8 @@ class AdminController extends AbstractController
             $totalPaid += $payment->getAmountPaid();
             $totalAmount += $payment->getAmount();
         }
+
+        $totalPaid += $deliveryAmount;
 
         $shop = $this->manager->getRepository(Shop::class)->find($shop);
         return $this->render('admin/reports/shop.html.twig', [
@@ -2540,6 +2605,7 @@ class AdminController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
+            $admin->setDeleted(false);
             $passwordHash = $passwordEncoder->encodePassword($admin, '123456');
             $admin->setPassword($passwordHash);
             $admin->setRoles(["ROLE_ADMIN"]);
@@ -2717,4 +2783,78 @@ class AdminController extends AbstractController
         return $this->redirectToRoute("admin_fund_operations");
     }
 
+
+     /**
+     * @Route("/cancel/order/{id}", name="admin_cancel_order", methods={"GET"})
+     * @return Response
+    */
+    public function cancelOrder(Order $order)
+    {
+       $orderProducts = $order->getOrderProducts();
+       $products = $this->manager->getRepository(Product::class)->findAll();
+       $invoice = $this->manager->getRepository(Invoice::class)->findOneBy(['orders' => $order]);
+       $payment = $this->manager->getRepository(Payment::class)->findOneBy(['invoice' => $invoice]);
+       $productsx = [];
+
+       $this->manager->getConnection()->beginTransaction();
+       $this->manager->getConnection()->setAutoCommit(false);
+
+       try{
+            foreach($orderProducts as $oP){
+                foreach($products as $product){
+                    if($oP->getProductOrder()->getShop() === $product->getShop()){
+                        if($product->getId() === $oP->getProducts()->getId()){
+                            $product->setQuantity($product->getQuantity() + $oP->getQuantity());
+                            $productsx[] = $product;
+                        }
+                    }
+                }
+            }
+           
+            $payment->setStatus(false);
+            $this->manager->persist($payment);
+
+
+            foreach($productsx as $productx){
+                $this->manager->persist($productx);
+            }
+            $this->manager->flush();
+            $this->manager->commit();
+
+            
+            $productArray = [];
+            $slugArray = [];
+
+            foreach($productsx as $productx){
+                $products = $this->manager->getRepository(Product::class)->findBy(['slug' => $productx->getSlug()]);
+
+                foreach($products as $product){
+                    if(!in_array($product->getSlug(), $slugArray)){
+                        $slugArray[] = $product->getSlug();
+                        $productArray[$product->getSlug()] = $product;
+    
+                    }else{
+                        $productx = $productArray[$product->getSlug()];
+                        $productx->setQuantity($productx->getQuantity() + $product->getQuantity());
+                        $productArray[$product->getSlug()] = $productx;
+                    }
+                }
+            }
+          
+         
+            foreach($productArray as $product){
+                // $this->api->putQ('products', $product);
+                dd($productArray);
+            }
+
+
+            $this->addFlash("success","Vente annulée!");
+            
+       }catch(\Exception $e){
+            throw $e;
+       }
+      
+
+       return $this->redirectToRoute('admin_products_orders');
+    }
 }

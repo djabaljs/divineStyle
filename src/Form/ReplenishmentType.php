@@ -16,15 +16,14 @@ use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 
 class ReplenishmentType extends AbstractType
 {
+    private $products;
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
+        $this->products = $options['products'];
         $builder
             ->add('product', EntityType::class, [
                 'class' => Product::class,
-                'choice_label' => 'name',
-                'query_builder' => function(ProductRepository $productRepository){
-                  return $productRepository->productsDistinct();
-                },
+                'choices' => $this->products,
                 'label' => false,
                 'placeholder' => 'Produit à réapprovisionner',
                 'attr' => [
@@ -44,7 +43,8 @@ class ReplenishmentType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
-            'data_class' => Replenishment::class
+            'data_class' => Replenishment::class,
+            'products' => null
         ]);
     }
 }

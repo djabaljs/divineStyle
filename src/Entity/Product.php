@@ -138,6 +138,11 @@ class Product
      */
     private $onSaleAmount;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $deleted;
+
     public function __construct()
     {
         $this->lengths = new ArrayCollection();
@@ -512,4 +517,17 @@ class Product
 
         return $this;
     }
+
+    public function getDeleted(): ?bool
+    {
+        return $this->deleted;
+    }
+
+    public function setDeleted(bool $deleted): self
+    {
+        $this->deleted = $deleted;
+
+        return $this;
+    }
+
 }

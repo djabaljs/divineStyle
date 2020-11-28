@@ -19,13 +19,13 @@ class AttributeType extends AbstractType
             ->add('name', TextType::class, [
                 'label' => false
             ])
-            ->add('position', IntegerType::class, [
-                'label' => false,
-                'attr' =>  [
-                    'min' => 0,
-                    'max' => 5
-                ]
-            ])
+            // ->add('position', IntegerType::class, [
+            //     'label' => false,
+            //     'attr' =>  [
+            //         'min' => 0,
+            //         'max' => 5
+            //     ]
+            // ])
             ->add('visible', CheckboxType::class, [
                 'label' => false,
                 'required' => false,

@@ -44,6 +44,11 @@ class DeliveryMan
      */
     private $deliveries;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $deleted;
+
     public function __construct()
     {
         $this->deliveries = new ArrayCollection();
@@ -136,5 +141,17 @@ class DeliveryMan
     public function __toString()
     {
         return $this->getFirstname().' '.$this->getLastname();
+    }
+
+    public function getDeleted(): ?bool
+    {
+        return $this->deleted;
+    }
+
+    public function setDeleted(bool $deleted): self
+    {
+        $this->deleted = $deleted;
+
+        return $this;
     }
 }

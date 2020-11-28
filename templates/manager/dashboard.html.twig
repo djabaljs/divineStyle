@@ -85,7 +85,7 @@
                             <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12 col-12">
                                 <div class="card border-3 border-top border-top-primary">
                                     <div class="card-body">
-                                        <h5 class="text-muted">Articles</h5>
+                                        <h5 class="text-muted">Produits</h5>
                                         <div class="metric-value d-inline-block">
                                             <h1 class="mb-1">{{products|length}}</h1>
                                         </div>
@@ -104,9 +104,9 @@
                             <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12 col-12">
                                 <div class="card border-3 border-top border-top-primary">
                                     <div class="card-body">
-                                        <h5 class="text-muted">Montant dû</h5>
+                                        <h5 class="text-muted">Avoir</h5>
                                         <div class="metric-value d-inline-block">
-                                            <h1 class="mb-1">{{totalAmount|format_currency('XOF')}}</h1>
+                                            <h1 class="mb-1">{{orderReturnAmount|format_currency('XOF')}}</h1>
                                         </div>
                                         <div class="metric-label d-inline-block float-right text-danger font-weight-bold">
                                             {# <span class="icon-circle-small icon-box-xs text-danger bg-danger-light bg-danger-light "><i class="fa fa-fw fa-arrow-down"></i></span><span class="ml-1">4%</span> #}
@@ -136,9 +136,9 @@
                             <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12 col-12">
                                 <div class="card border-3 border-top border-top-primary">
                                     <div class="card-body">
-                                        <h5 class="text-muted">Livraisons non effectuées</h5>
+                                        <h5 class="text-muted">Livraisons effectuées / Non effectuées</h5>
                                         <div class="metric-value d-inline-block">
-                                            <h1 class="mb-1">{{deliveryIsNotSuccessfully|length}}</h1>
+                                            <h1 class="mb-1">{{deliveryIsSuccessfully|length}}/{{deliveryIsNotSuccessfully|length}}</h1>
                                         </div>
                                         <div class="metric-label d-inline-block float-right text-danger font-weight-bold">
                                             {# <span class="icon-circle-small icon-box-xs text-danger bg-danger-light bg-danger-light "><i class="fa fa-fw fa-arrow-down"></i></span><span class="ml-1">4%</span> #}
