@@ -42,12 +42,12 @@
                     <!-- ============================================================== -->
                 </div>
                 <br/>
-                  <div class="row">
+              <div class="row">
                     <!-- ============================================================== -->
                     <!-- button  -->
                     <!-- ============================================================== -->
                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                        <a href="{{path('manager_products_orders_create')}}" class="btn btn-success" style="color:#fff" ><i class="fas fa-save"></i> Enregistrer une vente</a>
+                            <a href="{{path('admin_reports_shop', {id: shop.id})}}" class="btn btn-success" style="color:#fff" ><i class="fas"></i>Retour</a>
                    </div>
                     <!-- ============================================================== -->
                     <!-- button  -->
@@ -64,7 +64,7 @@
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h5 class="mb-0">Liste des ventes effectuées</h5>
+                                <h5 class="mb-0">Liste des retours de marchandise</h5>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
@@ -72,56 +72,40 @@
                                         <thead>
                                             <tr>
                                                 <th>N°</th>
-                                                <th>N° commande</th>
+                                                <th>N° Facture 1</th>
+                                                <th>N° Facture 2</th>
                                                 <th>Client</th>
-                                                <th>Montant</th>
-                                                <th>Remise</th>
-                                                <th>Statut</th>
+                                                <th>Avoir</th>
                                                 <th>Date</th>
                                                 {# <th>Heure</th> #}
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                         {% for payment in payments %}
-                                            <tr>
+                                           {% for order in orders %}
+                                             <tr>
                                                 <td>{{loop.index}}</td>
-                                                <td>{{payment.invoice.orders.orderNumber}}</td>
-                                                <td>{{payment.invoice.orders.customer}}</td>
-                                                <td>{{payment.invoice.orders.saleTotal| format_currency('XOF') }}</td>
-                                                 {% if payment.invoice.discount is not null %}
-                                                <td>{{payment.invoice.discount|format_currency('XOF')}}</td>
-                                                {% else %}
-                                                <td>{{ 0|format_currency('XOF')}}</td>
-                                                {% endif %}
-                                                {% if payment.status %}
-                                                <td>PAYÉ</td>
-                                                {% else %}
-                                                <td>ANNULÉ</td>
-                                                {% endif %}
-                                                <td>{{payment.invoice.orders.createdAt|date('Y-m-d')}}</td>
-                                                {# <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td> #}
-                                                 <td>
-                                                    {# <a href="{{path('manager_products_orders_show', {id: payment.invoice.orders.id})}}" class="btn btn-info"><i class="fas fa-eye"></i></a> #}
-                                                    {# <a href="{{path('admin_products_orders_update', {id: order.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a> #}
-                                                    <a href="{{path('manager_products_orders_invoice_show', {id: payment.invoice.id})}}" class="btn btn-primary"><i class="fas fa-file"></i></a>
-                                                     
-                                                    {% if payment.status %}
-                                                    <a href="{{path('manager_cancel_order', {id: payment.invoice.orders.id})}}" class="btn btn-success"><i class="fas fa-times-circle"></i></a>
-                                                    
-                                                    {% endif %}
+                                                <td>{{order.firstOrder.invoice.orders.orderNumber}}</td>
+                                                <td>{{order.lastOrder.invoice.orders.orderNumber}}</td>
+                                                <td>{{order.lastOrder.invoice.orders.customer}}</td>
+                                                <td>{{order.amount|format_currency('XOF')}}</td>
+                                                <td>{{order.createdAt|date('Y-m-d')}}</td>
+                                                {# <td>{{order.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td> #}
+                                                <td>
+                                                  {# <a href="{{path('admin_orders_return_update', {id: order.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a> #}
+                                                  <a href="{{path('admin_orders_return_invoice', {id: order.id})}}" class="btn btn-success"><i class="fas fa-file"></i></a>
+                                                  <a href="{{path('admin_orders_return_delete', {id: order.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
                                                 </td>
                                             </tr>
-                                         {% endfor %}
+                                           {% endfor %}
                                         </tbody>
                                         <tfoot>
-                                              <tr>
-                                                <th>N°</th>
-                                                <th>N° commande</th>
+                                            <tr>
+                                             <th>N°</th>
+                                                <th>N° commande 1</th>
+                                                <th>N° commande 2</th>
                                                 <th>Client</th>
-                                                <th>Montant</th>
-                                                <th>Remise</th>
-                                                <th>Statut</th>
+                                                <th>Avoir</th>
                                                 <th>Date</th>
                                                 {# <th>Heure</th> #}
                                                 <th>Actions</th>
@@ -135,7 +119,7 @@
                     <!-- ============================================================== -->
                     <!-- end data table  -->
                     <!-- ============================================================== -->
-                 </div>
+                </div>
                      
 </div>
 {% endblock %}

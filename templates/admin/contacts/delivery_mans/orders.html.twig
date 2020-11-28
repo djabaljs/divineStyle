@@ -81,7 +81,7 @@
                                                 <th>Téléphone</th>
                                                 <th>Statut</th>
                                                 <th>Date</th>
-                                                <th>Heure</th>
+                                                {# <th>Heure</th> #}
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -96,7 +96,7 @@
                                                 <td>{{delivery.recipientPhone }}</td>
                                                 <td>{{delivery.status == null? 'Pas livré': 'Livré' }}</td>
                                                 <td>{{delivery.order.createdAt|date('Y-m-d')}}</td>
-                                                <td>{{delivery.order.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
+                                                {# <td>{{delivery.order.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td> #}
                                                  <td>
                                                     <a href="{{path('admin_products_orders_show', {id: delivery.order.id})}}" class="btn btn-info"><i class="fas fa-eye"></i></a>
                                                     {# <a href="{{path('admin_products_orders_invoice_show', {id: payment.invoice.id})}}" class="btn btn-primary"><i class="fas fa-file"></i></a> #}
@@ -115,7 +115,7 @@
                                                 <th>Téléphone</th>
                                                 <th>Statut</th>
                                                 <th>Date</th>
-                                                <th>Heure</th>
+                                                {# <th>Heure</th> #}
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>

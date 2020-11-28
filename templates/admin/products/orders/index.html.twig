@@ -80,7 +80,7 @@
                                                 <th>Remise</th>
                                                 <th>Statut</th>
                                                 <th>Date</th>
-                                                <th>Heure</th>
+                                                {# <th>Heure</th> #}
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -98,7 +98,7 @@
                                                 <td>ANNULÉ</td>
                                                 {% endif %}
                                                 <td>{{payment.invoice.orders.createdAt|date('Y-m-d')}}</td>
-                                                <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
+                                                {# <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td> #}
                                                  <td>
                                                     {# <a href="{{path('admin_products_orders_show', {id: payment.invoice.orders.id})}}" class="btn btn-info"><i class="fas fa-eye"></i></a> #}
                                                     {# <a href="{{path('admin_products_orders_update', {id: order.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a> #}
@@ -106,7 +106,7 @@
                                                     <a href="{{path('admin_products_orders_delete', {id: payment.invoice.orders.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
                                                  
                                                     {% if payment.status %}
-                                                    <a href="{{path('manager_cancel_order', {id: payment.invoice.orders.id})}}" class="btn btn-success"><i class="fas fa-times-circle"></i></a>
+                                                    <a href="{{path('admin_cancel_order', {id: payment.invoice.orders.id})}}" class="btn btn-success"><i class="fas fa-times-circle"></i></a>
                                                     
                                                     {% endif %}
                                                 </td>
@@ -122,7 +122,7 @@
                                                 <th>Remise</th>
                                                 <th>Statut</th>
                                                 <th>Date</th>
-                                                <th>Heure</th>
+                                                {# <th>Heure</th> #}
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>

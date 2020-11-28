@@ -93,7 +93,8 @@
                                                 <td>
                                                 {# <a href="{{path('admin_customer_create', {id: category['id']})}}" class="btn btn-info"><i class="fas fa-eye"></i></a> #}
                                                 <a href="{{path('admin_customers_update', {id: customer.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                                <a class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                                                <a href="{{path('admin_customer_orders', {id: customer.id})}}" class="btn btn-success"><i class="fas fa-file"></i></a>
+                                                <a class="btn btn-danger" href="{{path('admin_customers_delete', {id: customer.id})}}"><i class="fas fa-trash"></i></a>
                                                 </td>
                                             </tr>
                                            {% endfor %}

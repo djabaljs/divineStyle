@@ -26,8 +26,13 @@
                                     <h5 class="mb-0 text-white nav-user-name">{{app.user.firstname}} {{app.user.lastname}}</h5>
                                     <span class="status"></span><span class="ml-2">Disponible</span>
                                 </div>
-                                <a class="dropdown-item" href="#"><i class="fas fa-user mr-2"></i>Compte</a>
-                                <a class="dropdown-item" href="#"><i class="fas fa-cog mr-2"></i>Paramètre</a>
+                                {% if is_granted("ROLE_ADMIN") or is_granted("ROLE_SUPER_ADMIN") %}
+                                <a class="dropdown-item" href="{{path("admin_setting")}}"><i class="fas fa-user"></i> Compte</a>
+                                {% elseif is_granted("ROLE_MANAGER") %}
+                                 <a class="dropdown-item" href="{{path("manager_setting")}}"><i class="fas fa-user"></i> Compte</a>
+                                {% endif %}
+
+                                {# <a class="dropdown-item" href="#"><i class="fas fa-cog mr-2"></i>Paramètre</a> #}
                                 <a class="dropdown-item" href="{{path('app_logout')}}"><i class="fas fa-power-off mr-2"></i>Déconnexion</a>
                             </div>
                         </li>

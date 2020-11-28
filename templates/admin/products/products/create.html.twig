@@ -85,7 +85,10 @@
                                                     {{form_row(form.buyingPrice, {attr:{'class': 'form-control', 'style':'height:50px'}})}}
                                                 </div>
                                             </div>
+                                            {% else %}
+                                                {# {{form_row(form.buyingPrice, {attr:{'class': 'form-control', 'style':'height:50px'}})}} #}
                                             {% endif %}
+
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="product_selling_price">Prix de vente</label>

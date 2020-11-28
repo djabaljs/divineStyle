@@ -59,13 +59,13 @@ class CategoryRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
-    public function getShopProductsQuantity($shop)
+    public function getShopProductsQuantity(Shop $shop)
     {
         $qb = $this->createQueryBuilder('c');
         $qb
-            ->select('c')
             ->innerJoin('c.products', 'p')
-            ->where('p.shop = :shop')
+            ->andWhere('p.shop = :shop')
+            ->andWhere('p.deleted = FALSE')
             ->setParameter('shop', $shop)
         ;
         

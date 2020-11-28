@@ -15,14 +15,13 @@ use App\Entity\Customer;
 use App\Entity\Delivery;
 use App\Entity\Versement;
 use App\Form\BillingType;
+use App\Form\SettingType;
 use App\Form\CustomerType;
 use App\Form\DeliveryType;
 use App\Entity\OrderReturn;
-use App\Entity\OrderSearch;
 use App\Form\VersementType;
 use App\Entity\OrderProduct;
 use App\Form\OrderReturnType;
-use App\Form\OrderSearchShopType;
 use App\Repository\ShopRepository;
 use App\Repository\PaymentRepository;
 use App\Services\Invoice\ReturnInvoice;
@@ -37,6 +36,7 @@ use App\Services\Woocommerce\WoocommerceApiService;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 /**
  * @IsGranted("ROLE_MANAGER")
@@ -160,6 +160,18 @@ class ManagerController extends AbstractController
      */
     public function categories(): Response
     {
+
+        $categories = $this->manager->getRepository(Category::class)->getShopProductsQuantity($this->shop);
+        
+        // $quantity = 0;
+        // foreach($categories as $category){
+        //     foreach($category->getProducts() as $product){
+        //         dd($product);
+        //         $quantity += $product->getQuantity();
+        //     }
+        // }
+
+        // dd($quantity);
         return $this->render('manager/products/categories/index.html.twig', [
             'categories' => $this->manager->getRepository(Category::class)->getShopProductsQuantity($this->shop)
         ]);
@@ -406,9 +418,11 @@ class ManagerController extends AbstractController
                     $customer->setLastname($billing->getCustomerLastname());
                     $customer->setPhone($billing->getCustomerPhone());
                     $customer->setEmail($billing->getCustomerEmail());
+                    $customer->setDeleted(false);
                     $customer->setBirthDay($billing->getCustomerBirthDay());
                     $customer->setShops($this->shop);
                 }else{
+
                     $customer = $billing->getCustomer();
                 }
 
@@ -450,8 +464,7 @@ class ManagerController extends AbstractController
                     $delivery->setDeliveryMan($billing->getDeliveryMan());
                     $delivery->setAddress($billing->getDeliveryAddress());
                     $delivery->setOrder($order);
-                    
-                    $delivery->setRecipientPhone($billing->getCustomer()->getPhone());
+        
                     $this->manager->persist($delivery);
                 }
 
@@ -467,11 +480,13 @@ class ManagerController extends AbstractController
                     $delivery->setAddress($billing->getDeliveryAddress());
                     $delivery->setAmountPaid($billing->getDeliveryAmount());
                     $delivery->setStatus(false);
+                    $delivery->setDeleted(false);
+
                    
                     if($billing->getChoice() == 0){
-                        $delivery->setRecipient($billing->getCustomer());
+                        $delivery->setRecipient($customer);
                         
-                        $delivery->setRecipientPhone($billing->getCustomer()->getPhone());
+                        $delivery->setRecipientPhone($customer->getPhone());
                     }else{
                         $delivery->setRecipient($billing->getRecipient());
                         $delivery->setRecipientPhone($billing->getRecipientPhone());
@@ -689,6 +704,7 @@ class ManagerController extends AbstractController
             'form' => $form->createView()
         ]);
     }
+
 
     /**
      * @Route("/orders/deliveries/delete/{id}", name="manager_orders_deliveries_delete", methods={"GET"})
@@ -1170,6 +1186,47 @@ class ManagerController extends AbstractController
 
         return $this->render('manager/products/orders/return/index.html.twig', [
             'orders' =>  $this->manager->getRepository(OrderReturn::class)->findBy([],['createdAt' => 'DESC'])
+        ]);
+    }
+
+
+    /**
+     * @Route("/setting", name="manager_setting", methods={"GET","POST"})
+     * @return Response
+    */
+    public function setting(Request $request, UserPasswordEncoderInterface $encoder)
+    {
+        $manager = $this->getUser();
+
+        $form = $this->createForm(SettingType::class, $manager);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+           
+
+            $isPasswordValid = $encoder->isPasswordValid($manager, $manager->getOldPassword());
+          
+           if($isPasswordValid){
+            
+            $passHass = $encoder->encodePassword($manager, $manager->getNewPassword());
+
+            $manager->setPassword($passHass);
+            
+            $this->manager->persist($manager);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Paramètres modifiés");
+
+            return $this->redirectToRoute("manager_setting");
+           }else{
+               $this->addFlash("danger", "Mot de passe incorrecte.");
+           }
+             
+           
+        }
+
+        return $this->render('manager/setting/index.html.twig', [
+            'form' => $form->createView()
         ]);
     }
 }

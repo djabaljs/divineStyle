@@ -75,7 +75,7 @@
                                                 <th>Montant</th>
                                                 <th>Description</th>
                                                 <th>Date</th>
-                                                <th>Heure</th>
+                                                {# <th>Heure</th> #}
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -87,13 +87,13 @@
                                                 <td>{{versement.amount}}</td>
                                                 <td>{{versement.description}}</td>
                                                 <td>{{versement.createdAt|date("Y-m-d")}}</td>
-                                                <td>{{versement.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ")}}</td>
+                                                {# <td>{{versement.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ")}}</td> #}
                                             </tr>
                                            {% endfor %}
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <td align="right" colspan="4">Total:</td>
+                                                <td align="right" colspan="3">Total:</td>
                                                 <td>{{total|format_currency('XOF')}}</td>
                                             </tr>
                                         </tfoot>

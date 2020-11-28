@@ -126,7 +126,7 @@ class PaymentRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('p');
         $qb
-            // ->where('p.status = TRUE')
+            ->where('p.status = TRUE')
             ->innerJoin('p.invoice', 'i')
             ->innerJoin('i.orders', 'o')
             ->andWhere('o.shop = :shop')
@@ -137,12 +137,11 @@ class PaymentRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
-    public function shopOrdersSuccessfully($shop)
+    public function shopOrders($shop)
     {
         $qb = $this->createQueryBuilder('p');
         $qb 
             ->andWhere('p.amountPaid != 0')
-            ->andWhere('p.status = TRUE')
             ->innerJoin('p.invoice', 'i')
             ->innerJoin('i.orders', 'o')
             ->andWhere('o.shop = :shop')
@@ -192,6 +191,26 @@ class PaymentRepository extends ServiceEntityRepository
         
     }
 
+
+    public function findPaymentsByWeek()
+    {
+        $start_week = date("Y-m-d",strtotime('monday this week'));
+        $end_week = date("Y-m-d",strtotime('sunday this week'));
+        return $this->createQueryBuilder('p')
+                    ->andWhere('p.status = TRUE')
+                    ->innerJoin('p.invoice', 'i')
+                    ->innerJoin('i.orders', 'o')
+                    ->andWhere('p.createdAt >= :start')
+                    ->andWhere('p.createdAt <= :end')
+                    ->setParameter('start',$start_week)                      
+                    ->setParameter('end',$end_week)
+                    ->getQuery()
+                    ->getResult(); 
+                ;
+        
+    }
+
+
     public function searchPayments($shop, $start, $end, $paymentType)
     {
         $start = $start->format(('Y-m-d')." 00:00:00");
@@ -203,7 +222,7 @@ class PaymentRepository extends ServiceEntityRepository
         if(is_null($shop) && is_null($paymentType)){
             
             return $this->createQueryBuilder('p')
-            ->where('p.createdAt BETWEEN :start AND :end')
+            ->andWhere('p.createdAt BETWEEN :start AND :end')
             ->andWhere('p.status = TRUE')
             ->setParameter('start', $start)
             ->setParameter('end', $end)
@@ -234,7 +253,7 @@ class PaymentRepository extends ServiceEntityRepository
         if(is_null($paymentType)){
 
             return $this->createQueryBuilder('p')
-            ->where('p.createdAt BETWEEN :start AND :end')
+            ->andWhere('p.createdAt BETWEEN :start AND :end')
             ->andWhere('p.status = TRUE')
             ->setParameter('start', $start)
             ->setParameter('end', $end)
@@ -250,7 +269,7 @@ class PaymentRepository extends ServiceEntityRepository
         }else{
 
             return $this->createQueryBuilder('p')
-            ->where('p.createdAt BETWEEN :start AND :end')
+            ->andWhere('p.createdAt BETWEEN :start AND :end')
             ->andWhere('p.status = TRUE')
             ->andWhere('p.paymentType = :paymentType')
             ->setParameter('start', $start)

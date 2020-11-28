@@ -29,6 +29,7 @@ use App\Entity\Attribute;
 use App\Entity\Versement;
 use App\Form\BillingType;
 use App\Form\ProductType;
+use App\Form\SettingType;
 use App\Form\CategoryType;
 use App\Form\CustomerType;
 use App\Form\DeliveryType;
@@ -44,6 +45,7 @@ use App\Entity\OrderProduct;
 use App\Form\ShopUpdateType;
 use App\Entity\Replenishment;
 use App\Form\DeliveryManType;
+use App\Form\OrderReturnType;
 use App\Form\PaymentTypeType;
 use App\Entity\ProviderProduct;
 use App\Form\AdminDeliveryType;
@@ -52,9 +54,11 @@ use App\Form\ProductUpdateType;
 use App\Form\ReplenishmentType;
 use App\Repository\UserRepository;
 use App\Form\OrderSearchByShopType;
+use App\Form\SimpleAdminProductType;
 use App\Repository\PaymentRepository;
 use App\Repository\ProductRepository;
 use App\Repository\DeliveryRepository;
+use App\Services\Invoice\ReturnInvoice;
 use App\Services\Invoice\InvoiceService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -211,8 +215,12 @@ class AdminController extends AbstractController
         $product = new Product();
         $color = new Color();
         $length = new Length();
-
-        $form = $this->createForm(ProductType::class, $product);
+        
+        if (in_array('ROLE_SUPER_ADMIN', $this->getUser()->getRoles())){
+            $form = $this->createForm(ProductType::class, $product);
+        }elseif(in_array('ROLE_ADMIN', $this->getUser()->getRoles())){
+            $form = $this->createForm(SimpleAdminProductType::class, $product);
+        }
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
@@ -348,8 +356,11 @@ class AdminController extends AbstractController
             throw $this->createNotFoundException("Ce produit n'existe pas");
         }
             
-        
-        $form = $this->createForm(ProductUpdateType::class, $product);
+        if (in_array('ROLE_SUPER_ADMIN', $this->getUser()->getRoles())){
+            $form = $this->createForm(ProductType::class, $product);
+        }elseif(in_array('ROLE_ADMIN', $this->getUser()->getRoles())){
+            $form = $this->createForm(SimpleAdminProductType::class, $product);
+        }
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
@@ -1374,7 +1385,7 @@ class AdminController extends AbstractController
     public function deliveryMans()
     {
         return $this->render('admin/contacts/delivery_mans/index.html.twig', [
-            'mans' => $this->manager->getRepository(DeliveryMan::class)->findBy(['deleted' => 0], ['createdAt' => 'DESC'])
+            'mans' => $this->manager->getRepository(DeliveryMan::class)->findBy(['deleted' => 0], ['id' => 'DESC'])
         ]);
     }
 
@@ -2350,10 +2361,15 @@ class AdminController extends AbstractController
 
         $form = $this->createForm(OrderSearchByShopType::class, $orderSearch);
         $form->handleRequest($request);
+                
+        if(in_array('ROLE_ADMIN', $this->getUser()->getRoles())){
+            $results = $this->manager->getRepository(Payment::class)->findPaymentsByWeek();
+        }
 
         if($form->isSubmitted() && $form->isValid()){
             $results = $this->manager->getRepository(Payment::class)->searchPayments($orderSearch->getShop(), $orderSearch->getStart(),$orderSearch->getEnd(),$orderSearch->getPaymentType());
         }
+
 
         return $this->render('admin/reports/index.html.twig', [
             'shops' => $this->manager->getRepository(Shop::class)->findBy([],['createdAt' => 'DESC']),
@@ -2380,7 +2396,8 @@ class AdminController extends AbstractController
         $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsSuccessfully($shop);
         $deliveriesIsNotSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsNotSuccessfully($shop);
 
-        
+        $fundOperations = $this->manager->getRepository(Fund::class)->findBy(['manager' => $shop->getManager()]);
+    
         $deliveries = $this->manager->getRepository(Delivery::class)->shopDeliveries($shop);
 
         $deliveryAmount = 0;
@@ -2392,14 +2409,32 @@ class AdminController extends AbstractController
    
         $totalPaid = 0;
         $totalAmount = 0;
-        foreach($payments as $payment){
+        foreach($payments as $key => $payment){
             $totalPaid += $payment->getAmountPaid();
             $totalAmount += $payment->getAmount();
+        }
+
+
+        foreach($fundOperations as $fundOperation){
+            
+            if($fundOperation->getTransactionType()->getId() == 1){
+                $totalPaid += $fundOperation->getAmount();
+            }elseif($fundOperation->getTransactionType()->getId() == 2){
+                $totalPaid -= $fundOperation->getAmount();
+            }
         }
 
         $totalPaid += $deliveryAmount;
 
         $shop = $this->manager->getRepository(Shop::class)->find($shop);
+
+        $orderReturns = $this->manager->getRepository(OrderReturn::class)->findBy(['manager' => $shop->getManager()]);
+        
+        $orderReturnAmount = 0;
+        foreach($orderReturns as $orderReturn){
+            $orderReturnAmount += $orderReturn->getAmount();
+        }
+
         return $this->render('admin/reports/shop.html.twig', [
             'shop' => $shop,
             'totalAmount' => $totalAmount,
@@ -2408,6 +2443,7 @@ class AdminController extends AbstractController
             'deliveryIsNotSuccessfully' => $deliveriesIsNotSuccessfully,
             'payments' => $payments,
             'deliveries' => $deliveries,
+            'orderReturnAmount' => $orderReturnAmount
 
         ]);
     }
@@ -2421,7 +2457,7 @@ class AdminController extends AbstractController
     public function shopOrders(Shop $shop)
     {
         return $this->render("admin/reports/shop/orders.html.twig", [
-            'payments' => $this->manager->getRepository(Payment::class)->shopOrdersSuccessfully($shop),
+            'payments' => $this->manager->getRepository(Payment::class)->shopOrders($shop),
             'shop' => $shop
         ]);
     }
@@ -2435,7 +2471,7 @@ class AdminController extends AbstractController
     public function shopCustomers(Shop $shop)
     {
         return $this->render("admin/reports/shop/customers.html.twig", [
-            'customers' => $this->manager->getRepository(Customer::class)->findBy(['shops' => $shop]),
+            'customers' => $this->manager->getRepository(Customer::class)->findBy(['shops' => $shop, 'deleted' => 0]),
             'shop' => $shop
         ]);
     }
@@ -2455,17 +2491,95 @@ class AdminController extends AbstractController
     }
 
      /**
-     * @Route("/reports/shop/{id}/commands", name="admin_reports_shop_commands", methods={"GET"})
+     * @Route("/reports/shop/{id}/orders/return", name="admin_reports_shop_orders_return", methods={"GET"})
      * @method reportShop
      * @param Shop $shop
      * @return Response
      */
-    public function shopCommands(Shop $shop)
+    public function shopOrdersReturn(Shop $shop)
     {
-        return $this->render("admin/reports/shop/commands.html.twig", [
-            'payments' => $this->manager->getRepository(Payment::class)->shopOrdersSuccessfully($shop),
+        return $this->render("admin/reports/shop/orders_return.html.twig", [
+            'orders' => $this->manager->getRepository(OrderReturn::class)->findBy(['manager' => $shop->getManager()]),
             'shop' => $shop
         ]);
+    }
+
+        /**
+     * @Route("/order/return/{id}/update", name="admin_orders_return_update", methods={"GET","POST"})
+     * @return Response
+    */
+    public function ordersReturnUpdate(Request $request, OrderReturn $order)
+    {
+        if(is_null($order)){
+            $this->addFlash("danger", "Ce retour de marchandise n'existe pas!");
+        }
+
+        $form = $this->createForm(OrderReturnType::class, $order, ['shop' => $this->shop]);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+
+            $order->setAmount($order->getFirstOrder()->getAmountPaid() - $order->getLastOrder()->getAmountPaid());
+            if($order->getAmount() <= 0){
+              $this->addFlash("warning", "Le total de l'ancienne vente doit est inferieur au total de la nouvelle vente!");
+              return $this->redirectToRoute('manager_orders_return_create');
+            }
+
+            $this->manager->persist($order);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Retour de marchandise modifié!");
+
+            return $this->redirectToRoute("manager_orders_return_update", ['id' => $order->getId()]);
+        }
+
+        return $this->render('admin/reports/shop/order_return_update.html.twig', [
+            'form' => $form->createView()  
+        ]);
+    }
+
+        /**
+     * @Route("/order/return/invoice/{id}", name="admin_orders_return_invoice", methods={"GET"})
+     * @return Response
+    */
+    public function orderReturnInvoice(OrderReturn $order, ReturnInvoice $returnInvoice)
+    {
+        if(is_null($order)){
+            $this->addFlash("danger", "Ce retour de marchandise n'existe pas");
+            return $this->redirectToRoute("manager_order_return");
+        }
+
+        // dd($order);
+        $firstInvoice = $order->getFirstOrder()->getInvoice();
+        $lastInvoice = $order->getLastOrder()->getInvoice();
+
+        if(!is_null($firstInvoice) && !is_null($lastInvoice)){
+            $returnInvoice->generateInvoice($firstInvoice, $lastInvoice);
+        }
+
+        return $this->render('admin/products/orders/return/index.html.twig', [
+            'orders' =>  $this->manager->getRepository(OrderReturn::class)->findBy([],['createdAt' => 'DESC'])
+        ]);
+    }
+
+
+
+     /**
+     * @Route("/order/return/{id}/delete", name="admin_orders_return_delete", methods={"GET"})
+     * @return Response
+    */
+    public function ordersReturnDelete(OrderReturn $order)
+    {
+        if(is_null($order)){
+            $this->addFlash("danger", "Ce retour de marchandise n'existe pas!");
+        }
+
+        $this->manager->remove($order);
+        $this->manager->flush();
+
+        $this->addFlash("success", "Retour de marchandise supprimé");
+
+        return $this->redirectToRoute("manager_order_return");
     }
 
      /**
@@ -2843,8 +2957,7 @@ class AdminController extends AbstractController
           
          
             foreach($productArray as $product){
-                // $this->api->putQ('products', $product);
-                dd($productArray);
+                $this->api->putQ('products', $product);
             }
 
 
@@ -2857,4 +2970,47 @@ class AdminController extends AbstractController
 
        return $this->redirectToRoute('admin_products_orders');
     }
+
+      /**
+     * @Route("/setting", name="admin_setting", methods={"GET","POST"})
+     * @return Response
+    */
+    public function setting(Request $request, UserPasswordEncoderInterface $encoder)
+    {
+        $user = $this->getUser();
+
+        $form = $this->createForm(SettingType::class, $user);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+           
+
+            $isPasswordValid = $encoder->isPasswordValid($user, $user->getOldPassword());
+          
+           if($isPasswordValid){
+            
+            $passHass = $encoder->encodePassword($user, $user->getNewPassword());
+
+            $manager->setPassword($passHass);
+            
+            $this->manager->persist($user);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Paramètres modifiés");
+
+            return $this->redirectToRoute("manager_setting");
+           }else{
+               $this->addFlash("danger", "Mot de passe incorrecte.");
+           }
+             
+           
+        }
+
+        return $this->render('manager/setting/index.html.twig', [
+            'form' => $form->createView()
+        ]);
+    }
+
+
+    
 }
