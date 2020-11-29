@@ -79,7 +79,6 @@ class ManagerController extends AbstractController
         $fundOperations = $this->manager->getRepository(Fund::class)->findBy(['manager' => $this->getUser()]);
 
         $deliveries = $this->manager->getRepository(Delivery::class)->shopDeliveries($this->shop);
-//   dd($payments);
         $deliveryAmount = 0;
         
         foreach($deliveries as $delivery){
@@ -111,6 +110,8 @@ class ManagerController extends AbstractController
         foreach($orderReturns as $orderReturn){
             $orderReturnAmount += $orderReturn->getAmount();
         }
+
+        $totalPaid += $deliveryAmount;
      
         return $this->render('manager/dashboard.html.twig', [
             'totalAmount' => $totalAmount,
@@ -184,7 +185,8 @@ class ManagerController extends AbstractController
     {   
 
         return $this->render("manager/products/orders/index.html.twig",  [
-            'payments' => $paymentRepository->shopAllPayments($this->shop)
+            'payments' => $paymentRepository->shopAllPayments($this->shop),
+            'deliveries' =>  $this->manager->getRepository(Delivery::class)->shopDeliveries($this->shop)
         ]);
     }
 
@@ -492,7 +494,7 @@ class ManagerController extends AbstractController
 
                     $this->manager->persist($delivery);
 
-                    $total += $billing->getDeliveryAmount();
+                    // $total += $billing->getDeliveryAmount();
                     $deliveryAmount = $billing->getDeliveryAmount();
                 }
 
@@ -842,7 +844,8 @@ class ManagerController extends AbstractController
 
         return $this->render('manager/reports/index.html.twig', [
             'results' => $this->manager->getRepository(Payment::class)->findShopPaymentsByWeek($this->shop),
-            // 'form' => $form->createView()
+            // 'form' => $form->createView(),
+            'deliveries' =>  $this->manager->getRepository(Delivery::class)->shopDeliveries($this->shop)
         ]);
     }
 

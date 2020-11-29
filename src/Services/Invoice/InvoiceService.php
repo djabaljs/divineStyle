@@ -251,7 +251,7 @@ class InvoiceService{
                     </tr>
                     <tr>
                         <td class="totals"><b>TOTAL TTC:</b></td>
-                        <td class="totals cost"><b>'.number_format($invoice->getAmount()).'</b></td>
+                        <td class="totals cost"><b>'.number_format($invoice->getAmount() + $deliveryAmount).'</b></td>
                     </tr>
                 </tbody>
             </table>

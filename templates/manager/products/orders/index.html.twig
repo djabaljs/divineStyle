@@ -88,7 +88,20 @@
                                                 <td>{{loop.index}}</td>
                                                 <td>{{payment.invoice.orders.orderNumber}}</td>
                                                 <td>{{payment.invoice.orders.customer}}</td>
-                                                <td>{{payment.invoice.orders.saleTotal| format_currency('XOF') }}</td>
+                                                   {% if deliveries is not empty %}
+                                                           {% for delivery in deliveries %}
+                                                             {% if payment.invoice.orders == delivery.order %}
+                                                                 {% set isTrue = true %}
+                                                                {% set deliveryAmount = delivery.amountPaid %}
+                                                             {% endif %}
+                                                           {% endfor %}
+                                                        {% else %}
+                                                        {% endif %}
+                                                        {# {% if isTrue %} #}
+                                                        {# <td>{{(payment.invoice.orders.saleTotal + deliveryAmount)|format_currency('XOF') }}</td> #}
+                                                        {# {% else %} #}
+                                                         <td>{{payment.invoice.orders.saleTotal|format_currency('XOF') }}</td>
+                                                        {# {% endif %} #}
                                                  {% if payment.invoice.discount is not null %}
                                                 <td>{{payment.invoice.discount|format_currency('XOF')}}</td>
                                                 {% else %}

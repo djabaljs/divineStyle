@@ -55,7 +55,7 @@
                         <div class="row">
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                                 <div class="card">
-                                    <h5 class="card-header">Ventes effectuées de la semainde</h5>
+                                    <h5 class="card-header">Ventes de la semaine</h5>
                                     <div class="card-body">
                                          {# <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                                             {{form_start(form)}}
@@ -91,40 +91,55 @@
                                             <div class="table-responsive">
                                                 <table id="example" class="table table-striped table-bordered second" style="width:100%">
                                                     <thead>
-                                                        <tr>
-                                                            <th>N°</th>
-                                                            <th>N° commande</th>
-                                                            <th>Client</th>
-                                                            <th>Montant Payer</th>
-                                                            <th>Reste à Payer</th>
-                                                            <th>Date</th>
-                                                            <th>Heure</th>
-                                                        </tr>
+                                                    <tr>
+                                                        <th>N°</th>
+                                                        <th>N° commande</th>
+                                                        <th>Client</th>
+                                                        <th>Montant</th>
+                                                        <th>Remise</th>
+                                                        <th>Statut</th>
+                                                        <th>Date</th>
+                                                    </tr>
                                                     </thead>
                                                     <tbody>
                                                     {% set totalAmountPaid = 0 %}
                                                     {% set totalAmount = 0 %}
+                                                    {% set totalDelivery = 0 %}
+                                                    {% for delevery in deliveries %}
+                                                       {% set totalDelivery = totalDelivery + delevery.amountPaid %}
+                                                    {% endfor %}
+
                                                     {% for payment in results %}
-                                                        <tr>
-                                                          {% set totalAmountPaid = totalAmountPaid + payment.invoice.orders.saleTotal  %}
-                                                          {% set totalAmount = totalAmount + payment.amount %}
-                                                            <td>{{loop.index}}</td>
-                                                            <td>{{payment.invoice.orders.orderNumber}}</td>
-                                                            <td>{{payment.invoice.orders.customer}}</td>
-                                                            <td>{{payment.invoice.orders.saleTotal| format_currency('XOF') }}</td>
-                                                            <td>{{payment.amount| format_currency('XOF') }}</td>
-                                                            <td>{{payment.invoice.orders.createdAt|date('Y-m-d')}}</td>
-                                                            <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
-                                                        </tr>
+                                                    <tr>
+                                                        {% set totalAmountPaid = totalAmountPaid + payment.invoice.orders.saleTotal  %}
+                                                        {% set totalAmount = totalAmount + payment.amount %}
+                                                        <td>{{loop.index}}</td>
+                                                        <td>{{payment.invoice.orders.orderNumber}}</td>
+                                                        <td>{{payment.invoice.orders.customer}}</td>
+                                                        <td>{{payment.invoice.orders.saleTotal| format_currency('XOF') }}</td>
+                                                        <td>{{payment.invoice.discount| format_currency('XOF') }}</td>
+                                                        {% if payment.status %}
+                                                        <td>PAYÉ</td>
+                                                        {% else %}
+                                                        <td>ANNULÉ</td>
+                                                        {% endif %}
+                                                        <td>{{payment.invoice.orders.createdAt|date('Y-m-d')}}</td>
+                                                            {# <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td> #}
+                                                    </tr>
                                                     {% endfor %}
                                                     </tbody>
                                                     <tfoot>
                                                         <tr>
-                                                            <td colspan="5" align=right>Totales ventes</td>
-                                                            <td colspan="2">{{totalAmountPaid|format_currency('XOF')}}</td>
+                                                            <td colspan="6" align=right>Totales ventes</td>
+                                                            <td colspan="1">{{totalAmountPaid|format_currency('XOF')}}</td>
                                                         </tr>
-                                                            <td colspan="5" align=right>Totales créances</td>
-                                                            <td colspan="2">{{totalAmount|format_currency('XOF')}}</td>
+                                                        <tr>
+                                                            <td colspan="6" align=right>Totales livraisons</td>
+                                                            <td colspan="1">{{totalDelivery|format_currency('XOF')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td colspan="6" align=right>Totales ventes + livraisons</td>
+                                                            <td colspan="1">{{(totalAmountPaid + totalDelivery)|format_currency('XOF')}}</td>
                                                         </tr>
                                                     </tfoot>
                                                 </table>

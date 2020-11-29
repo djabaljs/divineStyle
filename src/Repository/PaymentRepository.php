@@ -188,8 +188,8 @@ class PaymentRepository extends ServiceEntityRepository
 
     public function findShopPaymentsByWeek(Shop $shop)
     {
-        $start_week = date("Y-m-d",strtotime('monday this week'));
-        $end_week = date("Y-m-d",strtotime('sunday this week'));
+        $start_week = date("Y-m-d 00:00:00",strtotime('monday this week'));
+        $end_week = date("Y-m-d 23:59:59",strtotime('sunday this week'));
         return $this->createQueryBuilder('p')
                     ->andWhere('p.status = TRUE')
                     ->innerJoin('p.invoice', 'i')
@@ -209,8 +209,8 @@ class PaymentRepository extends ServiceEntityRepository
 
     public function findPaymentsByWeek()
     {
-        $start_week = date("Y-m-d",strtotime('monday this week'));
-        $end_week = date("Y-m-d",strtotime('sunday this week'));
+        $start_week = date("Y-m-d 00:00:00",strtotime('monday this week'));
+        $end_week = date("Y-m-d 23:59:59",strtotime('sunday this week'));
         return $this->createQueryBuilder('p')
                     ->andWhere('p.status = TRUE')
                     ->innerJoin('p.invoice', 'i')

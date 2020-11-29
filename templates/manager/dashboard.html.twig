@@ -175,22 +175,27 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
+                                              {% set isTrue = false %}
+                                              {% set deliveryAmount = 0 %}
                                               {% for payment in fivePayments %}
                                                     <tr>
                                                         <td>{{loop.index}}</td>
                                                         <td>{{payment.invoice.orders.orderNumber}}</td>
                                                         <td>{{payment.invoice.orders.customer}}</td>
                                                         {% if deliveries is not empty %}
-                                                        {% for delivery in deliveries %}
-                                                        {% if payment.invoice.orders == delivery.order %}
-                                                         <td>{{(payment.invoice.orders.saleTotal + delivery.amountPaid)|format_currency('XOF') }}</td>
+                                                           {% for delivery in deliveries %}
+                                                             {% if payment.invoice.orders == delivery.order %}
+                                                                 {% set isTrue = true %}
+                                                                {% set deliveryAmount = delivery.amountPaid %}
+                                                             {% endif %}
+                                                           {% endfor %}
                                                         {% else %}
-                                                         <td>{{payment.invoice.orders.saleTotal|format_currency('XOF') }}</td>
                                                         {% endif %}
-                                                        {% endfor %}
-                                                        {% else %}
+                                                        {# {% if isTrue %} #}
+                                                        {# <td>{{(payment.invoice.orders.saleTotal + deliveryAmount)|format_currency('XOF') }}</td> #}
+                                                        {# {% else %} #}
                                                          <td>{{payment.invoice.orders.saleTotal|format_currency('XOF') }}</td>
-                                                        {% endif %}
+                                                        {# {% endif %} #}
                                                         <td>{{payment.invoice.discount| format_currency('XOF') }}</td>
                                                         {% if payment.status %}
                                                         <td>PAYÉ</td>

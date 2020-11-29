@@ -78,9 +78,9 @@ class DeliveryRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('d');
         $qb 
-            ->where('d.deleted = FALSE')
+            ->andWhere('d.deleted = FALSE')
             ->innerJoin('d.order', 'o')
-            ->where('o.shop = :shop')
+            ->andWhere('o.shop = :shop')
             ->setParameter('shop', $shop)
             ->innerJoin('o.shop', 's')
             ->andWhere('s.deleted = FALSE')
@@ -94,6 +94,7 @@ class DeliveryRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('d');
         $qb
             ->andWhere('d.status = TRUE')
+            ->andWhere('d.deleted = FALSE')
             ->innerJoin('d.order', 'o')
             ->andWhere('o.shop = :shop')
             ->setParameter('shop', $shop)
@@ -109,6 +110,7 @@ class DeliveryRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('d');
         $qb
             ->where('d.status = FALSE')
+            ->andWhere('d.deleted = FALSE')
             ->innerJoin('d.order', 'o')
             ->andWhere('o.shop = :shop')
             ->setParameter('shop', $shop)

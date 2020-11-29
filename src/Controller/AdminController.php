@@ -518,7 +518,7 @@ class AdminController extends AbstractController
     public function categories(): Response
     {
       return  $this->render('admin/products/categories/index.html.twig', [
-            'categories' => $this->manager->getRepository(Category::class)->findBy(['deleted' => 0],['createdAt', 'DESC'])
+            'categories' => $this->manager->getRepository(Category::class)->findBy(['deleted' => 0])
         ]);
     }
 
@@ -570,9 +570,8 @@ class AdminController extends AbstractController
      * @param Request $request
      * @return Response
      */
-    public function showCategory(Product $product): Response
+    public function showCategory(Category $category): Response
     {
-        dd($product);
         return $this->render('admin/products/categories/show.html.twig', [
         ]);
     }
@@ -585,7 +584,6 @@ class AdminController extends AbstractController
      */
     public function updateCategory(Request $request, Category $category): Response
     {
-        $category = $this->manager->getRepository(Category::class)->find($category->getId());
 
         if(is_null($category))
             throw $this->createNotFoundException("Cette catégorie de produit n'existe pas!");
@@ -2330,6 +2328,7 @@ class AdminController extends AbstractController
      */
     public function ordersDeliveriesDelete(Delivery $delivery)
     {
+
         $delivery = $this->manager->getRepository(Delivery::class)->find($delivery);
 
 
@@ -2364,11 +2363,14 @@ class AdminController extends AbstractController
                 
         if(in_array('ROLE_ADMIN', $this->getUser()->getRoles())){
             $results = $this->manager->getRepository(Payment::class)->findPaymentsByWeek();
+        // dd($results);
+
         }
 
         if($form->isSubmitted() && $form->isValid()){
             $results = $this->manager->getRepository(Payment::class)->searchPayments($orderSearch->getShop(), $orderSearch->getStart(),$orderSearch->getEnd(),$orderSearch->getPaymentType());
         }
+
 
 
         return $this->render('admin/reports/index.html.twig', [
