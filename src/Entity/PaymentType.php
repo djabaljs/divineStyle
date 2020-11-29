@@ -37,9 +37,15 @@ class PaymentType
      */
     private $deleted;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Delivery::class, mappedBy="paymentType")
+     */
+    private $deliveries;
+
     public function __construct()
     {
        $this->payments = new ArrayCollection();
+       $this->deliveries = new ArrayCollection();
     }
 
 
@@ -102,6 +108,42 @@ class PaymentType
         $this->deleted = $deleted;
 
         return $this;
+    }
+
+    /**
+     * @return Collection|Delivery[]
+     */
+    public function getDeliveries(): Collection
+    {
+        return $this->deliveries;
+    }
+
+    public function addDelivery(Delivery $delivery): self
+    {
+        if (!$this->deliveries->contains($delivery)) {
+            $this->deliveries[] = $delivery;
+            $delivery->setPaymentType($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDelivery(Delivery $delivery): self
+    {
+        if ($this->deliveries->contains($delivery)) {
+            $this->deliveries->removeElement($delivery);
+            // set the owning side to null (unless already changed)
+            if ($delivery->getPaymentType() === $this) {
+                $delivery->setPaymentType(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
     }
 
 }

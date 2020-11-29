@@ -187,7 +187,7 @@
                                                         <th class="border-0">Remise</th>
                                                         <th class="border-0">Statut</th>
                                                         <th class="border-0">Date</th>
-                                                        <th class="border-0">Heure</th>
+                                                        {# <th class="border-0">Heure</th> #}
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -204,7 +204,7 @@
                                                         <td>ANNULÉ</td>
                                                         {% endif %}
                                                         <td>{{payment.invoice.orders.createdAt|date('Y-m-d')}}</td>
-                                                        <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
+                                                        {# <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td> #}
                                                     </tr>
                                                 {% endfor %}
                                                 </tbody>

@@ -98,7 +98,7 @@ class AdminController extends AbstractController
 
         $payments = $this->manager->getRepository(Payment::class)->findBy(['status' => 1]);
         $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->findBy(['status' => 1]);
-        $deliveries = $this->manager->getRepository(Delivery::class)->findAll();
+        $deliveries = $this->manager->getRepository(Delivery::class)->findBy(['deleted' => 0]);
         $fundOperations = $this->manager->getRepository(Fund::class)->findAll();
         $deliveryAmount = 0;
         
@@ -126,7 +126,7 @@ class AdminController extends AbstractController
             }
         }
 
-        $orderReturns =  $this->manager->getRepository(OrderReturn::class)->findAll();
+        $orderReturns =  $this->manager->getRepository(OrderReturn::class)->findBy(['deleted' => 0]);
         
         $orderReturnAmount = 0;
 
@@ -136,7 +136,7 @@ class AdminController extends AbstractController
 
         return $this->render('admin/dashboard.html.twig', [
             'orders' => $this->manager->getRepository(Order::class)->findLastFiveProducts(),
-            'customers' => $this->manager->getRepository(Customer::class)->findAll(),
+            'customers' => $this->manager->getRepository(Customer::class)->findBy(['deleted' => 0]),
             'products' => $this->manager->getRepository(Product::class)->findProducts(),
             "amountPaid" => $totalPaid + $deliveryAmount,
             'amount' => $totalAmount,
@@ -2271,11 +2271,12 @@ class AdminController extends AbstractController
     {
         $delivery = new Delivery();
 
+        
         $form = $this->createForm(AdminDeliveryType::class, $delivery);
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
-
+            $delivery->setDeleted(false);
             $this->manager->persist($delivery);
             $this->manager->flush();
 
@@ -2357,6 +2358,7 @@ class AdminController extends AbstractController
         // $chart = new Chart();
         $orderSearch = new OrderSearch();
         $results = [];
+        $deliveries = [];
 
         $form = $this->createForm(OrderSearchByShopType::class, $orderSearch);
         $form->handleRequest($request);
@@ -2369,6 +2371,8 @@ class AdminController extends AbstractController
 
         if($form->isSubmitted() && $form->isValid()){
             $results = $this->manager->getRepository(Payment::class)->searchPayments($orderSearch->getShop(), $orderSearch->getStart(),$orderSearch->getEnd(),$orderSearch->getPaymentType());
+            $deliveries = $this->manager->getRepository(Delivery::class)->searchDeliveries($orderSearch->getShop(), $orderSearch->getStart(),$orderSearch->getEnd(),$orderSearch->getPaymentType());
+
         }
 
 
@@ -2379,7 +2383,8 @@ class AdminController extends AbstractController
             'categories' => $this->manager->getRepository(Category::class)->findAll(),
             'form' => $form->createView(),
             'payments' => $this->manager->getRepository(Payment::class)->findBy(['status' => 1]),
-            'results' => $results
+            'results' => $results,
+            'deliveries' => $deliveries
         ]);
     }
 

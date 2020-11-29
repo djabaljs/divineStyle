@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Entity\Order;
 use App\Entity\Delivery;
 use App\Entity\DeliveryMan;
+use App\Entity\PaymentType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -37,6 +38,12 @@ class AdminDeliveryType extends AbstractType
                     'attr' => [
                         'placeholder' => 'Nom du récepteur'
                     ]
+                ])
+                ->add('paymentType', EntityType::class, [
+                    'label' => false,
+                    'class' => PaymentType::class,
+                    'choice_name' => 'name',
+                    'placeholder' => 'Selectionner un type de payment'
                 ])
                 ->add('recipientPhone', NumberType::class, [
                     'label' => false,

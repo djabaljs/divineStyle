@@ -144,6 +144,11 @@
                                                     <tbody>
                                                     {% set totalAmountPaid = 0 %}
                                                     {% set totalAmount = 0 %}
+                                                    {% set totalDelivery = 0 %}
+                                                    {% for delevery in deliveries %}
+                                                       {% set totalDelivery = totalDelivery + delevery.amountPaid %}
+                                                    {% endfor %}
+
                                                     {% for payment in results %}
                                                     <tr>
                                                         {% set totalAmountPaid = totalAmountPaid + payment.invoice.orders.saleTotal  %}
@@ -168,10 +173,14 @@
                                                             <td colspan="6" align=right>Totales ventes</td>
                                                             <td colspan="1">{{totalAmountPaid|format_currency('XOF')}}</td>
                                                         </tr>
-                                                        {# <tr>
-                                                            <td colspan="6" align=right>Totales créances</td>
-                                                            <td colspan="1">{{totalAmount|format_currency('XOF')}}</td>
-                                                        </tr> #}
+                                                        <tr>
+                                                            <td colspan="6" align=right>Totales livraisons</td>
+                                                            <td colspan="1">{{totalDelivery|format_currency('XOF')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td colspan="6" align=right>Totales ventes + livraisons</td>
+                                                            <td colspan="1">{{(totalAmountPaid + totalDelivery)|format_currency('XOF')}}</td>
+                                                        </tr>
                                                     </tfoot>
                                                 </table>
                                             </div>

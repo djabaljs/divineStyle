@@ -5,14 +5,15 @@ namespace App\Form;
 use App\Entity\Order;
 use App\Entity\Delivery;
 use App\Entity\DeliveryMan;
+use App\Entity\PaymentType;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
-use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 
 class DeliveryType extends AbstractType
@@ -51,6 +52,13 @@ class DeliveryType extends AbstractType
             ->add('status', CheckboxType::class, [
                 'label' => false,
                 'required' => false,
+            ])
+            ->add('paymentType', EntityType::class, [
+                'label' => false,
+                'class' => PaymentType::class,
+                'choice_name' => 'name',
+                'placeholder' => 'Selectionner un type de payment'
+
             ])
             ->add('deliveryMan', EntityType::class, [
                 'label' => false,

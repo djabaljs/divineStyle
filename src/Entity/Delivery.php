@@ -60,6 +60,12 @@ class Delivery
      */
     private $deleted;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=PaymentType::class, inversedBy="deliveries")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $paymentType;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -157,6 +163,18 @@ class Delivery
     public function setDeleted(bool $deleted): self
     {
         $this->deleted = $deleted;
+
+        return $this;
+    }
+
+    public function getPaymentType(): ?PaymentType
+    {
+        return $this->paymentType;
+    }
+
+    public function setPaymentType(?PaymentType $paymentType): self
+    {
+        $this->paymentType = $paymentType;
 
         return $this;
     }

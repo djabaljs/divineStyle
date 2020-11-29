@@ -481,7 +481,8 @@ class ManagerController extends AbstractController
                     $delivery->setAmountPaid($billing->getDeliveryAmount());
                     $delivery->setStatus(false);
                     $delivery->setDeleted(false);
-
+                    $delivery->setPaymentType($billing->getPaymentType());
+                    
                    
                     if($billing->getChoice() == 0){
                         $delivery->setRecipient($customer);

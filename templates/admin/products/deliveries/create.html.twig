@@ -109,6 +109,12 @@
                                             </div>
                                              <div class="col-md-12">
                                                 <div class="form-group">
+                                                    <label for="admin_delivery_paymentType">Type de paiement</label>
+                                                    {{form_row(form.paymentType, {attr:{'class': 'form-control'}})}}
+                                                </div>
+                                            </div>
+                                             <div class="col-md-12">
+                                                <div class="form-group">
                                                     <label for="delivery_status">Livré?</label>
                                                     {{form_row(form.status, {attr:{}})}}
                                                 </div>
@@ -136,8 +142,9 @@
    <script src="{{asset('concept/assets/vendor/select2/js/select2.min.js')}}"></script>
  <script>
 
-$('#delivery_deliveryMan').select2();
-$('#delivery_order').select2();
-$('#delivery').select2();
+$('#admin_delivery_deliveryMan').select2();
+$('#admin_delivery_order').select2();
+$('#admin_delivery').select2();
+$('#admin_delivery_paymentType').select2();
 </script>
 {% endblock %}

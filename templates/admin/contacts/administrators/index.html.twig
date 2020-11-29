@@ -88,7 +88,7 @@
                                                 <td>{{loop.index}}</td>
                                                 <td>{{administrator.firstname}}</td>
                                                 <td>{{administrator.lastname}}</td>
-                                                <td>{{administrator.createdAt|date('d-m-Y H:m:s')}}</td>
+                                                <td>{{administrator.createdAt|date('Y-m-d')}}</td>
                                                 <td>
                                                 {# <a href="{{path('admin_category_show', {id: category['id']})}}" class="btn btn-info"><i class="fas fa-eye"></i></a> #}
                                                 <a href="{{path('admin_administrators_update', {id: administrator.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>

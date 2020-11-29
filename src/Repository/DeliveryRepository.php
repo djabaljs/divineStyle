@@ -130,4 +130,71 @@ class DeliveryRepository extends ServiceEntityRepository
     //         ->le
     //         ;
     // }
+
+    public function searchDeliveries($shop, $start, $end, $paymentType)
+    {
+        $start = $start->format(('Y-m-d')." 00:00:00");
+        ;
+        $end = $end->format(('Y-m-d')." 23:59:59");
+        ;
+
+
+        if(is_null($shop) && is_null($paymentType)){
+            
+            return $this->createQueryBuilder('d')
+            ->andWhere('d.createdAt BETWEEN :start AND :end')
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->orderBy('d.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult()
+            ;
+
+        }elseif(is_null($shop) && !is_null($paymentType)){
+
+            return $this->createQueryBuilder('d')
+            ->where('d.createdAt BETWEEN :start AND :end')
+            ->andWhere('d.paymentType = :paymentType')
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->setParameter('paymentType', $paymentType)
+            ->orderBy('d.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult()
+            ;
+        }
+
+        if(is_null($paymentType)){
+
+            return $this->createQueryBuilder('d')
+            ->andWhere('d.createdAt BETWEEN :start AND :end')
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->innerJoin('d.order', 'o')
+            ->andWhere('o.shop = :shop')
+            ->setParameter('shop', $shop)
+            ->orderBy('d.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult()
+            ;
+
+        }else{
+
+            return $this->createQueryBuilder('d')
+            ->andWhere('d.createdAt BETWEEN :start AND :end')
+            ->andWhere('d.paymentType = :paymentType')
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->setParameter('paymentType', $paymentType)
+            ->innerJoin('d.order', 'o')
+            ->andWhere('o.shop = :shop')
+            ->setParameter('shop', $shop)
+            ->orderBy('d.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult()
+            ;
+        }
+       
+
+    }
 }
