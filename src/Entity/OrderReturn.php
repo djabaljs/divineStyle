@@ -4,10 +4,13 @@ namespace App\Entity;
 
 use App\Repository\OrderReturnRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
 
 /**
  * @ORM\Entity(repositoryClass=OrderReturnRepository::class)
  * @ORM\HasLifecycleCallBacks()
+ * @UniqueEntity("firstOrder")
  */
 class OrderReturn
 {
@@ -42,6 +45,11 @@ class OrderReturn
      * @ORM\JoinColumn(nullable=false)
      */
     private $manager;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $deleted;
 
     public function getId(): ?int
     {
@@ -92,6 +100,18 @@ class OrderReturn
     public function setLastOrder(?Payment $lastOrder): self
     {
         $this->lastOrder = $lastOrder;
+
+        return $this;
+    }
+
+    public function getDeleted(): ?bool
+    {
+        return $this->deleted;
+    }
+
+    public function setDeleted(bool $deleted): self
+    {
+        $this->deleted = $deleted;
 
         return $this;
     }

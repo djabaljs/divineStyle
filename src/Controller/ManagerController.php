@@ -23,6 +23,7 @@ use App\Form\VersementType;
 use App\Entity\OrderProduct;
 use App\Form\OrderReturnType;
 use App\Repository\ShopRepository;
+use App\Form\OrderReturnUpdateType;
 use App\Repository\PaymentRepository;
 use App\Services\Invoice\ReturnInvoice;
 use App\Services\Invoice\InvoiceService;
@@ -71,21 +72,20 @@ class ManagerController extends AbstractController
   
 
         $fivePayments = $this->manager->getRepository(Payment::class)->shopOrdersLastFiveSuccessfully($this->shop);
-        $payments = $this->manager->getRepository(Payment::class)->shopOrdersSuccessfully($this->shop);
+        $payments = $this->manager->getRepository(Payment::class)->shopPaymentsByStatus($this->shop, TRUE);
         $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsSuccessfully($this->shop);
         $deliveriesIsNotSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsNotSuccessfully($this->shop);
 
         $fundOperations = $this->manager->getRepository(Fund::class)->findBy(['manager' => $this->getUser()]);
 
         $deliveries = $this->manager->getRepository(Delivery::class)->shopDeliveries($this->shop);
-
+//   dd($payments);
         $deliveryAmount = 0;
         
         foreach($deliveries as $delivery){
             $deliveryAmount += $delivery->getAmountPaid();
         }
 
-   
         $totalPaid = 0;
         $totalAmount = 0;
         foreach($payments as $key => $payment){
@@ -102,8 +102,6 @@ class ManagerController extends AbstractController
                 $totalPaid -= $fundOperation->getAmount();
             }
         }
-
-        $totalPaid += $deliveryAmount;
 
         $shop = $this->manager->getRepository(Shop::class)->find($this->shop);
 
@@ -186,7 +184,7 @@ class ManagerController extends AbstractController
     {   
 
         return $this->render("manager/products/orders/index.html.twig",  [
-            'payments' => $paymentRepository->shopPayments($this->shop)
+            'payments' => $paymentRepository->shopAllPayments($this->shop)
         ]);
     }
 
@@ -302,7 +300,7 @@ class ManagerController extends AbstractController
                                                     $response .= '<td>'.number_format($product->getOnSaleAmount()).'</td>';
                                                    }
                                                 $response .= '<td>'.$request->get('quantity').'</td>';
-                                                $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+                                                $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
                                             $response .= '</tr>';
                                         foreach($session->get('cart_item', []) as $v){
                                             $total += $v['price'] * $v['quantity'];
@@ -322,7 +320,7 @@ class ManagerController extends AbstractController
                                             $response .= '<td>'.number_format($product->getOnSaleAmount()).'</td>';
                                            }
                                         $response .= '<td>'.$request->get('quantity').'</td>';
-                                        $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+                                        $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
                                     $response .= '</tr>';
 
                                     foreach($session->get('cart_item', []) as $v){
@@ -346,8 +344,8 @@ class ManagerController extends AbstractController
                                                 $response .= '<td>'.$v['name'].'</td>';
                                                 $response .= '<td>'.number_format($v['price']).'</td>';
                                                 $response .= '<td>'.$v['quantity'].'</td>';
-                                                $response .= '<td><a onClick="cartAction("remove","'.$v['code'].'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
-                                                 $response .= '</tr>';
+                                                $response .= '<td><a onClick="cartAction("remove","'.$v['code'].'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+                                                $response .= '</tr>';
                                         }
 
                                     }else{
@@ -363,7 +361,7 @@ class ManagerController extends AbstractController
                                             $response .= '<td>'.$v['name'].'</td>';
                                             $response .= '<td>'.number_format($v['price']).'</td>';
                                             $response .= '<td>'.$v['quantity'].'</td>';
-                                            $response .= '<td><a onClick="cartAction("remove","'.$v['code'].'")" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+                                            $response .= '<td><a onClick="cartAction("remove","'.$v['code'].'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
                                              $response .= '</tr>';
                                         }
 
@@ -692,7 +690,6 @@ class ManagerController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
-
             $this->manager->persist($delivery);
             $this->manager->flush();
 
@@ -721,8 +718,8 @@ class ManagerController extends AbstractController
             $this->addFlash("danger","Cette livraison n'existe pas!");
             return $this->redirectToRoute('manager_orders_deliveries');
         }
-
-        $this->manager->remove($delivery);
+        $delivery->setDeleted(true);
+        $this->manager->persist($delivery);
         $this->manager->flush();
 
         $this->addFlash("success", "Livraison supprimée!");
@@ -1077,7 +1074,7 @@ class ManagerController extends AbstractController
     public function ordersReturn()
     {
         return $this->render('manager/products/orders/return/index.html.twig', [
-            'orders' =>  $this->manager->getRepository(OrderReturn::class)->findBy([],['createdAt' => 'DESC'])
+            'orders' =>  $this->manager->getRepository(OrderReturn::class)->findBy(['deleted' => 0],['createdAt' => 'DESC'])
         ]);
     }
 
@@ -1100,12 +1097,13 @@ class ManagerController extends AbstractController
               $this->addFlash("warning", "Le total de l'ancienne vente doit est inferieur au total de la nouvelle vente!");
               return $this->redirectToRoute('manager_orders_return_create');
             }
+            $order->setDeleted(false);
             $this->manager->persist($order);
             $this->manager->flush();
 
             $this->addFlash("success", "Retour de marchandise crée!");
 
-            return $this->redirectToRoute("manager_order_return_create");
+            return $this->redirectToRoute("manager_orders_return_create");
         }
 
         return $this->render('manager/products/orders/return/create.html.twig', [
@@ -1123,7 +1121,7 @@ class ManagerController extends AbstractController
             $this->addFlash("danger", "Ce retour de marchandise n'existe pas!");
         }
 
-        $form = $this->createForm(OrderReturnType::class, $order, ['shop' => $this->shop]);
+        $form = $this->createForm(OrderReturnUpdateType::class, $order, ['shop' => $this->shop]);
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
@@ -1131,7 +1129,7 @@ class ManagerController extends AbstractController
             $order->setAmount($order->getFirstOrder()->getAmountPaid() - $order->getLastOrder()->getAmountPaid());
             if($order->getAmount() <= 0){
               $this->addFlash("warning", "Le total de l'ancienne vente doit est inferieur au total de la nouvelle vente!");
-              return $this->redirectToRoute('manager_orders_return_create');
+              return $this->redirectToRoute('manager_orders_return_update', ['id' => $order->getId()]);
             }
 
             $this->manager->persist($order);
@@ -1155,14 +1153,40 @@ class ManagerController extends AbstractController
     {
         if(is_null($order)){
             $this->addFlash("danger", "Ce retour de marchandise n'existe pas!");
-        }
 
-        $this->manager->remove($order);
+            return $this->redirectToRoute("manager_orders_return");
+
+        }
+        $order->setDeleted(true);
+        $this->manager->persist($order);
         $this->manager->flush();
 
         $this->addFlash("success", "Retour de marchandise supprimé");
 
-        return $this->redirectToRoute("manager_order_return");
+        return $this->redirectToRoute("manager_orders_return");
+    }
+
+    /**
+     * @Route("/order/return/{id}/success", name="manager_orders_return_success", methods={"GET"})
+     * @return Response
+    */
+    public function ordersReturnSuccess(OrderReturn $orderReturn)
+    {
+        if(is_null($orderReturn)){
+            $this->addFlash("danger", "Ce retour de marchandise n'existe pas!");
+
+            return $this->redirectToRoute("manager_orders_return");
+        }
+
+        $orderReturn->setAmount(0);
+
+        $this->manager->persist($orderReturn);
+
+        $this->manager->flush();
+
+        $this->addFlash("success", "Retour de marchandise réglé");
+
+        return $this->redirectToRoute("manager_orders_return");
     }
 
     /**

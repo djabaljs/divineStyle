@@ -143,7 +143,7 @@ class ReturnInvoice{
           }
        }
        $paymentBody .= '<br/><br/>
-        Avoir: -'.number_format($firstInvoice->getAmount() - $lastInvoice->getAmount()).' <br/><br/>
+        Avoir: '.number_format($firstInvoice->getAmount() - $lastInvoice->getAmount()).' <br/><br/>
         NB: Les vêtements ne sont ni repris, ni échangés
        ';
 

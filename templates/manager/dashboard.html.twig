@@ -172,7 +172,6 @@
                                                         <th class="border-0">Remise</th>
                                                         <th class="border-0">Statut</th>
                                                         <th class="border-0">Date</th>
-                                                        <th class="border-0">Heure</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -181,7 +180,17 @@
                                                         <td>{{loop.index}}</td>
                                                         <td>{{payment.invoice.orders.orderNumber}}</td>
                                                         <td>{{payment.invoice.orders.customer}}</td>
-                                                        <td>{{payment.invoice.orders.saleTotal| format_currency('XOF') }}</td>
+                                                        {% if deliveries is not empty %}
+                                                        {% for delivery in deliveries %}
+                                                        {% if payment.invoice.orders == delivery.order %}
+                                                         <td>{{(payment.invoice.orders.saleTotal + delivery.amountPaid)|format_currency('XOF') }}</td>
+                                                        {% else %}
+                                                         <td>{{payment.invoice.orders.saleTotal|format_currency('XOF') }}</td>
+                                                        {% endif %}
+                                                        {% endfor %}
+                                                        {% else %}
+                                                         <td>{{payment.invoice.orders.saleTotal|format_currency('XOF') }}</td>
+                                                        {% endif %}
                                                         <td>{{payment.invoice.discount| format_currency('XOF') }}</td>
                                                         {% if payment.status %}
                                                         <td>PAYÉ</td>
@@ -189,7 +198,7 @@
                                                         <td>ANNULÉ</td>
                                                         {% endif %}
                                                         <td>{{payment.invoice.orders.createdAt|date('Y-m-d')}}</td>
-                                                        <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
+                                                        {# <td>{{payment.invoice.orders.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td> #}
                                                     </tr>
                                                 {% endfor %}
                                                 </tbody>

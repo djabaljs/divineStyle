@@ -19,16 +19,13 @@ class OrderReturnUpdateType extends AbstractType
         {
             $this->shop = $options['shop'];
             $builder
-                ->add('amount', NumberType::class, [
-                    'label' => false,
-                ])
                 ->add('firstOrder', EntityType::class, [
                     'label' => false,
                     'class'=> Payment::class,
                     'placeholder' => 'Selectionner l\'ancienne vente',
                     'query_builder' => function(EntityRepository $er){
                       return $er->createQueryBuilder('p')
-                                ->andWhere('p.status = FALSE')
+                                ->andWhere('p.status = TRUE')
                                 ->innerJoin('p.invoice', 'i')
                                 ->innerJoin('i.orders', 'o')
                                 ->andWhere('o.shop = :shop')

@@ -2514,7 +2514,7 @@ class AdminController extends AbstractController
             $this->addFlash("danger", "Ce retour de marchandise n'existe pas!");
         }
 
-        $form = $this->createForm(OrderReturnType::class, $order, ['shop' => $this->shop]);
+        $form = $this->createForm(OrderReturnUpdateType::class, $order, ['shop' => $this->shop]);
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){

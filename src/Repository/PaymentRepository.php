@@ -122,6 +122,20 @@ class PaymentRepository extends ServiceEntityRepository
 
     }
 
+    public function shopAllPayments(Shop $shop)
+    {
+        $qb = $this->createQueryBuilder('p');
+        $qb
+            ->innerJoin('p.invoice', 'i')
+            ->innerJoin('i.orders', 'o')
+            ->andWhere('o.shop = :shop')
+            ->setParameter('shop', $shop)
+            ->orderBy('p.createdAt', 'DESC')
+            ;
+
+        return $qb->getQuery()->getResult();
+    }
+
     public function shopPayments(Shop $shop)
     {
         $qb = $this->createQueryBuilder('p');
@@ -136,6 +150,7 @@ class PaymentRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
 
     public function shopOrders($shop)
     {

@@ -134,7 +134,7 @@
                                                     <td>{{item['name']}}</td>
                                                     <td>{{item['price']|format_currency('XOF')}}</td>
                                                     <td>{{item['quantity']}}</td>
-                                                    <td><a onClick="cartAction('remove','{{item["code"]}}')" class="btnRemoveAction btn btn-danger btn-sm"><i class="fa fa-remove"></i></a></td>
+                                                    <td><a onClick="cartAction('remove','{{item["code"]}}');" class="btnRemoveAction btn btn-danger btn-sm"><i class="fa fa-remove"></i></a></td>
                                                 </tr>
                                                 {% set total = total + (item['price'] * item['quantity']) %}
                                             {% endfor %}
@@ -250,7 +250,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td colspan="1"><button class="btn btn-success form-control">Facturer</button></td>
-                                                    <td colspan="3" align=right id="endTotal" style="font-size:20px;text-transform:uppercase;">NET: <strong>{{total| format_currency('XOF')}}</strong></td>
+                                                    <td colspan="3" align=right id="endTotal">NET: <strong>{{total| format_currency('XOF')}}</strong></td>
                                                 </tr>
                                               </thead>
                                         </table>
@@ -301,7 +301,7 @@ var queryString = "";
 	data:queryString,
 	type: "POST",
 	success:function(data){
-            if(data.status == 201){
+        if(data.status == 201){
           $('#cart-item').append(data.response);
           $('#total').html('<strong>Total:'+data.total+'</strong>');
           $('#endTotal').html('<strong>Total:'+data.total+' cfa</strong>');

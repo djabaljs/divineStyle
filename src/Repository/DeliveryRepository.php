@@ -78,6 +78,7 @@ class DeliveryRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('d');
         $qb 
+            ->where('d.deleted = FALSE')
             ->innerJoin('d.order', 'o')
             ->where('o.shop = :shop')
             ->setParameter('shop', $shop)

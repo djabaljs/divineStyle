@@ -25,9 +25,10 @@ class OrderReturnType extends AbstractType
             ->add('firstOrder', EntityType::class, [
                 'label' => false,
                 'class'=> Payment::class,
-                'placeholder' => 'Selectionner l\'ancienne vente',
+                'placeholder' => 'Selectionner la vente annulée',
                 'query_builder' => function(EntityRepository $er){
                   return $er->createQueryBuilder('p')
+                            ->andWhere('p.status = FALSE')
                             ->innerJoin('p.invoice', 'i')
                             ->innerJoin('i.orders', 'o')
                             ->andWhere('o.shop = :shop')

@@ -78,7 +78,7 @@
                                                 <th>Client</th>
                                                 <th>Avoir</th>
                                                 <th>Date</th>
-                                                <th>Heure</th>
+                                                {# <th>Heure</th> #}
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -91,10 +91,11 @@
                                                 <td>{{order.lastOrder.invoice.orders.customer}}</td>
                                                 <td>{{order.amount|format_currency('XOF')}}</td>
                                                 <td>{{order.createdAt|date('Y-m-d')}}</td>
-                                                <td>{{order.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
+                                                {# <td>{{order.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td> #}
                                                 <td>
                                                   <a href="{{path('manager_orders_return_update', {id: order.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
                                                   <a href="{{path('manager_orders_return_invoice', {id: order.id})}}" class="btn btn-success"><i class="fas fa-file"></i></a>
+                                                  <a href="{{path('manager_orders_return_success', {id: order.id})}}" class="btn btn-info"><i class="fas fa-check-circle"></i></a>
                                                   <a href="{{path('manager_orders_return_delete', {id: order.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
                                                 </td>
                                             </tr>
@@ -102,13 +103,13 @@
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                             <th>N°</th>
-                                                <th>N° commande 1</th>
-                                                <th>N° commande 2</th>
+                                                 <th>N°</th>
+                                                <th>N° Facture 1</th>
+                                                <th>N° Facture 2</th>
                                                 <th>Client</th>
                                                 <th>Avoir</th>
                                                 <th>Date</th>
-                                                <th>Heure</th>
+                                                {# <th>Heure</th> #}
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>
