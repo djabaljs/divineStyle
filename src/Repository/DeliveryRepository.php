@@ -205,4 +205,75 @@ class DeliveryRepository extends ServiceEntityRepository
        
 
     }
+
+    public function findDeliveriesByWeek()
+    {
+        $start_week = date("Y-m-d 00:00:00",strtotime('monday this week'));
+        $end_week = date("Y-m-d 23:59:59",strtotime('sunday this week'));
+
+
+        return $this->createQueryBuilder('d')
+            ->where('d.deleted = FALSE')
+            ->andWhere('d.createdAt >= :start')
+            ->andWhere('d.createdAt <= :end')
+            ->setParameter('start',$start_week)                      
+            ->setParameter('end',$end_week)
+            ->orderBy('d.createdAt','ASC')
+            ->getQuery()
+            ->getResult()
+            ;
+    }
+
+    //   $start = $start->format(('Y-m-d')." 00:00:00");
+    //     ;
+    //     $end = $end->format(('Y-m-d')." 23:59:59");
+    //     ;
+
+
+        // if(is_null($shop) && is_null($paymentType)){
+            
+        //     return $this->createQueryBuilder('p')
+        //     ->andWhere('p.createdAt BETWEEN :start AND :end')
+        //     ->andWhere('p.status = TRUE')
+        //     ->setParameter('start', $start)
+        //     ->setParameter('end', $end)
+        //     ->innerJoin('p.invoice', 'i')
+        //     ->innerJoin('i.orders', 'o')
+        //     ->orderBy('p.createdAt', 'DESC')
+        //     ->getQuery()
+        //     ->getResult()
+        //     ;
+
+        // }elseif(is_null($shop) && !is_null($paymentType)){
+
+        //     return $this->createQueryBuilder('p')
+        //     ->where('p.createdAt BETWEEN :start AND :end')
+        //     ->andWhere('p.status = TRUE')
+        //     ->andWhere('p.paymentType = :paymentType')
+        //     ->setParameter('start', $start)
+        //     ->setParameter('end', $end)
+        //     ->setParameter('paymentType', $paymentType)
+        //     ->innerJoin('p.invoice', 'i')
+        //     ->innerJoin('i.orders', 'o')
+        //     ->orderBy('p.createdAt', 'DESC')
+        //     ->getQuery()
+        //     ->getResult()
+        //     ;
+        // }
+
+        public function shopAllDeliveries(Shop $shop)
+        {
+    
+            $qb = $this->createQueryBuilder('d');
+            $qb 
+                ->andWhere('d.deleted = FALSE')
+                ->innerJoin('d.order', 'o')
+                ->andWhere('o.shop = :shop')
+                ->setParameter('shop', $shop)
+                ->innerJoin('o.shop', 's')
+                ->andWhere('s.deleted = FALSE')
+                ->orderBy("o.createdAt", "DESC")
+                ;
+            return $qb->getQuery()->getResult();
+        }
 }

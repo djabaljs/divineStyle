@@ -300,6 +300,7 @@ var queryString = "";
 	url: "http://localhost:8000/user/manager/products/orders/create",
 	data:queryString,
 	type: "POST",
+    dataType: 'json',
 	success:function(data){
         if(data.status == 201){
           $('#cart-item').append(data.response);
@@ -380,12 +381,12 @@ $('#billing_customerType').change(function(){
      $('#billing_customerFirstname').prop('required', true);
      $('#billing_customerLastname').prop('required', true);
     }
-})
+});
 
 $("#billing_amountPaid").keypress(function(){
     if($(this).val() != 0){
          $("#billing_paymentType").prop("required", true);
     }
-})
+});
  </script>
 {% endblock %}

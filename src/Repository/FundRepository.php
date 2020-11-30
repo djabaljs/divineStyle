@@ -68,4 +68,56 @@ class FundRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    public function findFundByWeek()
+    {
+        $start_week = date("Y-m-d 00:00:00",strtotime('monday this week'));
+        $end_week = date("Y-m-d 23:59:59",strtotime('sunday this week'));
+
+
+        $qb = $this->createQueryBuilder('f');
+        $qb 
+            ->andWhere('f.createdAt >= :start')
+            ->andWhere('f.createdAt <= :end')
+            ->setParameter('start',$start_week)                      
+            ->setParameter('end',$end_week)
+            ->orderBy('f.createdAt', 'DESC');
+        ;
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function searchFundByShop($shop, $start, $end)
+    {
+        $start = $start->format(('Y-m-d')." 00:00:00");
+        $end = $end->format(('Y-m-d')." 23:59:59");
+        
+        if(is_null($shop)){
+            
+            
+            return $this->createQueryBuilder('f')
+            ->andWhere('f.createdAt BETWEEN :start AND :end')
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->orderBy('f.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult()
+            ;
+
+        }else{
+
+            $manager = $shop->getManager();
+
+            return $this->createQueryBuilder('f')
+            ->where('f.createdAt BETWEEN :start AND :end')
+            ->andWhere('f.manager = :manager')
+            ->setParameter('manager', $manager)
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->orderBy('f.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult()
+            ;
+        }
+    }
 }

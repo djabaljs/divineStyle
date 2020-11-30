@@ -142,6 +142,15 @@
                                                     </tr>
                                                     </thead>
                                                     <tbody>
+                                                     {% set totalE = 0 %}
+                                                    {% set totalS = 0 %}
+                                                     {% for operation in operations %}
+                                                        {% if operation.transactionType.id == 1 %}
+                                                        {% set totalE = totalE + operation.amount %}
+                                                        {% elseif operation.transactionType.id == 2 %}
+                                                        {% set totalS = totalS + operation.amount %}
+                                                        {% endif %}
+                                                    {% endfor %}
                                                     {% set totalAmountPaid = 0 %}
                                                     {% set totalAmount = 0 %}
                                                     {% set totalDelivery = 0 %}
@@ -177,9 +186,25 @@
                                                             <td colspan="6" align=right>Totales livraisons</td>
                                                             <td colspan="1">{{totalDelivery|format_currency('XOF')}}</td>
                                                         </tr>
+                                                        
                                                         <tr>
-                                                            <td colspan="6" align=right>Totales ventes + livraisons</td>
-                                                            <td colspan="1">{{(totalAmountPaid + totalDelivery)|format_currency('XOF')}}</td>
+                                                            <td align="right" colspan="6">total entrée:</td>
+                                                            <td colspan="1">
+                                                            {% set total = totalS - totalE %}
+                                                            {% if total < 0 %}
+                                                            {% set total = - total %}
+                                                            {{ total|format_currency('XOF')}}</td>
+                                                            {% else %}
+                                                            {{ total|format_currency('XOF')}}</td>
+                                                            {% endif %}
+                                                        </tr>
+                                                         <tr>
+                                                            <td align="right" colspan="6">total sortie:</td>
+                                                            <td colspan="1">{{totalS|format_currency('XOF')}}</td>
+                                                        </tr>
+                                                         <tr>
+                                                            <td colspan="6" align=right>Totales ventes + livraisons + entrée - sortie</td>
+                                                            <td colspan="1">{{(totalAmountPaid + totalDelivery + totalE - totalS)|format_currency('XOF')}}</td>
                                                         </tr>
                                                     </tfoot>
                                                 </table>

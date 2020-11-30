@@ -330,4 +330,23 @@ class PaymentRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+
+    public function findLastFiveOrdersByWeek()
+    {
+        $start_week = date("Y-m-d 00:00:00",strtotime('monday this week'));
+        $end_week = date("Y-m-d 23:59:59",strtotime('sunday this week'));
+
+
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.createdAt >= :start')
+            ->andWhere('p.createdAt <= :end')
+            ->setParameter('start',$start_week)                      
+            ->setParameter('end',$end_week)
+            ->orderBy('p.createdAt','ASC')
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult()
+            ;
+    }
 }

@@ -95,9 +95,10 @@ class AdminController extends AbstractController
     public function dashboard(PaymentRepository $paymentRepository, DeliveryRepository $deliveryRepository): Response
     {
 
-
+        
         $payments = $this->manager->getRepository(Payment::class)->findBy(['status' => 1]);
-        $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->findBy(['status' => 1]);
+        $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->findBy(['status' => 1, 'deleted' => 0]);
+        $deliveriesIsNotSuccessfully = $this->manager->getRepository(Delivery::class)->findBy(['status' => 0, 'deleted' => 0]);
         $deliveries = $this->manager->getRepository(Delivery::class)->findBy(['deleted' => 0]);
         $fundOperations = $this->manager->getRepository(Fund::class)->findAll();
         $deliveryAmount = 0;
@@ -118,7 +119,6 @@ class AdminController extends AbstractController
 
 
         foreach($fundOperations as $fundOperation){
-            
             if($fundOperation->getTransactionType()->getId() == 1){
                 $totalPaid += $fundOperation->getAmount();
             }elseif($fundOperation->getTransactionType()->getId() == 2){
@@ -133,17 +133,24 @@ class AdminController extends AbstractController
         foreach($orderReturns as $orderReturn){
             $orderReturnAmount += $orderReturn->getAmount();
         }
+ 
+        $orders = [];
+        if(in_array('ROLE_ADMIN', $this->getUser()->getRoles())){
+           $orders = $this->manager->getRepository(Payment::class)->findLastFiveOrdersByWeek();
+        }elseif(in_array('ROLE_SUPER_ADMIN', $this->getUser()->getRoles())){
+            $orders = $this->manager->getRepository(Order::class)->findLastFiveOrders();
+        }
+
 
         return $this->render('admin/dashboard.html.twig', [
-            'orders' => $this->manager->getRepository(Order::class)->findLastFiveProducts(),
+            'orders' => $orders,
             'customers' => $this->manager->getRepository(Customer::class)->findBy(['deleted' => 0]),
             'products' => $this->manager->getRepository(Product::class)->findProducts(),
             "amountPaid" => $totalPaid + $deliveryAmount,
-            'amount' => $totalAmount,
             'deliveries' => $deliveriesSuccessfully,
             'payments' => $paymentRepository->ordersLastFiveSuccessfully(),
-            'deliverySuccessFully' =>  $deliveryRepository->isSuccessFully(),
-            'deliveryIsNotSuccessFully' =>  $deliveryRepository->isNotSuccessFully(),
+            'deliverySuccessFully' =>  $deliveriesSuccessfully,
+            'deliveryIsNotSuccessFully' =>  $deliveriesIsNotSuccessfully,
             'orderReturnAmount' => $orderReturnAmount
         ]);
 
@@ -2256,8 +2263,16 @@ class AdminController extends AbstractController
      */
     public function ordersDeliveries()
     {
+        $deliveries = [];
+        if(in_array('ROLE_ADMIN', $this->getUser()->getRoles())){
+           $deliveries = $this->manager->getRepository(Delivery::class)->findDeliveriesByWeek();
+        }elseif(in_array('ROLE_SUPER_ADMIN', $this->getUser()->getRoles())){
+            $deliveries =$this->manager->getRepository(Delivery::class)->findBy(['deleted' => 0], ['createdAt' => 'DESC']);
+        }
+
+
         return $this->render('admin/products/deliveries/index.html.twig',[
-            'deliveries' => $this->manager->getRepository(Delivery::class)->findBy([], ['createdAt' => 'DESC'])
+            'deliveries' => $deliveries
         ]);
     }
 
@@ -2359,22 +2374,22 @@ class AdminController extends AbstractController
         $orderSearch = new OrderSearch();
         $results = [];
         $deliveries = [];
-
+        $operations = [];
         $form = $this->createForm(OrderSearchByShopType::class, $orderSearch);
         $form->handleRequest($request);
                 
         if(in_array('ROLE_ADMIN', $this->getUser()->getRoles())){
             $results = $this->manager->getRepository(Payment::class)->findPaymentsByWeek();
-        // dd($results);
-
+            $deliveries = $this->manager->getRepository(Delivery::class)->findDeliveriesByWeek();
+            $operations = $this->manager->getRepository(Fund::class)->findFundByWeek();
         }
 
         if($form->isSubmitted() && $form->isValid()){
             $results = $this->manager->getRepository(Payment::class)->searchPayments($orderSearch->getShop(), $orderSearch->getStart(),$orderSearch->getEnd(),$orderSearch->getPaymentType());
             $deliveries = $this->manager->getRepository(Delivery::class)->searchDeliveries($orderSearch->getShop(), $orderSearch->getStart(),$orderSearch->getEnd(),$orderSearch->getPaymentType());
+            $operations = $this->manager->getRepository(Fund::class)->searchFundByShop($orderSearch->getShop(), $orderSearch->getStart(),$orderSearch->getEnd());
 
         }
-
 
 
         return $this->render('admin/reports/index.html.twig', [
@@ -2384,7 +2399,8 @@ class AdminController extends AbstractController
             'form' => $form->createView(),
             'payments' => $this->manager->getRepository(Payment::class)->findBy(['status' => 1]),
             'results' => $results,
-            'deliveries' => $deliveries
+            'deliveries' => $deliveries,
+            'operations' => $operations
         ]);
     }
 
@@ -2404,8 +2420,8 @@ class AdminController extends AbstractController
         $deliveriesIsNotSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsNotSuccessfully($shop);
 
         $fundOperations = $this->manager->getRepository(Fund::class)->findBy(['manager' => $shop->getManager()]);
-    
-        $deliveries = $this->manager->getRepository(Delivery::class)->shopDeliveries($shop);
+       
+        $deliveries = $this->manager->getRepository(Delivery::class)->shopAllDeliveries($shop);
 
         $deliveryAmount = 0;
         
@@ -2413,7 +2429,6 @@ class AdminController extends AbstractController
             $deliveryAmount += $delivery->getAmountPaid();
         }
 
-   
         $totalPaid = 0;
         $totalAmount = 0;
         foreach($payments as $key => $payment){
@@ -2598,7 +2613,7 @@ class AdminController extends AbstractController
     public function shopDeliveries(Shop $shop)
     {
         return $this->render("admin/reports/shop/deliveries.html.twig", [
-            'deliveries' => $this->manager->getRepository(Delivery::class)->shopDeliveries($shop),
+            'deliveries' => $this->manager->getRepository(Delivery::class)->shopAllDeliveries($shop),
             'shop' => $shop
         ]);
     }
@@ -2998,14 +3013,14 @@ class AdminController extends AbstractController
             
             $passHass = $encoder->encodePassword($user, $user->getNewPassword());
 
-            $manager->setPassword($passHass);
+            $user->setPassword($passHass);
             
             $this->manager->persist($user);
             $this->manager->flush();
 
             $this->addFlash("success", "Paramètres modifiés");
 
-            return $this->redirectToRoute("manager_setting");
+            return $this->redirectToRoute("admin_setting");
            }else{
                $this->addFlash("danger", "Mot de passe incorrecte.");
            }
@@ -3013,7 +3028,7 @@ class AdminController extends AbstractController
            
         }
 
-        return $this->render('manager/setting/index.html.twig', [
+        return $this->render('admin/setting/index.html.twig', [
             'form' => $form->createView()
         ]);
     }
