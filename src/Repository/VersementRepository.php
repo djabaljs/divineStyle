@@ -2,9 +2,10 @@
 
 namespace App\Repository;
 
+use App\Entity\User;
 use App\Entity\Versement;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @method Versement|null find($id, $lockMode = null, $lockVersion = null)
@@ -47,4 +48,24 @@ class VersementRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    public function findManagerVersementsByWeek(User $manager)
+    {
+        $start_week = date("Y-m-d 00:00:00",strtotime('monday this week'));
+        $end_week = date("Y-m-d 23:59:59",strtotime('sunday this week'));
+
+
+        $qb = $this->createQueryBuilder('v');
+        $qb 
+            ->where('v.manager = :manager')
+            ->setParameter('manager', $manager)
+            ->andWhere('v.createdAt >= :start')
+            ->andWhere('v.createdAt <= :end')
+            ->setParameter('start',$start_week)                      
+            ->setParameter('end',$end_week)
+            ->orderBy('v.createdAt', 'DESC')
+        ;
+
+        return $qb->getQuery()->getResult();
+    }
 }

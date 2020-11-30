@@ -72,7 +72,7 @@ class ManagerController extends AbstractController
   
 
         $fivePayments = $this->manager->getRepository(Payment::class)->shopOrdersLastFiveSuccessfully($this->shop);
-        $payments = $this->manager->getRepository(Payment::class)->shopPaymentsByStatus($this->shop, TRUE);
+        $payments = $this->manager->getRepository(Payment::class)->findShopPaymentsByWeek($this->shop);
         $deliveriesSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsSuccessfully($this->shop);
         $deliveriesIsNotSuccessfully = $this->manager->getRepository(Delivery::class)->shopOrderIsNotSuccessfully($this->shop);
 
@@ -160,17 +160,6 @@ class ManagerController extends AbstractController
     public function categories(): Response
     {
 
-        $categories = $this->manager->getRepository(Category::class)->getShopProductsQuantity($this->shop);
-        
-        // $quantity = 0;
-        // foreach($categories as $category){
-        //     foreach($category->getProducts() as $product){
-        //         dd($product);
-        //         $quantity += $product->getQuantity();
-        //     }
-        // }
-
-        // dd($quantity);
         return $this->render('manager/products/categories/index.html.twig', [
             'categories' => $this->manager->getRepository(Category::class)->getShopProductsQuantity($this->shop)
         ]);
@@ -212,12 +201,6 @@ class ManagerController extends AbstractController
     public function productOrdersDelete(Order $order)
     {
         
-
-        $orderProduct = $this->manager->getRepository(OrderProduct::class)->findOneBy(['productOrder' => $order]);
-
-        // if(is_null($orderProduct))
-        //     throw $this->createNotFoundException('Cette commande n\'existe pas');
-
         $this->manager->getConnection()->beginTransaction();
         $this->manager->getConnection()->setAutoCommit(false);
 
@@ -302,7 +285,7 @@ class ManagerController extends AbstractController
                                                     $response .= '<td>'.number_format($product->getOnSaleAmount()).'</td>';
                                                    }
                                                 $response .= '<td>'.$request->get('quantity').'</td>';
-                                                $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+                                                $response .= '<td><a type="button" onclick="javascript:cartAction("remove","'.$product->getId().'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-trash"></i></a></td>';
                                             $response .= '</tr>';
                                         foreach($session->get('cart_item', []) as $v){
                                             $total += $v['price'] * $v['quantity'];
@@ -322,7 +305,7 @@ class ManagerController extends AbstractController
                                             $response .= '<td>'.number_format($product->getOnSaleAmount()).'</td>';
                                            }
                                         $response .= '<td>'.$request->get('quantity').'</td>';
-                                        $response .= '<td><a onClick="cartAction("remove","'.$product->getId().'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+                                        $response .= '<td><a type="button" onclick="javascript:cartAction("remove","'.$product->getId().'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-trash"></i></a></td>';
                                     $response .= '</tr>';
 
                                     foreach($session->get('cart_item', []) as $v){
@@ -346,7 +329,7 @@ class ManagerController extends AbstractController
                                                 $response .= '<td>'.$v['name'].'</td>';
                                                 $response .= '<td>'.number_format($v['price']).'</td>';
                                                 $response .= '<td>'.$v['quantity'].'</td>';
-                                                $response .= '<td><a onClick="cartAction("remove","'.$v['code'].'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
+                                                $response .= '<td><a type="button" onclick="javascript:cartAction("remove","'.$v['code'].'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-trash"></i></a></td>';
                                                 $response .= '</tr>';
                                         }
 
@@ -363,8 +346,8 @@ class ManagerController extends AbstractController
                                             $response .= '<td>'.$v['name'].'</td>';
                                             $response .= '<td>'.number_format($v['price']).'</td>';
                                             $response .= '<td>'.$v['quantity'].'</td>';
-                                            $response .= '<td><a onClick="cartAction("remove","'.$v['code'].'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-remove"></i></a></td>';
-                                             $response .= '</tr>';
+                                            $response .= '<td><a type="button" onclick="javascript:cartAction("remove","'.$v['code'].'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-trash"></i></a></td>';
+                                            $response .= '</tr>';
                                         }
 
                                     }
@@ -373,7 +356,6 @@ class ManagerController extends AbstractController
                                         unset($items[$k]);
                                         $session->set('cart_item', $items);
                                         $session->set('cart_item', $items);
-                                        
                                     }
                             }
                         }
@@ -386,7 +368,7 @@ class ManagerController extends AbstractController
                }
             }
 
-            return $request->get('action') == 'add' ? new JsonResponse(['status' => 201,'response' => $response, 'total' => number_format($total)]): new JsonResponse(['status' => 200,'response' => $response, 'code' => $code, 'total'=>number_format($total)]);
+            return $request->get('action') == 'add' ? $this->json(['status' => 201,'response' => $response, 'total' => number_format($total)]): $this->json(['status' => 200,'response' => $response, 'code' => $code, 'total'=> number_format($total)]);
         }
 
 
@@ -846,7 +828,8 @@ class ManagerController extends AbstractController
         return $this->render('manager/reports/index.html.twig', [
             'results' => $this->manager->getRepository(Payment::class)->findShopPaymentsByWeek($this->shop),
             // 'form' => $form->createView(),
-            'deliveries' =>  $this->manager->getRepository(Delivery::class)->shopDeliveries($this->shop)
+            'deliveries' =>  $this->manager->getRepository(Delivery::class)->shopDeliveries($this->shop),
+            'operations' => $this->manager->getRepository(Fund::class)->findManagerFundByWeek($this->getUser())
         ]);
     }
 
@@ -873,7 +856,7 @@ class ManagerController extends AbstractController
     public function versements()
     {
         return $this->render('manager/operations/versements/index.html.twig', [
-            'versements' => $this->manager->getRepository(Versement::class)->findBy(['manager' => $this->getUser()]),
+            'versements' => $this->manager->getRepository(Versement::class)->findManagerVersementsByWeek($this->getUser()),
         ]);
     }
 

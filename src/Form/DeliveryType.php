@@ -76,9 +76,17 @@ class DeliveryType extends AbstractType
                 'label' => false,
                 'class' => Order::class,
                 'query_builder' => function (EntityRepository $er){
+                    $start_week = date("Y-m-d 00:00:00",strtotime('monday this week'));
+                    $end_week = date("Y-m-d 23:59:59",strtotime('sunday this week'));
+            
+            
                    return $er->createQueryBuilder('o')
                        ->andWhere('o.shop = :shop')
                        ->setParameter('shop', $this->shop)
+                       ->andWhere('o.createdAt >= :start')
+                       ->andWhere('o.createdAt <= :end')
+                       ->setParameter('start',$start_week)                      
+                       ->setParameter('end',$end_week)
                        ->orderBy('o.createdAt', 'DESC');
 
                 },

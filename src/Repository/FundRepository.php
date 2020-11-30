@@ -3,8 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\Fund;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use App\Entity\User;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @method Fund|null find($id, $lockMode = null, $lockVersion = null)
@@ -47,4 +48,24 @@ class FundRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    public function findManagerFundByWeek(User $manager)
+    {
+        $start_week = date("Y-m-d 00:00:00",strtotime('monday this week'));
+        $end_week = date("Y-m-d 23:59:59",strtotime('sunday this week'));
+
+
+        $qb = $this->createQueryBuilder('f');
+        $qb 
+            ->where('f.manager = :manager')
+            ->setParameter('manager', $manager)
+            ->andWhere('f.createdAt >= :start')
+            ->andWhere('f.createdAt <= :end')
+            ->setParameter('start',$start_week)                      
+            ->setParameter('end',$end_week)
+            ->orderBy('f.createdAt', 'DESC');
+        ;
+
+        return $qb->getQuery()->getResult();
+    }
 }

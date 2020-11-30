@@ -102,8 +102,8 @@
                                                                     {% set in_session = 1 %}
                                                                 {% endif %}
                                                             {% endif %}
-                                                        <button {% if product.quantity <= 0 %}disabled{% endif %} class="btn btn-danger btn-sm btnAddAction" id="add_{{products[loop.index -1].id }}" {% if in_session  != 0 %} style="display:none" {% endif %} onClick="cartAction('add', '{{product.id}}')"><i class="fas fa-shopping-cart"></i></button>
-                                                        <button class="btn btn-danger btn-sm btnAdded"id="added_{{products[loop.index -1].id }}" {% if in_session != 1 %} style="display:none" {% endif %}>Ajouté</button>
+                                                        <button {% if product.quantity <= 0 %}disabled{% endif %} class="btn btn-danger btn-sm btnAddAction" id="add_{{products[loop.index -1].id }}" {% if in_session  != 0 %} style="display:none" {% endif %} onClick="cartAction('add', '{{product.id}}');"><i class="fas fa-shopping-cart"></i></button>
+                                                        <button class="btn btn-danger btn-sm btnAdded" id="added_{{products[loop.index -1].id }}" {% if in_session != 1 %} style="display:none" {% endif %}>Ajouté</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -134,7 +134,7 @@
                                                     <td>{{item['name']}}</td>
                                                     <td>{{item['price']|format_currency('XOF')}}</td>
                                                     <td>{{item['quantity']}}</td>
-                                                    <td><a onClick="cartAction('remove','{{item["code"]}}');" class="btnRemoveAction btn btn-danger btn-sm"><i class="fa fa-remove"></i></a></td>
+                                                    <td><a onclick="cartAction('remove','{{item["code"]}}');" class="btnRemoveAction btn btn-danger btn-sm"><i style="color:#fff;" class="fa fa-trash"></i></a></td>
                                                 </tr>
                                                 {% set total = total + (item['price'] * item['quantity']) %}
                                             {% endfor %}
@@ -303,14 +303,13 @@ var queryString = "";
 	success:function(data){
         if(data.status == 201){
           $('#cart-item').append(data.response);
-          $('#total').html('<strong>Total:'+data.total+'</strong>');
-          $('#endTotal').html('<strong>Total:'+data.total+' cfa</strong>');
-          $('#billing_amountPaid').attr({"max": data.total});
+          $('#total').html('<strong>Total: Cfa '+data.total+'</strong>');
+          $('#endTotal').html('<strong>NET: Cfa '+data.total+' </strong>');
         }else if(data.status == 200){
+       
           $('#cart-item').html(data.response);
-          $('#total').html('<strong>Total:'+data.total+' cfa</strong>');
-          $('#endTotal').html('<strong>Total:'+data.total+' cfa</strong>');
-          $('#billing_amountPaid').attr({"max": data.total});
+          $('#total').html('<strong>Total: Cfa '+data.total+' </strong>');
+          $('#endTotal').html('<strong>NET: Cfa '+data.total+' </strong>');
         }
 		if(action != "") {
 			switch(action) {
@@ -328,10 +327,10 @@ var queryString = "";
 				break;
 			}	 
 		}
-	},
-	error:function (){}
-	});	
+	  }
+  });	
 }
+
 $('#billing_deliveryMan').change(function(){
     if($(this).val() >= 1){
           $('#billing_deliveryAddress').prop('required',true);

@@ -76,6 +76,10 @@ class DeliveryRepository extends ServiceEntityRepository
 
     public function shopDeliveries(Shop $shop)
     {
+        $start_week = date("Y-m-d 00:00:00",strtotime('monday this week'));
+        $end_week = date("Y-m-d 23:59:59",strtotime('sunday this week'));
+
+
         $qb = $this->createQueryBuilder('d');
         $qb 
             ->andWhere('d.deleted = FALSE')
@@ -84,6 +88,10 @@ class DeliveryRepository extends ServiceEntityRepository
             ->setParameter('shop', $shop)
             ->innerJoin('o.shop', 's')
             ->andWhere('s.deleted = FALSE')
+            ->andWhere('d.createdAt >= :start')
+            ->andWhere('d.createdAt <= :end')
+            ->setParameter('start',$start_week)                      
+            ->setParameter('end',$end_week)
             ->orderBy("o.createdAt", "DESC")
             ;
         return $qb->getQuery()->getResult();

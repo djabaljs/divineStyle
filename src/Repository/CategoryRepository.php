@@ -64,8 +64,8 @@ class CategoryRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('c');
         $qb
             ->innerJoin('c.products', 'p')
+            ->where('p.deleted = FALSE')
             ->andWhere('p.shop = :shop')
-            ->andWhere('p.deleted = FALSE')
             ->setParameter('shop', $shop)
         ;
         

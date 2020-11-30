@@ -65,13 +65,20 @@ class PaymentRepository extends ServiceEntityRepository
 
     public function shopOrdersLastFiveSuccessfully(Shop $shop)
     {
+        $start_week = date("Y-m-d 00:00:00",strtotime('monday this week'));
+        $end_week = date("Y-m-d 23:59:59",strtotime('sunday this week'));
+
         $qb = $this->createQueryBuilder('p');
         $qb
             ->innerJoin('p.invoice', 'i')
             ->innerJoin('i.orders', 'o')
             ->where('o.shop = :shop')
-            ->orderBy('o.createdAt', 'DESC')
             ->setParameter('shop', $shop)
+            ->orderBy('o.createdAt', 'DESC')
+            ->andWhere('p.createdAt >= :start')
+            ->andWhere('p.createdAt <= :end')
+            ->setParameter('start',$start_week)                      
+            ->setParameter('end',$end_week)
             ->setMaxResults(5)
             ;
         return $qb->getQuery()
@@ -124,12 +131,19 @@ class PaymentRepository extends ServiceEntityRepository
 
     public function shopAllPayments(Shop $shop)
     {
+        $start_week = date("Y-m-d 00:00:00",strtotime('monday this week'));
+        $end_week = date("Y-m-d 23:59:59",strtotime('sunday this week'));
+
         $qb = $this->createQueryBuilder('p');
         $qb
             ->innerJoin('p.invoice', 'i')
             ->innerJoin('i.orders', 'o')
             ->andWhere('o.shop = :shop')
             ->setParameter('shop', $shop)
+            ->andWhere('p.createdAt >= :start')
+            ->andWhere('p.createdAt <= :end')
+            ->setParameter('start',$start_week)                      
+            ->setParameter('end',$end_week)
             ->orderBy('p.createdAt', 'DESC')
             ;
 
