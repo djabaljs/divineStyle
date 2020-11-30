@@ -62,6 +62,7 @@
             <div class="card-header text-center"><a href="{{path('app_login')}}"><img class="logo-img img-fluid" width="70%" src="{{asset('concept/assets/images/logo.jpg')}}" alt="logo"></a><span class="splash-description">Réinitialiser votre mot de passe.</span></div>
             <div class="card-body">
               {{ form_start(requestForm) }}
+               {% include 'shared/flash_message.html.twig' %}
                     <p>
                     Ne vous inquiétez pas, nous vous enverrons un e-mail pour réinitialiser votre mot de passe
                     .</p>

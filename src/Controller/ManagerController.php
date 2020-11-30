@@ -112,7 +112,7 @@ class ManagerController extends AbstractController
         }
 
         $totalPaid += $deliveryAmount;
-     
+
         return $this->render('manager/dashboard.html.twig', [
             'totalAmount' => $totalAmount,
             'totalPaid' => $totalPaid,
