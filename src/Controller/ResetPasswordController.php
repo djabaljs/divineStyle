@@ -175,7 +175,7 @@ class ResetPasswordController extends AbstractController
     
             // $mailer->send($email);
 
-            $this->addFlash("success", "Un token de réinitialisation vous a été envoyé par e-mail!");
+            $this->addFlash("success", "Un token de réinitialisation  de mot de passe vous a été envoyé par e-mail!");
 
             return $this->redirectToRoute('app_forgot_password_request');
 
@@ -189,7 +189,7 @@ class ResetPasswordController extends AbstractController
                 //     $e->getReason()
                 // ));
 
-                $this->addFlash("danger", "Un token de réinitialisation vous a été déjà envoyé par e-mail");
+                $this->addFlash("danger", "Un token de réinitialisation de mot de passe vous a été déjà envoyé par e-mail");
                 return $this->redirectToRoute('app_forgot_password_request');
             }
     

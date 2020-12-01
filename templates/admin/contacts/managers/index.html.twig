@@ -30,7 +30,8 @@
                         </div>
                     </div>
                 </div>
-                  <div class="row">
+
+                 <div class="row">
                     <!-- ============================================================== -->
                     <!-- button  -->
                     <!-- ============================================================== -->
@@ -42,29 +43,32 @@
                     <!-- ============================================================== -->
                 </div>
                 <br/>
-                  {# <div class="row">
+
+                <div class="row">
                     <!-- ============================================================== -->
                     <!-- button  -->
                     <!-- ============================================================== -->
                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                            <a href="{{path('manager_versements_create')}}" class="btn btn-success" style="color:#fff" ><i class="fas fa-save"></i> Effectuer un versement</a>
+                        <a class="btn btn-success" href="{{path('admin_managers_create')}}" style="color:#fff" ><i class="fas fa-save"></i> Enregistrer un gestionnaire</a>
                    </div>
                     <!-- ============================================================== -->
                     <!-- button  -->
                     <!-- ============================================================== -->
                 </div>
-                <br/> #}
+                <br/>
                 <!-- ============================================================== -->
                 <!-- end pageheader -->
                 <!-- ============================================================== -->
                    <div class="row">
+                 
                     <!-- ============================================================== -->
                     <!-- data table  -->
-                    <!-- ============================================================== -->
+                    <!-- ========================= ===================================== -->
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                         <div class="card">
+                            
                             <div class="card-header">
-                                <h5 class="mb-0">Liste des versements effectués</h5>
+                                <h5 class="mb-0">Liste des gestionnaires</h5>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
@@ -72,38 +76,34 @@
                                         <thead>
                                             <tr>
                                                 <th>N°</th>
-                                                <th>Gerant</th>
-                                                <th>Montant</th>
-                                                <th>Description</th>
-                                                <th>Date</th>
-                                                {# <th>Heure</th> #}
+                                                <th>Nom</th>
+                                                <th>Prénoms</th>
+                                                <th>Date enregistrement</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                        {% set total = 0 %}
-                                           {% for versement in versements %}
-                                            {% set total = total + versement.amount %}
+                                           {% for manager in managers %}
                                              <tr>
                                                 <td>{{loop.index}}</td>
-                                                <td>{{versement.manager}}</td>
-                                                <td>{{versement.amount}}</td>
-                                                <td>{{versement.description}}</td>
-                                                <td>{{versement.createdAt|date("Y-m-d")}}</td>
-                                                {# <td>{{versement.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ")}}</td> #}
+                                                <td>{{manager.firstname}}</td>
+                                                <td>{{manager.lastname}}</td>
+                                                <td>{{manager.createdAt|date('Y-m-d')}}</td>
                                                 <td>
-                                                    <a href="{{path('admin_versements_update', {id: versement.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                                    {% if is_granted("ROLE_MANAGER") %}
-                                                    <a href="{{path('admin_versements_delete', {id: versement.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
-                                                    {% endif %}
+                                                {# <a href="{{path('admin_category_show', {id: category['id']})}}" class="btn btn-info"><i class="fas fa-eye"></i></a> #}
+                                                <a href="{{path('admin_managers_update', {id: manager.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
+                                                <a href="{{path('admin_managers_delete', {id: manager.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
                                                 </td>
                                             </tr>
                                            {% endfor %}
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <td align="right" colspan="5">Total:</td>
-                                                <td>{{total|format_currency('XOF')}}</td>
+                                               <th>N°</th>
+                                                <th>Nom</th>
+                                                <th>Prénoms</th>
+                                                <th>Date enregistrement</th>
+                                                <th>Actions</th>
                                             </tr>
                                         </tfoot>
                                     </table>

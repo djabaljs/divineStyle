@@ -104,10 +104,9 @@
                                                     {# <a href="{{path('admin_products_orders_update', {id: order.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a> #}
                                                     <a href="{{path('admin_products_orders_invoice_show', {id: payment.invoice.id})}}" class="btn btn-primary"><i class="fas fa-file"></i></a>
                                                     {# <a href="{{path('admin_products_orders_delete', {id: payment.invoice.orders.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a> #}
-                                                 
-                                                    {% if payment.status %}
-                                                    <a href="{{path('admin_cancel_order', {id: payment.invoice.orders.id})}}" class="btn btn-success"><i class="fas fa-times-circle"></i></a>
                                                     
+                                                    {% if is_granted("ROLE_MANAGER") and  payment.status %}
+                                                    <a href="{{path('admin_cancel_order', {id: payment.invoice.orders.id})}}" class="btn btn-success"><i class="fas fa-times-circle"></i></a>
                                                     {% endif %}
                                                 </td>
                                             </tr>

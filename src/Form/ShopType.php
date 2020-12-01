@@ -4,11 +4,13 @@ namespace App\Form;
 
 use App\Entity\Shop;
 use App\Entity\User;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 
 class ShopType extends AbstractType
 {
@@ -19,7 +21,7 @@ class ShopType extends AbstractType
             ->add('name', TextType::class, [
                 'label' => false,
             ])
-            ->add('address', TextType::class, [
+            ->add('address', TextareaType::class, [
                 'label' => false,
                 'required' => false
             ])
@@ -33,13 +35,12 @@ class ShopType extends AbstractType
             ->add('manager', EntityType::class, [
                 'label' => false,
                 'class' => User::class,
-                'query_builder' => function(\Doctrine\ORM\EntityRepository $er) {
-                    return $er->createQueryBuilder('q')
-                        ->where('q.roles LIKE :roles')
+                'query_builder' => function(EntityRepository $er) {
+                    return $er->createQueryBuilder('u')
+                        ->andWhere('u.shops is null')
+                        ->andWhere('u.roles LIKE :roles')
                         ->setParameter('roles', '%"ROLE_MANAGER"%')
-                        ->andWhere('q.shops IS NULL')
-                        ->orderBy('q.id', 'DESC');
-
+                    ;
                 },
        
             ])

@@ -100,7 +100,9 @@
                                                 {# <td>{{operation.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ")}}</td> #}
                                                 <td>
                                                     <a href="{{path('admin_fund_operations_update', {id: operation.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
+                                                    {% if is_granted("ROLE_MANAGER") %}
                                                     <a href="{{path('admin_fund_operations_delete', {id: operation.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                                                    {% endif %}
                                                 </td>
                                             </tr>
                                            {% endfor %}

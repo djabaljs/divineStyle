@@ -8,9 +8,10 @@ use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
-use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 
 class ShopUpdateType extends AbstractType
 {
@@ -20,7 +21,7 @@ class ShopUpdateType extends AbstractType
             ->add('name', TextType::class, [
                 'label' => false,
             ])
-            ->add('address', TextType::class, [
+            ->add('address', TextareaType::class, [
                 'label' => false,
                 'required' => false
             ])
@@ -31,11 +32,12 @@ class ShopUpdateType extends AbstractType
             ->add('manager', EntityType::class, [
                 'label' => false,
                 'class' => User::class,
-                'query_builder' => function(\Doctrine\ORM\EntityRepository $er) {
+                'query_builder' => function(EntityRepository $er) {
                     return $er->createQueryBuilder('u')
-                        ->where('u.roles LIKE :roles')
+                        ->andWhere('u.shops is null')
+                        ->andWhere('u.roles LIKE :roles')
                         ->setParameter('roles', '%"ROLE_MANAGER"%')
-                        ->orderBy('u.id', 'ASC');
+                    ;
                 },
        
             ]);

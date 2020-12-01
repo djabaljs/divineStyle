@@ -70,7 +70,7 @@
                                 <h5 class="mb-0">Modification de produit</h5>
                             </div>
                             <div class="card-body">
-                                   {{form_start(form)}}
+                               {{form_start(form)}}
                                     <div class="row">
                                         <div class="col-md-6">
                                            <div class="col-md-12">
@@ -79,27 +79,29 @@
                                                     {{form_row(form.name, {attr:{'class': 'form-control', 'placeholder':'Nom du produit','style':'height:50px'}})}}
                                                 </div>
                                             </div>
+                                            {% if is_granted("ROLE_SUPER_ADMIN") %}
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="product_unit_price">Prix d'achat</label>
                                                     {{form_row(form.buyingPrice, {attr:{'class': 'form-control', 'style':'height:50px'}})}}
                                                 </div>
                                             </div>
+                                            {% else %}
+                                                {# {{form_row(form.buyingPrice, {attr:{'class': 'form-control', 'style':'height:50px'}})}} #}
+                                            {% endif %}
+
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="product_selling_price">Prix de vente</label>
                                                     {{form_row(form.sellingPrice, {attr:{'class': 'form-control','style':'height:50px'}})}}
                                                 </div>
                                             </div>
-                                            <div class="col-md-12">
+                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="product_onSaleAmount">Prix promo</label>
                                                     {{form_row(form.onSaleAmount, {attr:{'class': 'form-control','style':'height:50px'}})}}
                                                 </div>
                                             </div>
-                                            
-                                        </div>
-                                                 <div class="col-md-6">
                                                 {% set shopArray = [] %}
                                                 {% set nameArray = [] %}
                                                 {% for key, shop in shops %}
@@ -108,56 +110,93 @@
                                                     {% set shopArray = shopArray|merge({(key): shop}) %}
                                                  {% endif %}
                                                 {% endfor %}
-                                              
                                                 {% for shop in shopArray %}
-                                                     {% if product in shopArray %}
-                                                        <div class="col-md-12">
-                                                            <div class="form-group">
-                                                                <label for="product_provider">Quantité {{shop.name}}</label>
-                                                                <input type="number" class="form-control" name="shopQuantity[{{shop.id}}][]" value="{{product.quantity}}" min="0" style="height:50px" />
-                                                            </div>
-                                                        </div> 
-                                                     {% else %}
-                                                          <div class="col-md-12">
-                                                            <div class="form-group">
-                                                                <label for="product_provider">Quantité {{shop.name}}</label>
-                                                                <input type="number" class="form-control" name="shopQuantity[{{shop.id}}][]" value="{{product.quantity}}" min="0" style="height:50px" />
-                                                            </div>
-                                                        </div> 
-                                                     {% endif %}
+                                                    {% if product in shop.products %}
+                                                            {% for shopProduct in shop.products %}
+                                                                {% if shopProduct.id == product.id and product.shop == shopProduct.shop %}
+                                                                    <div class="col-md-12">
+                                                                        <div class="form-group">
+                                                                            <label for="product_provider">Quantité {{shop.name}}</label>
+                                                                            <input type="number" class="form-control" name="shopQuantity[{{shop.id}}][]" value="{{product.quantity}}" min="0" style="height:50px" />
+                                                                        </div>
+                                                                    </div> 
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                    {% else %}
+                                                       {% if shop.products is not empty %}
+                                                          {% for shopProduct in shop.products %}
+                                                            {% if shopProduct.slug == product.slug %}
+                                                                <div class="col-md-12">
+                                                                    <div class="form-group">
+                                                                        <label for="product_provider">Quantité {{shop.name}}</label>
+                                                                        <input type="number" class="form-control" name="shopQuantity[{{shop.id}}][]" value="{{shopProduct.quantity}}" min="0" style="height:50px" />
+                                                                    </div>
+                                                                </div> 
+                                                            {% endif %}
+                                                          {% endfor %}
+                                                       {% else %}
+                                                            <div class="col-md-12">
+                                                                <div class="form-group">
+                                                                    <label for="product_provider">Quantité {{shop.name}}</label>
+                                                                    <input type="number" class="form-control" name="shopQuantity[{{shop.id}}][]" min="0" style="height:50px" />
+                                                                </div>
+                                                            </div> 
+                                                       {% endif %}
+                                                    {% endif %}
                                                 {% endfor %}
-                                                <div class="col-md-12">
+                                        </div>
+                                        <div class="col-md-6">
+                                         <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="product_category">Catégorie</label>
+                                                    {{form_row(form.category, {attr:{'class': 'form-control'}})}}
+                                                </div>
+                                            </div>
+                                                <div class="col-md-12 ">
                                                     <div class="form-group">
-                                                        <label for="product_update_lengths">Fournisseur</label>
+                                                        <label for="product_isVariable">Type de produit</label>
+                                                        {{form_row(form.isVariable)}}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12 element">
+                                                    <div class="form-group">
+                                                        <label for="product_lengths">Taille</label>
                                                         {{form_row(form.lengths, {attr:{'class': 'form-control','style':'height:50px'}})}}
                                                     </div>
+                                                </div>
+                                                 <div class="col-md-12 element">
                                                     <div class="form-group">
-                                                        <label for="product_update_colors">Fournisseur</label>
+                                                        <label for="product_colors">Couleur</label>
                                                         {{form_row(form.colors, {attr:{'class': 'form-control','style':'height:50px'}})}}
                                                     </div>
+                                                </div>
+                                                <div class="col-md-12">
                                                     <div class="form-group">
                                                         <label for="product_minimumStock">Stock minimum</label>
-                                                        {% if form.minimumStock is not null  %}
-                                                            {{form_row(form.minimumStock, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                        {% else %}
-                                                            {{form_row(form.minimumStock, {attr:{'class': 'form-control','style':'height:50px','min':'0','value':'2'}})}}
-                                                        {% endif %}
+                                                        {{form_row(form.minimumStock, {attr:{'class': 'form-control','style':'height:50px'}})}}
                                                     </div>
                                                 </div>
                                                  <div class="col-md-12">
                                                     <div class="form-group">
-                                                        <label for="product_update_provider">Fournisseur</label>
+                                                        <label for="product_provider">Fournisseur</label>
                                                         {{form_row(form.provider, {attr:{'class': 'form-control','style':'height:50px'}})}}
                                                     </div>
                                                  </div>  
+                                                
+                                                 {# <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="product_quantity">Magasin</label>
+                                                        {{form_row(form.shop, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                </div>
+                                            </div> #}
                                             </div>
                                       </div>
-                                       <div class="col-md-12">
-                                       <div class="form-group">
-                                     <button type="submit" class="btn btn-warning"><i class="fas fa-edit"></i> Modifier</button>
-                                    </div>
-                                    </div>  
-                                    
+                                      <div class="col-md-12">
+                                            <div class="form-group">
+                                                <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
+                                            </div>
+                                      </div>  
+
                                 {{form_end(form)}}
                             </div>
                         </div>
@@ -172,11 +211,11 @@
 {% block javascripts %}
  <script src="{{asset('concept/assets/vendor/select2/js/select2.min.js')}}"></script>
  <script>
-    $('#product_update_lengths').select2({
+    $('#product_lengths').select2({
         placeholder: "Tailles disponibles",
         allowClear: true
     });
-    $('#product_update_colors').select2({
+    $('#product_colors').select2({
         placeholder: "Couleurs disponibles",
         allowClear: true
     });
@@ -196,6 +235,7 @@
         placeholder: "Selectionner le magasin",
         allowClear: true
     });
+    $('.element').hide();
 
     $('#product_isVariable').change(function(){
         if($(this).val() == 0){

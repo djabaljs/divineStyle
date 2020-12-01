@@ -28,6 +28,7 @@ use App\Form\LengthType;
 use App\Entity\Attribute;
 use App\Entity\Versement;
 use App\Form\BillingType;
+use App\Form\ManagerType;
 use App\Form\ProductType;
 use App\Form\SettingType;
 use App\Form\CategoryType;
@@ -357,8 +358,6 @@ class AdminController extends AbstractController
      */
     public function updateProduct(Request $request, Product $product): Response
     {   
-
-
         if(is_null($product)){
             throw $this->createNotFoundException("Ce produit n'existe pas");
         }
@@ -371,106 +370,118 @@ class AdminController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
-          
-            
-            if($request->get('shopQuantity')){
-               
-                $totalQuantity = 0;
-                foreach($request->get('shopQuantity') as $key => $quantities){
+
+            $this->manager->getConnection()->beginTransaction();
+            $this->manager->getConnection()->setAutoCommit(false);
+
+            try{
+                if($request->get('shopQuantity')){
+                
+                    $totalQuantity = 0;
+
+                    foreach($request->get('shopQuantity') as $key => $quantities){
+
                         foreach($quantities as $quantity){
 
-                        $totalQuantity += $quantity;
-
-                        if($key != 0){
+                            if($quantity != ""){
+                               $totalQuantity += $quantity;
+                            }else{
+                                $quantity = 0;
+                            }
 
                             $shop = $this->manager->getRepository(Shop::class)->find($key);
-
                             $shopProducts = [];
 
                             foreach($shop->getProducts() as $shopProduct){
                                 $shopProducts[] = $shopProduct;
                             }
 
-                            if(!empty($shopProducts)){
+                            if(in_array($product,$shopProducts)){
+                                foreach($shopProducts as $shopProduct){
+                                    if($shopProduct->getShop() === $product->getShop() && $shopProduct->getSlug() === $product->getSlug()){
+                                        $shopProduct->setQuantity($quantity);
 
-                                foreach($shop->getProducts() as $productC){
-                        
-                                    if($product->getShop() == $productC->getShop()){
-    
-                                        $slugify = new Slugify();
-                        
-                                        $productC->setSlug($slugify->slugify($product->getName()));
-                                        $productC->setQuantity($quantity);
-                                        $productC->setName($product->getName());
-                                        $productC->setProvider($product->getProvider());
-                                        $productC->setMinimumStock($product->getMinimumStock());
-                                        $productC->setSellingPrice($product->getSellingPrice());
-                                        $productC->setBuyingPrice($product->getBuyingPrice());
-    
-                                        if(is_null($product->getOnSaleAmount()) || $product->getOnSaleAmount() == 0.0){
-                                            $productC->setOnSaleAmount(null);
+                                        if(is_null($product->getOnSaleAmount())){
+                                            $shopProduct->setOnSaleAmount(null);
                                         }else{
-                                            $productC->setOnSaleAmount($product->getOnSaleAmount());
+                                            $shopProduct->setOnSaleAmount($product->getOnSaleAmount());
                                         }
-    
-                                        $this->manager->persist($productC);
-                                        $this->manager->flush(); 
-    
-                                    }
-                                    else{
-    
-                                            $products = $this->manager->getRepository(Product::class)->findAll();
-    
-                                            foreach($products as $productx){
-    
-                                            if($productx->getWcProductId() == $product->getWcProductId()){
-                                                $slugify = new Slugify();
-                                                $productx->setName($product->getName());
-                                                $productx->setSlug($slugify->slugify($product->getName()));
-                                                $productx->setQuantity($quantity);
-                                                $productx->setProvider($product->getProvider());
-                                                $productx->setMinimumStock($product->getMinimumStock());
-                                                $productx->setSellingPrice($product->getSellingPrice());
-                                                $productx->setBuyingPrice($product->getBuyingPrice());
-    
-                                                if(is_null($product->getOnSaleAmount())){
-                                                    $productx->setOnSaleAmount(null);
-                                                }else{
-                                                    $productx->setOnSaleAmount($product->getOnSaleAmount());
-                                                }
-    
-                                                $this->manager->persist($productx);
-                                                $this->manager->flush(); 
-                                            }
-                                            
-                                            }
-    
+
+                                        $this->manager->persist($shopProduct);
                                     }
                                 }
                             }else{
-
-                                $nProduct = new  Product();
-                                $nProduct = clone($product);
-                                $nProduct->setQuantity($quantity);
-                                $shop->addProduct($nProduct);
-                                $this->manager->persist($shop);
-                                $this->manager->flush();
+                                if(!empty($shopProducts)){
+                                    foreach($shop->getProducts() as $shopProduct){
+                                        if($shopProduct->getSlug() == $product->getSlug()){
+                                            $shopProduct->setQuantity($quantity);
+    
+                                            if(is_null($product->getOnSaleAmount())){
+                                                $shopProduct->setOnSaleAmount(null);
+                                            }else{
+                                                $shopProduct->setOnSaleAmount($product->getOnSaleAmount());
+                                            }
+    
+                                            $this->manager->persist($shopProduct);
+    
+                                        }else{
+    
+                                            $newProduct = clone($product);
+                                            $newProduct->setQuantity($quantity);
+            
+                                            if(is_null($product->getOnSaleAmount())){
+                                                $newProduct->setOnSaleAmount(null);
+                                            }else{
+                                                $newProduct->setOnSaleAmount($product->getOnSaleAmount());
+                                            }
+            
+                                            $shop->addProduct($newProduct);
+            
+                                            $this->manager->persist($shop);
+                                        }
+                                    }
+                                }else{
+                                    $newProduct = clone($product);
+                                            $newProduct->setQuantity($quantity);
+            
+                                            if(is_null($product->getOnSaleAmount())){
+                                                $newProduct->setOnSaleAmount(null);
+                                            }else{
+                                                $newProduct->setOnSaleAmount($product->getOnSaleAmount());
+                                            }
+            
+                                            $shop->addProduct($newProduct);
+            
+                                            $this->manager->persist($shop);
+                                }
+                    
+                               
                             }
+
                         }
+
                     }
 
+                    $this->manager->flush();
+                    $this->manager->commit();
+
+                    $product->setQuantity($totalQuantity);
+        
+                    $this->api->put('products',$product);
+
+                    $this->addFlash("success", "Produit modifié avec succès!");
+
+                    return $this->redirectToRoute("admin_products_update", [
+                        "slug" => $product->getSlug(), 
+                    ]);
                 }
-                
-                $product->setQuantity($totalQuantity);
-       
-                $this->api->put('products',$product);
+            
+            }catch(\Exception $e){
+                $this->manager->rollback();
 
-                $this->addFlash("success", "Produit modifié avec succès!");
-
-                return $this->redirectToRoute("admin_products_update", [
-                    "slug" => $product->getSlug(), 
-                ]);
+                throw $e;
             }
+
 
         } 
 
@@ -868,7 +879,7 @@ class AdminController extends AbstractController
     public function createShop(Request $request)
     {
         $shop = new Shop();
-        $staff = new User();
+        // $staff = new User();
         
         $form = $this->createForm(ShopType::class, $shop);
         $form->handleRequest($request);
@@ -877,17 +888,20 @@ class AdminController extends AbstractController
         {
             $this->manager->getConnection()->beginTransaction();
 
-            $staffs = $form->get('staffs')->getData();
+            // $staffs = $form->get('staffs')->getData();
             
-            foreach($staffs as $staff){
-                $shop->addStaff($staff);
-                $staff->setShop($shop);
-            }
+            // foreach($staffs as $staff){
+            //     $shop->addStaff($staff);
+            //     $staff->setShop($shop);
+            // }
 
             try{
-                
+                $manager = $shop->getManager();
+                $manager->setShops($shop);
+
+                $shop->setDeleted(false);
                 $this->manager->persist($shop);
-                // $this->manager->persist($staff);
+                $this->manager->persist($manager);
                 $this->manager->flush();
                 $this->manager->commit();
 
@@ -933,46 +947,53 @@ class AdminController extends AbstractController
         if($form->isSubmitted() && $form->isValid())
         {
             $this->manager->getConnection()->beginTransaction();
+            $this->manager->getConnection()->setAutoCommit(false);
 
-            $staffs = $form->get('staffs')->getData();
+            // $staffs = $form->get('staffs')->getData();
         
             try{
 
-                foreach($datas as $data){
-                    $staff = $this->manager->getRepository(User::class)->find($data);
+                // foreach($datas as $data){
+                //     $staff = $this->manager->getRepository(User::class)->find($data);
 
-                if(!is_null($staff)){
-                    if(!is_null($staff->getShop())){
-                        $shop->addStaff($staff);
-                        $staff->setShop($shop);
-                        $this->manager->persist($shop);
-                        $this->manager->persist($staff);
-                    }
-                  }
-                }
+                // if(!is_null($staff)){
+                //     if(!is_null($staff->getShop())){
+                //         $shop->addStaff($staff);
+                //         $staff->setShop($shop);
+                //         $this->manager->persist($shop);
+                //         $this->manager->persist($staff);
+                //     }
+                //   }
+                // }
 
-                foreach($staffs as $staff){
+                // foreach($staffs as $staff){
                    
 
-                    if(!is_null($staff->getShop())){
+                //     if(!is_null($staff->getShop())){
 
-                        $shop->removeStaff($staff);
-                        $staff->setShop(null);
-                        $this->manager->persist($shop);
-                        $this->manager->persist($staff);
+                //         $shop->removeStaff($staff);
+                //         $staff->setShop(null);
+                //         $this->manager->persist($shop);
+                //         $this->manager->persist($staff);
                         
-                    }else{
+                //     }else{
 
-                        $shop->addStaff($staff);
-                        $staff->setShop($shop);
-                        $this->manager->persist($shop);
-                        $this->manager->persist($staff);
-                    }
+                //         $shop->addStaff($staff);
+                //         $staff->setShop($shop);
+                //         $this->manager->persist($shop);
+                //         $this->manager->persist($staff);
+                //     }
     
-                }
-
+                // }
+                $manager = $shop->getManager();
+                $manager->setShops($shop);
+              
+                $shop->setDeleted(false);
+                $this->manager->persist($shop);
+                $this->manager->persist($manager);
                 $this->manager->flush();
                 $this->manager->commit();
+
 
                 $this->addFlash("success", "Magasin modifié avec succès!");
 
@@ -3031,6 +3052,102 @@ class AdminController extends AbstractController
         return $this->render('admin/setting/index.html.twig', [
             'form' => $form->createView()
         ]);
+    }
+
+
+
+               
+    /**
+     * @Route("/managers", name="admin_managers", methods={"GET"})
+     * @method managers
+     * @return Response
+     */
+    public function managers()
+    {
+        return $this->render('admin/contacts/managers/index.html.twig', [
+            'managers' => $this->manager->getRepository(User::class)->findManagers()
+        ]);
+    }
+
+  
+     /**
+     * @Route("/managers/create", name="admin_managers_create", methods={"GET", "POST"})
+     * @param Request $request
+     * @param UserPasswordEncoderInterface $passwordEncoder
+     * @return Response
+     */
+
+    public function managersCreate(Request $request, UserPasswordEncoderInterface $passwordEncoder)
+    {
+        $manager = new User();
+
+        $form = $this->createForm(ManagerType::class, $manager);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $manager->setDeleted(false);
+            $passwordHash = $passwordEncoder->encodePassword($manager, '123456');
+            $manager->setPassword($passwordHash);
+            $manager->setRoles(["ROLE_MANAGER"]);
+            $this->manager->persist($manager);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Gestionnaire crée!");
+
+            $this->redirectToRoute('admin_managers_create');
+        }
+
+        return $this->render('admin/contacts/managers/create.html.twig',[
+            'form' => $form->createView()
+        ]);
+    }
+
+     /**
+     * @Route("/managers/update/{id}", name="admin_managers_update", methods={"GET", "POST"})
+     * @param Request $request
+     * @param UserPasswordEncoderInterface $passwordEncoder
+     * @param User $manager
+     * @return Response
+     */
+
+    public function managersUpdate(Request $request, UserPasswordEncoderInterface $passwordEncoder, User $manager)
+    {
+        $form = $this->createForm(ManagerType::class, $manager);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()){
+            $passwordHash = $passwordEncoder->encodePassword($manager, '123456');
+            $manager->setPassword($passwordHash);
+            $this->manager->persist($manager);
+            $this->manager->flush();
+
+            $this->addFlash("success", "Gestionnaire modifié!");
+
+
+        }
+
+        return $this->render('admin/contacts/managers/update.html.twig',[
+            'form' => $form->createView()
+        ]);
+    }
+       /**
+     * @Route("/managers/delete/{id}", name="admin_managers_delete", methods={"GET"})
+     * @method managersRemove
+     * @return Response
+     */
+    public function managersRemove(User $manager)
+    {
+
+        if(is_null($manager))
+             throw $this->createNotFoundException('Cet gestionnaire n\'existe pas!');
+
+        $manager->setDeleted(true);
+        $this->manager->persist($manager);
+        $this->manager->flush();
+
+        $this->addFlash("success", "Gestionnaire supprimé avec succès");
+
+        return $this->redirectToRoute("admin_managers");
     }
 
 
