@@ -91,8 +91,31 @@
                                                 <td>{{administrator.createdAt|date('Y-m-d')}}</td>
                                                 <td>
                                                 {# <a href="{{path('admin_category_show', {id: category['id']})}}" class="btn btn-info"><i class="fas fa-eye"></i></a> #}
-                                                <a href="{{path('admin_administrators_update', {id: administrator.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                                <a href="{{path('admin_administrators_delete', {id: administrator.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                                                <a href="{{path('admin_administrators_update', {id: administrator.id})}}" class="btn btn-warning btn-xs"><i class="fas fa-edit"></i></a>
+                                                {# <a href="{{path('admin_administrators_delete', {id: administrator.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a> #}
+                                                 <a href="#" class="btn btn-danger btn-xs" data-toggle="modal" data-target="#customerMoadl{{administrator.id}}">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                   
+                                                    <div class="modal fade" id="customerMoadl{{administrator.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog" role="document">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title text-uppercase" style="color:#ffff;" id="customerMoadl{{administrator.id}}">{{administrator}}</h5>
+                                                                    <a href="#" class="close" data-dismiss="modal" aria-label="Close">
+                                                                        <span aria-hidden="true">&times;</span>
+                                                                    </a>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <p>Voulez-vous vraiment supprimer {{administrator}}? Toutes les données liées à cet administrateur seront définitivement supprimées!</p>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <a href="#" class="btn btn-secondary" data-dismiss="modal" style="color:#fff;">Annuler</a>
+                                                                    <a href="{{path('admin_administrators_delete', {id: administrator.id})}}" class="btn btn-danger" style="color:#fff;">Supprimer</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                             </tr>
                                            {% endfor %}

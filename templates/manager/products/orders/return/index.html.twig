@@ -93,10 +93,56 @@
                                                 <td>{{order.createdAt|date('Y-m-d')}}</td>
                                                 {# <td>{{order.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td> #}
                                                 <td>
-                                                  <a href="{{path('manager_orders_return_update', {id: order.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                                  <a href="{{path('manager_orders_return_invoice', {id: order.id})}}" class="btn btn-success"><i class="fas fa-file"></i></a>
-                                                  <a href="{{path('manager_orders_return_success', {id: order.id})}}" class="btn btn-info"><i class="fas fa-check-circle"></i></a>
-                                                  <a href="{{path('manager_orders_return_delete', {id: order.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                                                  <a href="{{path('manager_orders_return_update', {id: order.id})}}" class="btn btn-warning btn-xs"><i class="fas fa-edit"></i></a>
+                                                  <a href="{{path('manager_orders_return_invoice', {id: order.id})}}" class="btn btn-success btn-xs"><i class="fas fa-file"></i></a>
+                                                  {# <a href="{{path('manager_orders_return_success', {id: order.id})}}" class="btn btn-info"><i class="fas fa-check-circle"></i></a> #}
+                                                   <a href="#" class="btn btn-info btn-xs" data-toggle="modal" data-target="#customerMoadll{{order.id}}">
+                                                            <i class="fas fas fa-check-circle"></i>
+                                                    </a>
+                                                   
+                                                    <div class="modal fade" id="customerMoadll{{order.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog" role="document">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    {# <h5 class="modal-title text-uppercase" style="color:#ffff;" id="customerMoadl{{order.id}}">Livraison de la commande No {{delivery.order.orderNumber}}</h5> #}
+                                                                    <a href="#" class="close" data-dismiss="modal" aria-label="Close">
+                                                                        <span aria-hidden="true">&times;</span>
+                                                                    </a>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <p>Voulez-vous vraiment valider ce retour de marchandise?</p>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <a href="#" class="btn btn-secondary" data-dismiss="modal" style="color:#fff;">Annuler</a>
+                                                                    <a href="{{path('manager_orders_return_success', {id: order.id})}}" class="btn btn-danger" style="color:#fff;">Supprimer</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                  {# <a href="{{path('manager_orders_return_delete', {id: order.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a> #}
+                                                    <a href="#" class="btn btn-danger btn-xs" data-toggle="modal" data-target="#customerMoadl{{order.id}}">
+                                                            <i class="fas fa-trash"></i>
+                                                    </a>
+                                                   
+                                                    <div class="modal fade" id="customerMoadl{{order.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog" role="document">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    {# <h5 class="modal-title text-uppercase" style="color:#ffff;" id="customerMoadl{{order.id}}">Livraison de la commande No {{delivery.order.orderNumber}}</h5> #}
+                                                                    <a href="#" class="close" data-dismiss="modal" aria-label="Close">
+                                                                        <span aria-hidden="true">&times;</span>
+                                                                    </a>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <p>Voulez-vous vraiment supprimer ce retour de marchandise? Toutes les données liées à cette action seront annulées!</p>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <a href="#" class="btn btn-secondary" data-dismiss="modal" style="color:#fff;">Annuler</a>
+                                                                    <a href="{{path('manager_orders_return_delete', {id: order.id})}}" class="btn btn-danger" style="color:#fff;">Supprimer</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                             </tr>
                                            {% endfor %}

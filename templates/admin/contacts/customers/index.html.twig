@@ -102,10 +102,10 @@
                                                 <td>{{customer.birthDay}}</td>
                                                 <td>{{customer.createdAt|date('Y-m-d')}}</td>
                                                 <td>
-                                                <a href="{{path('admin_customers_update', {id: customer.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                                <a href="{{path('admin_customer_orders', {id: customer.id})}}" class="btn btn-success"><i class="fas fa-file"></i></a>
-                                                  <a href="#" class="btn btn-danger" data-toggle="modal" data-target="#customerMoadl{{customer.id}}">
-                                                            <i class="fas fa-file"></i>
+                                                <a href="{{path('admin_customers_update', {id: customer.id})}}" class="btn btn-warning btn-xs"><i class="fas fa-edit"></i></a>
+                                                <a href="{{path('admin_customer_orders', {id: customer.id})}}" class="btn btn-success btn-xs"><i class="fas fa-file"></i></a>
+                                                  <a href="#" class="btn btn-danger btn-xs" data-toggle="modal" data-target="#customerMoadl{{customer.id}}">
+                                                            <i class="fas fa-trash"></i>
                                                         </a>
                                                    
                                                     <div class="modal fade" id="customerMoadl{{customer.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -121,7 +121,7 @@
                                                                     <p>Voulez-vous vraiment supprimer {{customer}}? Toutes les données liées à ce client seront définitivement supprimées!</p>
                                                                 </div>
                                                                 <div class="modal-footer">
-                                                                    <a href="#" class="btn btn-primary" data-dismiss="modal" style="color:#fff;">Annuler</a>
+                                                                    <a href="#" class="btn btn-secondary" data-dismiss="modal" style="color:#fff;">Annuler</a>
                                                                     <a href="{{path('admin_customers_delete', {id: customer.id})}}" class="btn btn-danger" style="color:#fff;">Supprimer</a>
                                                                 </div>
                                                             </div>

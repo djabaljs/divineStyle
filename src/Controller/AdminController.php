@@ -173,11 +173,11 @@ class AdminController extends AbstractController
      */
     public function products(WoocommerceApiService $apiService)
     {
-        $products = $this->manager->getRepository(Product::class)->findBy(['deleted' => 0],['createdAt' => 'DESC']);
+        $products = $this->manager->getRepository(Product::class)->fundProductsNotDeleted();
 
         
         $sameProductName = [];
-        $sameProductArray = [];
+        $sameProductArray = []; 
         $sameProductQuantity = [];
 
         foreach($products as $key => $product){
@@ -266,6 +266,7 @@ class AdminController extends AbstractController
                         if(is_null($product->getOnSaleAmount()) || $product->getOnSaleAmount() == 0.0){
                             $product->setOnSaleAmount(null);
                         }
+
                         $product->colorArrays = $colorArrays;
                         $product->lengthArrays = $lengthArrays;
 
@@ -285,19 +286,13 @@ class AdminController extends AbstractController
                             }
                         }
 
+
                         $product->setQuantity($totalQuantity);
                 
                         $response =  $this->api->post("products", $product);
                         
-
                         $isVariable = false;
                         if($product->getIsVariable()){
-
-                            $color->addProduct($product);
-                            $length->addProduct($product);
-                            
-                            $this->manager->persist($color);
-                            $this->manager->persist($length);
                             $isVariable = true;
                         }
 
@@ -305,17 +300,33 @@ class AdminController extends AbstractController
                         try{
                             foreach($products as $product){
                                 if($isVariable){
+                                  $product->setDeleted(false);
                                   $product->setWcProductId($response['id'] - 1);
+
+                                  $color->addProduct($product);
+                                  $length->addProduct($product);
+                                  
+                                  $this->manager->persist($color);
+                                  $this->manager->persist($length);
+
+                                  $this->manager->persist($product);
+
+
                                 }else{
+                                  $product->setDeleted(false);
                                   $product->setWcProductId($response['id']);
+                                  $this->manager->persist($product);
+
                                 }
-                                $this->manager->persist($product);
+
                             }
                         }catch(\Exception $e){
                             foreach($products as $product){
                                 if($isVariable){
+                                  $product->setDeleted(false);
                                   $product->setWcProductId(null);
                                 }else{
+                                  $product->setDeleted(false);
                                   $product->setWcProductId(null);
                                 }
                                 $this->manager->persist($product);
@@ -1512,7 +1523,7 @@ class AdminController extends AbstractController
              throw $this->createNotFoundException('Ce livreur  n\'existe pas!');
 
         $man->setDeleted(true);
-        $this->manager->flsuh($man);
+        $this->manager->flush($man);
         $this->manager->flush();
 
         $this->addFlash("success", "Livreur supprimé avec succès");
@@ -2860,8 +2871,8 @@ class AdminController extends AbstractController
         ]);
     }
        /**
-     * @Route("/payment-types/delete/{id}", name="admin_administrators_delete", methods={"GET"})
-     * @method paymentTypesDelete
+     * @Route("/administrators/{id}/delete", name="admin_administrators_delete", methods={"GET"})
+     * @method administratorsRemove
      * @return Response
      */
     public function administratorsRemove(Request $request, User $user)

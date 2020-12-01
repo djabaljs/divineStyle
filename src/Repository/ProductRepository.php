@@ -92,4 +92,17 @@ class ProductRepository extends ServiceEntityRepository
 
        return $sameProduct;
     }
+
+    public function fundProductsNotDeleted()
+    {
+        $qb = $this->createQueryBuilder('p');
+        $qb 
+            ->where('p.deleted = false')
+            ->innerJoin('p.category','c')
+            ->andWhere('c.deleted = false')
+            ->orderBy('p.createdAt', 'DESC')
+            ;
+
+        return $qb->getQuery()->getResult();
+    }
 }

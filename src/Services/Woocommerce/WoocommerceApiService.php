@@ -37,9 +37,9 @@ class WoocommerceApiService  extends AbstractController
       public function __construct(HttpClientInterface $client, ContainerInterface $container)
       {
           $this->client = $client;
-          $this->endpoint = $container->getParameter('DIVINE_STYLES_API_ENDPOINT');
-          $this->username = $container->getParameter('DIVINE_STYLES_USERNAME');
-          $this->password = $container->getParameter('DIVINE_STYLES_PASSWORD');
+          $this->endpoint = $container->getParameter('TEST_API_ENDPOINT');
+          $this->username = $container->getParameter('TEST_USERNAME');
+          $this->password = $container->getParameter('TEST_PASSWORD');
       } 
 
       /**

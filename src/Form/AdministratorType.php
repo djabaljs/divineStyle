@@ -30,7 +30,11 @@ class AdministratorType extends AbstractType
         ])
         ->add('address', TextType::class, [
             'label' => false,
-            'required' => false
+            'required' => false,
+            'attr' => [
+                'placeholder' => 'Adresse',
+                'style' => 'height:100px'
+            ]
         ])
     ;
     }

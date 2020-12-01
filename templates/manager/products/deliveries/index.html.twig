@@ -97,7 +97,30 @@
                                                 <td>
                                                     {# <a href="{{path('admin_category_show', {id: category.id})}}" class="btn btn-info"><i class="fas fa-eye"></i></a> #}
                                                     <a href="{{path('manager_orders_deliveries_update', {id: delivery.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                                    <a href="{{path('manager_orders_deliveries_delete', {id: delivery.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                                                    {# <a href="{{path('manager_orders_deliveries_delete', {id: delivery.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a> #}
+                                                     <a href="#" class="btn btn-danger btn-xs" data-toggle="modal" data-target="#customerMoadl{{delivery.id}}">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                   
+                                                    <div class="modal fade" id="customerMoadl{{delivery.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog" role="document">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title text-uppercase" style="color:#ffff;" id="customerMoadl{{delivery.id}}">Livraison de la commande No {{delivery.order.orderNumber}}</h5>
+                                                                    <a href="#" class="close" data-dismiss="modal" aria-label="Close">
+                                                                        <span aria-hidden="true">&times;</span>
+                                                                    </a>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <p>Voulez-vous vraiment supprimer la livraison de la commande No {{delivery.order.orderNumber}} de {{delivery.order.customer}}? Toutes les données liées à cette livraison seront annulées</p>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <a href="#" class="btn btn-secondary" data-dismiss="modal" style="color:#fff;">Annuler</a>
+                                                                    <a href="{{path('manager_orders_deliveries_delete', {id: delivery.id})}}" class="btn btn-danger" style="color:#fff;">Supprimer</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                             </tr>
                                            {% endfor %}

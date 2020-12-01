@@ -16,6 +16,12 @@
         <link rel="stylesheet" href="{{asset('concept/assets/vendor/charts/c3charts/c3.css')}}">
         <link rel="stylesheet" href="{{asset('concept/assets/vendor/fonts/flag-icon-css/flag-icon.min.css')}}">
         {% block stylesheets %}{% endblock %}
+        <style>
+        .modal-content{
+            background: red;
+            color: #fff;
+        }
+    </style>
     </head>
     <body>
         {% include 'shared/navbar.html.twig' %}

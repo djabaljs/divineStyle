@@ -84,7 +84,7 @@
                                             {% set total = total + versement.amount %}
                                              <tr>
                                                 <td>{{loop.index}}</td>
-                                                <td>{{versement.amount}}</td>
+                                                <td>{{versement.amount|format_currency('XOF')}}</td>
                                                 <td>{{versement.description}}</td>
                                                 <td>{{versement.createdAt|date("Y-m-d")}}</td>
                                                 {# <td>{{versement.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ")}}</td> #}

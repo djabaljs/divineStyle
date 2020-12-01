@@ -96,8 +96,8 @@
                                                 <td>{{customer.birthDay}}</td>
                                                 <td>{{customer.createdAt|date('Y-m-d')}}</td>
                                                 <td>
-                                                <a href="{{path('manager_customers_update', {id: customer.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                                <a href="{{path('manager_customer_orders', {id: customer.id})}}" class="btn btn-success"><i class="fas fa-file"></i></a>
+                                                <a href="{{path('manager_customers_update', {id: customer.id})}}" class="btn btn-warning btn-xs"><i class="fas fa-edit"></i></a>
+                                                <a href="{{path('manager_customer_orders', {id: customer.id})}}" class="btn btn-success btn-xs"><i class="fas fa-file"></i></a>
                                                 </td>
                                             </tr>
                                            {% endfor %}

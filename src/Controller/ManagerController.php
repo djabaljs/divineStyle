@@ -704,7 +704,7 @@ class ManagerController extends AbstractController
             return $this->redirectToRoute('manager_orders_deliveries');
         }
         $delivery->setDeleted(true);
-        $this->manager->persist($delivery);
+        $this->manager->remove($delivery);
         $this->manager->flush();
 
         $this->addFlash("success", "Livraison supprimée!");
