@@ -142,6 +142,15 @@ class AdminController extends AbstractController
             $orders = $this->manager->getRepository(Order::class)->findLastFiveOrders();
         }
 
+        $wcOrders = [];
+        try{
+             $wcOrders = $this->api->getAll('orders');
+        }catch(\Exception $e){
+            throw $e;
+            $this->addFlash("danger","Impossible d'obtenir les commandes en ligne!");
+        }
+
+        
 
         return $this->render('admin/dashboard.html.twig', [
             'orders' => $orders,
@@ -152,7 +161,8 @@ class AdminController extends AbstractController
             'payments' => $paymentRepository->ordersLastFiveSuccessfully(),
             'deliverySuccessFully' =>  $deliveriesSuccessfully,
             'deliveryIsNotSuccessFully' =>  $deliveriesIsNotSuccessfully,
-            'orderReturnAmount' => $orderReturnAmount
+            'orderReturnAmount' => $orderReturnAmount,
+            "wcOrders" => $wcOrders
         ]);
 
     }
@@ -853,8 +863,29 @@ class AdminController extends AbstractController
      */
     public function providersProducts(Provider $provider)
     {
+        $products = $this->manager->getRepository(Product::class)->findBy(['provider' => $provider, 'deleted' => 0]);
+
+        $productNames = [];
+        $productArray = [];
+
+        foreach($products as $key => $product){
+            if(!in_array($product->getName(), $productNames)){
+                $productNames[]= $product->getName();
+                $productArray[$product->getSlug()] = $product;
+            }else{
+
+              $productx = $productArray[$product->getSlug()];
+
+              $productx->setQuantity($productx->getQuantity() + $product->getQuantity());
+            
+              $productArray[$product->getSlug()] = $productx;
+
+            }
+        }
+
+
         return $this->render("admin/contacts/providers/products.html.twig", [
-            'products' => $this->manager->getRepository(Product::class)->findBy(['provider' => $provider]),
+            'products' => $productArray,
             'provider' => $provider
         ]);
     }
@@ -2699,24 +2730,45 @@ class AdminController extends AbstractController
     public function wcOrders()
     {
         $array = [];
-        
+        $customers = [];
         try{
              $wcOrders = $this->api->getAll('orders');
-             foreach($wcOrders as $wcOrder){
-                if($wcOrder['status'] == "processing" || $wcOrder['satus'] == "completed"){
-                    $array[] = $wcOrder;
-                }
-            }
-    
+             $customers = $this->api->getAll('customers');
+            
         }catch(\Exception $e){
             throw $e;
+            $this->addFlash("danger","Impossible d'obtenir les commandes en ligne!");
         }
 
         
         return $this->render('admin/products/wc/orders/index.html.twig', [
-            'orders' => $array
+            'orders' => $wcOrders,
+            'customers' => $customers
         ]);
     }
+
+
+        /**
+     * @Route("/wc/orders/{id}", name="admin_wc_orders_show", methods={"GET"})
+     * @param Shop $shop
+     * @return Response
+     */
+    public function wcOrdersShow($id)
+    {
+         $order = null;
+        try{
+             $order = $this->api->getAll('orders/'.$id);
+
+        }catch(\Exception $e){
+            throw $e;
+            $this->addFlash("danger","Impossible d'obtenir les commandes en ligne!");
+        }
+        
+        return $this->render('admin/products/wc/orders/show.html.twig', [
+            'order' => $order,
+        ]);
+    }
+
 
     /**
      * @Route("/customer/{id}/orders", name="admin_customer_orders", methods={"GET"})

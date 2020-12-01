@@ -136,7 +136,7 @@ class InvoiceService{
           }
        }
        $paymentBody .= '<br/><br/>
-        Avance: '.number_format($payment->getAmountPaid()).' <br/><br/>
+        Avance: '.number_format($payment->getAmountPaid() + $deliveryAmount).' <br/><br/>
         Reste à payer: '.number_format($payment->getAmount()).' <br/><br/>
         NB: Les vêtements ne sont ni repris, ni échangés
        ';
