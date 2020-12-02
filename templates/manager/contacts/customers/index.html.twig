@@ -74,13 +74,14 @@
                                 <div class="table-responsive">
                                     <table id="example" class="table table-striped table-bordered second" style="width:100%">
                                         <thead>
-                                            <tr>
+                                              <tr>
                                                 <th>N°</th>
                                                 <th>Nom</th>
                                                 <th>Prenom</th>
                                                 <th>Email</th>
+                                                <th>Téléphone</th>
+                                                <th>Date d'anniversaire</th>
                                                 <th>Date enregistrement</th>
-                                                <th>Heure enregistrement</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -91,23 +92,25 @@
                                                 <td>{{customer.firstName}}</td>
                                                 <td>{{customer.lastName}}</td>
                                                 <td>{{customer.email}}</td>
+                                                <td>{{customer.phone}}</td>
+                                                <td>{{customer.birthDay}}</td>
                                                 <td>{{customer.createdAt|date('Y-m-d')}}</td>
-                                                <td>{{customer.createdAt|date('H:m')|format_datetime(pattern="H 'h' m ") }}</td>
                                                 <td>
                                                 <a href="{{path('manager_customers_update', {id: customer.id})}}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
                                                 <a href="{{path('manager_customer_orders', {id: customer.id})}}" class="btn btn-success"><i class="fas fa-file"></i></a>
-                                                {# <a href="{{path('manager_customers_delete', {id: customer.id})}}" class="btn btn-danger"><i class="fas fa-trash"></i></a> #}
                                                 </td>
                                             </tr>
                                            {% endfor %}
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                             <th>N°</th>
-                                                <th>Images</th>
+                                                <th>N°</th>
                                                 <th>Nom</th>
-                                                <th>Description</th>
-                                                <th>Nombre disponible</th>
+                                                <th>Prenom</th>
+                                                <th>Email</th>
+                                                <th>Téléphone</th>
+                                                <th>Date d'anniversaire</th>
+                                                <th>Date enregistrement</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>

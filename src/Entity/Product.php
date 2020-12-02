@@ -133,6 +133,11 @@ class Product
      */
     private $provider;
 
+    /**
+     * @ORM\Column(type="float", nullable=true)
+     */
+    private $onSaleAmount;
+
     public function __construct()
     {
         $this->lengths = new ArrayCollection();
@@ -494,5 +499,17 @@ class Product
     public function __toString()
     {
         return $this->getName();
+    }
+
+    public function getOnSaleAmount(): ?float
+    {
+        return $this->onSaleAmount;
+    }
+
+    public function setOnSaleAmount(?float $onSaleAmount): self
+    {
+        $this->onSaleAmount = $onSaleAmount;
+
+        return $this;
     }
 }

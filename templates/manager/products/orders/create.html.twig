@@ -71,9 +71,9 @@
                                             <div class="col-lg-3">
                                                 <div class="card">
                                                     {% if product.imageUrls is not empty  %}
-                                                         <img src="{{product.imageUrls[0]['src']}}" class="img-thumbnail" style="width:100%; height:250px"/>
+                                                         <img src="{{product.imageUrls[0]['src']}}" class="img-thumbnail" style="width:100%;"/>
                                                      {% else %}
-                                                    <img class="card-img" src="data:image/png;base64,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" alt="Vans">
+                                                    <img class="card-img" class="img-responsive" src="data:image/png;base64,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" alt="Vans">
                                                     {% endif %}
                                                     <div class="card-body">
                                                     <h4 class="card-title">{{product.name}}</h4>
@@ -81,8 +81,14 @@
                                                     <h6 class="card-subtitle mb-2 text-muted">En stock: {{product.quantity}}</h6>
                                                     <p class="card-text">
                                                     <div class="buy d-flex justify-content-between align-items-center">
-                                                        <div class="price text-success"><h5 class="mt-4">{{product.sellingPrice}} CFA</div>
-                                                        <input type="number" class="price"  value="{% if product.quantity <= 0 %}0{% else %}1{% endif %}" name="quantity" id="qty_{{product.id}}" min="0" max="{{product.quantity}}">
+                                                        {% if product.onSaleAmount is not null %}
+                                                         <div class="text-success"><h5 class=""><strike>{{product.sellingPrice|format_currency('XOF')}}</strike></div>
+                                                        <div class="text-success"><h5 class="">{{product.onSaleAmount|format_currency('XOF')}}</div>
+                                                        {% else %}
+                                                        <div class=" text-success"><h5 class="mt-4">{{product.sellingPrice|format_currency('XOF')}}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <input type="number" class="price"  value="{% if product.quantity <= 0 %}0{% else %}1{% endif %}" name="quantity" id="qty_{{product.id}}" min="0" max="{{product.quantity}}">
                                                             {% set in_session = 0 %}
                                                             {% if app.session.get('cart_item') is empty %}
                                                                 {% set session_code_array = app.session.get('cart_item')|keys %}
@@ -92,7 +98,6 @@
                                                             {% endif %}
                                                         <button {% if product.quantity <= 0 %}disabled{% endif %} class="btn btn-danger btn-sm btnAddAction" id="add_{{products[loop.index -1].id }}" {% if in_session  != 0 %} style="display:none" {% endif %} onClick="cartAction('add', '{{product.id}}')"><i class="fas fa-shopping-cart"></i></button>
                                                         <button class="btn btn-danger btn-sm btnAdded"id="added_{{products[loop.index -1].id }}" {% if in_session != 1 %} style="display:none" {% endif %}>Ajouté</button>
-                                                    </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -152,9 +157,39 @@
                                         <table id="example" class="table table-striped table-bordered second" style="width:100%">
                                             <thead>
                                                  <tr>
-                                                    <td>Client</td>
+                                                    <td id="customer">Client</td>
                                                     <td colspan="3">
-                                                        {{form_row(form.customer, {attr: {'class':'form-control'}})}}
+                                                        {{form_row(form.customerType, {attr: {'class':'form-control'}})}}
+                                                    </td>
+                                                </tr>
+                                                <tr id="customerx">
+                                                     <td colspan="3">
+                                                            {{form_row(form.customer, {attr: {'class':'form-control','style':'height:50px'}})}}
+                                                    </td>
+                                                </tr>
+                                                <tr id="customerProperties">
+                                                    <td colspan="3">
+                                                            {{form_row(form.customerFistname, {attr: {'class':'form-control','style':'height:50px'}})}}
+                                                    </td>
+                                                </tr>
+                                                <tr id="customerProperties">
+                                                    <td colspan="3">
+                                                            {{form_row(form.customerLastname, {attr: {'class':'form-control','style':'height:50px'}})}}
+                                                    </td>
+                                                </tr>
+                                                <tr id="customerProperties">
+                                                    <td colspan="3">
+                                                            {{form_row(form.customerPhone, {attr: {'class':'form-control','style':'height:50px'}})}}
+                                                    </td>
+                                                </tr>
+                                                 <tr id="customerProperties">
+                                                    <td colspan="3">
+                                                            {{form_row(form.customerEmail, {attr: {'class':'form-control','style':'height:50px'}})}}
+                                                    </td>
+                                                </tr>
+                                                <tr id="customerProperties">
+                                                    <td colspan="3">
+                                                            {{form_row(form.customerBirthDay, {attr: {'class':'form-control','style':'height:50px'}})}}
                                                     </td>
                                                 </tr>
                                                 <tr>
@@ -163,13 +198,20 @@
                                                         {{form_row(form.paymentType, {attr: {'class':'form-control'}})}}
                                                     </td>
                                                 </tr>
-                                                 <tr>
+                                                 {# <tr>
                                                     <td colspan="3">
                                                         {{form_row(form.amountPaid, {attr: {'class':'form-control','style':'height:50px'}})}}
                                                     </td>
+                                                    
+                                                </tr> #}
+                                                 <tr>
+                                                    <td colspan="3">
+                                                        {{form_row(form.discount, {attr: {'class':'form-control','style':'height:50px'}})}}
+                                                    </td>
+                                                    
                                                 </tr>
                                                 <tr>
-                                                    <td id="delivery" rowspan="4">Livraison</td>
+                                                <td id="delivery" rowspan="4">Livraison</td>
                                                     <td  colspan="3">
                                                     {{form_row(form.deliveryMan, {attr: {'class':'form-control'}})}}
                                                     </td>
@@ -221,10 +263,14 @@
 {% block javascripts %}
  <script src="{{asset('concept/assets/vendor/select2/js/select2.min.js')}}"></script>
  <script>
-
 $('#billing_paymentType').select2();
+$('#billing_paymentType').select2();
+$('#billing_customerType').select2();
 $('#billing_deliveryMan').select2();
 $('#billing_customer').select2();
+$('#customerx').hide();
+
+$('*[id*=customerProperties]').hide();
 var total = $('#totals').val();
 
 
@@ -312,6 +358,24 @@ $('#billing_choice').change(function(){
     }
 })
 
+$('#billing_customerType').change(function(){
+    if($(this).val() == 0){
+
+     $('#customer').attr('rowspan', '2');
+     $('*[id*=customerProperties]').hide();
+     $('#customerx').show();
+     $('#billing_customerFirstname').prop('required', false);
+     $('#billing_customerLastname').prop('required', false);
+     $('#billing_customer').prop('required', true);
+    }else if($(this).val() == 1){
+      $('#customer').attr('rowspan', '6');
+     $('*[id*=customerProperties]').show();
+     $('#customerx').hide();
+     $('#billing_customer').prop('required', false);
+     $('#billing_customerFirstname').prop('required', true);
+     $('#billing_customerLastname').prop('required', true);
+    }
+})
 
 $("#billing_amountPaid").keypress(function(){
     if($(this).val() != 0){

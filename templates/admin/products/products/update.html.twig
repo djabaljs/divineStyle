@@ -87,11 +87,20 @@
                                             </div>
                                             <div class="col-md-12">
                                                 <div class="form-group">
-                                                    <label for="email">Prix de vente</label>
+                                                    <label for="product_selling_price">Prix de vente</label>
                                                     {{form_row(form.sellingPrice, {attr:{'class': 'form-control','style':'height:50px'}})}}
                                                 </div>
                                             </div>
-                                              {% for shop in shops %}
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="product_onSaleAmount">Prix promo</label>
+                                                    {{form_row(form.onSaleAmount, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                </div>
+                                            </div>
+                                             
+                                        </div>
+                                        <div class="col-md-6">
+                                         {% for shop in shops %}
                                                  {% for productC in shop.products %}
                                                     {% if productC.slug == product.slug %}
                                                          <div class="col-md-12">
@@ -104,69 +113,30 @@
                                                  {% endfor %}
                                                  
                                             {% endfor %}
-                                        </div>
-                                        <div class="col-md-6">
-                                         <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="product_category">Catégorie</label>
-                                                        <input type="hidden" name="category" value="{{update}}">
-                                                    {{form_row(form.category, {attr:{'class': 'form-control'}})}}
-                                                </div>
-                                            </div>
-                                                <div class="col-md-12 ">
-                                                    <div class="form-group">
-                                                        <label for="product_isVariable">Type de produit</label>
-                                                        {{form_row(form.isVariable)}}
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-12 element">
-                                                    <div class="form-group">
-                                                        <label for="product_lengths">Taille</label>
-                                                        {{form_row(form.lengths, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                    </div>
-                                                </div>
-                                                {# <div class="col-md-12">
-                                                    <div class="form-group">
-                                                        <label for="product_width">Largeur</label>
-                                                        {{form_row(form.width, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-12">
-                                                    <div class="form-group">
-                                                        <label for="product_height">Hauteur</label>
-                                                        {{form_row(form.height, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                    </div>
-                                                </div> #}
-                                                 <div class="col-md-12 element">
-                                                    <div class="form-group">
-                                                        <label for="product_colors">Couleur</label>
-                                                        {{form_row(form.colors, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                    </div>
-                                                </div>
                                                 <div class="col-md-12">
                                                     <div class="form-group">
                                                         <label for="product_minimumStock">Stock minimum</label>
-                                                        {{form_row(form.minimumStock, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                        {% if form.minimumStock is not null  %}
+                                                            {{form_row(form.minimumStock, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                        {% else %}
+                                                            {{form_row(form.minimumStock, {attr:{'class': 'form-control','style':'height:50px','min':'0','value':'2'}})}}
+                                                        {% endif %}
                                                     </div>
                                                 </div>
                                                  <div class="col-md-12">
                                                     <div class="form-group">
-                                                        <label for="product_provider">Fournisseur</label>
+                                                        <label for="product_update_provider">Fournisseur</label>
                                                         {{form_row(form.provider, {attr:{'class': 'form-control','style':'height:50px'}})}}
                                                     </div>
                                                  </div>  
-                                                
-                                                 {# <div class="col-md-12">
-                                                    <div class="form-group">
-                                                        <label for="product_quantity">Magasin</label>
-                                                        {{form_row(form.shop, {attr:{'class': 'form-control','style':'height:50px'}})}}
-                                                </div>
-                                            </div> #}
                                             </div>
                                       </div>
-                                    <div class="form-group">
-                                     <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
+                                       <div class="col-md-12">
+                                       <div class="form-group">
+                                     <button type="submit" class="btn btn-warning"><i class="fas fa-edit"></i> Modifier</button>
                                     </div>
+                                    </div>  
+                                    
                                 {{form_end(form)}}
                             </div>
                         </div>
@@ -197,7 +167,7 @@
         placeholder: "Selectionner la catégorie",
         allowClear: true
     });
-    $('#product_provider').select2({
+    $('#product_update_provider').select2({
         placeholder: "Selectionner le fournisseur",
         allowClear: true
     });

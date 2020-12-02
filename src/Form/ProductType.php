@@ -29,10 +29,16 @@ class ProductType extends AbstractType
             ])
             ->add('buyingPrice', NumberType::class, [
                 'label' => false,
+                'required' => false
+
               
             ])
             ->add('sellingPrice', NumberType::class, [
-                'label' => false
+                'label' => false,
+            ])
+            ->add('onSaleAmount', NumberType::class, [
+                'label' => false,
+                'required' => false,
             ])
             // ->add('quantity', IntegerType::class, [
             //     'label' => false,

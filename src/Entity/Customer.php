@@ -58,6 +58,11 @@ class Customer
      */
     private $address;
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $birthDay;
+
     public function __construct()
     {
         $this->sales = new ArrayCollection();
@@ -98,7 +103,7 @@ class Customer
         return $this->phone;
     }
 
-    public function setPhone(string $phone): self
+    public function setPhone(?string $phone): self
     {
         $this->phone = $phone;
 
@@ -110,7 +115,7 @@ class Customer
         return $this->email;
     }
 
-    public function setEmail(string $email): self
+    public function setEmail(?string $email): self
     {
         $this->email = $email;
 
@@ -173,6 +178,18 @@ class Customer
     public function setAddress(?string $address): self
     {
         $this->address = $address;
+
+        return $this;
+    }
+
+    public function getBirthDay(): ?string
+    {
+        return $this->birthDay;
+    }
+
+    public function setBirthDay(?string $birthDay): self
+    {
+        $this->birthDay = $birthDay;
 
         return $this;
     }

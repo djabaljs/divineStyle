@@ -78,16 +78,24 @@
                                                     {{form_row(form.name, {attr:{'class': 'form-control', 'placeholder':'Nom du produit','style':'height:50px'}})}}
                                                 </div>
                                             </div>
+                                            {% if is_granted("ROLE_SUPER_ADMIN") %}
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="product_unit_price">Prix d'achat</label>
                                                     {{form_row(form.buyingPrice, {attr:{'class': 'form-control', 'style':'height:50px'}})}}
                                                 </div>
                                             </div>
+                                            {% endif %}
                                             <div class="col-md-12">
                                                 <div class="form-group">
-                                                    <label for="email">Prix de vente</label>
+                                                    <label for="product_selling_price">Prix de vente</label>
                                                     {{form_row(form.sellingPrice, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                </div>
+                                            </div>
+                                             <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="product_onSaleAmount">Prix promo</label>
+                                                    {{form_row(form.onSaleAmount, {attr:{'class': 'form-control','style':'height:50px'}})}}
                                                 </div>
                                             </div>
                                              {% for shop in shops %}
