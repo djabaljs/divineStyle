@@ -2,9 +2,12 @@
 
 namespace App\Services\Woocommerce;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use App\Entity\ProductVariation;
+use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\ProductVariationRepository;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 
 class WoocommerceApiService  extends AbstractController
@@ -30,16 +33,29 @@ class WoocommerceApiService  extends AbstractController
        * @var $password
        */
       protected $password;
+
+        /**
+       * @var $password
+       */
+      protected $productVariationRepository;
+    
+            /**
+       * @var $password
+       */
+      protected $manager;
+    
     
      /**
       * @method construct
       */
-      public function __construct(HttpClientInterface $client, ContainerInterface $container)
+      public function __construct(HttpClientInterface $client, ContainerInterface $container, ProductVariationRepository $productVariationRepository, EntityManagerInterface $manager)
       {
           $this->client = $client;
           $this->endpoint = $container->getParameter('TEST_API_ENDPOINT');
           $this->username = $container->getParameter('TEST_USERNAME');
           $this->password = $container->getParameter('TEST_PASSWORD');
+          $this->productVariationRepository = $productVariationRepository;
+          $this->manager = $manager;
       } 
 
       /**
@@ -49,6 +65,7 @@ class WoocommerceApiService  extends AbstractController
        */
       public function post($target, $data)
       {
+
         
         switch($target){
             case "products":
@@ -95,21 +112,21 @@ class WoocommerceApiService  extends AbstractController
                                         [
                                             "id" => $data->getCategory()->getWcCategoryId()
                                         ]
-                                    ],
+                                ],
                                 "attributes" => [
                                     [
                                         "id" => 4,
-                                        'variation' => true,
-			                            'visible'   => true,
+                                        "variation" => true,
+                                        "visible"   => true,
                                         "options" => $data->colorArrays
                                     ],
                                     [
                                         "id" => 1,
-                                        'variation' => true,
-			                            'visible'   => true,
+                                        "variation" => true,
+                                        "visible"   => true,
                                         "options" => $data->lengthArrays
                                     ]
-                                ]
+                                ],
                             ]
                         ]);
 
@@ -120,36 +137,11 @@ class WoocommerceApiService  extends AbstractController
     
                             $contentType = $response1->getHeaders()['content-type'][0];
                             // $contentType = 'application/json'
-                            $content = $response1->getContent();
                             // $content = '{"id":521583, "name":"symfony-docs", ...}'
-                            $content = $response1->toArray();
+                            $content1 = $response1->toArray();
                             // $content = ['id' => 521583, 'name' => 'symfony-docs', ...]
-                            // dd($content);
-                            $response =  $this->client->request(
-                                "POST",
-                                $this->endpoint.''.$target.'/'.$content['id'].'/variations', [
-                                // use a different HTTP Basic authentication only for this request
-                                'auth_basic' => [$this->username, $this->password],
-                                "body" => [
-                                    "regular_price" => $data->getSellingPrice(),
-                                    "attributes" => [
-                                        [
-                                            "id" => 4,
-                                            'variation' => true,
-                                            'visible'   => true,
-                                            "options" => $data->colorArrays
-                                        ],
-                                        [
-                                            "id" => 1,
-                                            'variation' => true,
-                                            'visible'   => true,
-                                            "options" => $data->lengthArrays
-                                        ]
-                                    ],
-                                    
-                                ]
-                            ]);
                             
+                            return $content1;
                         }             
                     } 
 
@@ -160,12 +152,12 @@ class WoocommerceApiService  extends AbstractController
 
                         $contentType = $response->getHeaders()['content-type'][0];
                         // $contentType = 'application/json'
-                        $content = $response->getContent();
+                        // $content = $response->getContent();
                         // $content = '{"id":521583, "name":"symfony-docs", ...}'
                         $content = $response->toArray();
                         // $content = ['id' => 521583, 'name' => 'symfony-docs', ...]
                         $this->addFlash("success", "Produit crée sur le site de vente.");
-                        
+
                         return $content;
 
                     }else{
@@ -173,6 +165,7 @@ class WoocommerceApiService  extends AbstractController
                     }
                   
                 }catch(\Exception $e){
+                    throw $e;
                     $this->addFlash("danger","Erreur: Une eurreur s'est produite lors de la création du produit!");
                     // throw $e;
                 }
@@ -212,6 +205,8 @@ class WoocommerceApiService  extends AbstractController
                     }
                   
                 }catch(\Exception $e){
+                    throw $e;
+
                     $this->addFlash("danger","Erreur: Une eurreur s'est produite lors de la création de la catégorie!");
 
                     // throw $e;
@@ -303,13 +298,13 @@ class WoocommerceApiService  extends AbstractController
      * @throws Exception $e
      * @return Response
      */
-    public function getOne($target, $slug)
+    public function getOne($target, $id)
     {
         try{
 
             $response =  $this->client->request(
                    "GET",
-                   $this->endpoint.''.$target.'?slug='.$slug, [
+                   $this->endpoint.''.$target.'?id='.$id, [
                     // use a different HTTP Basic authentication only for this request
                     'auth_basic' => [$this->username, $this->password],
                ]);
@@ -423,6 +418,68 @@ class WoocommerceApiService  extends AbstractController
                 }
             break;
                 
+        }
+
+    }
+
+        /**
+     * @method update
+     * @throws Exception $e
+     * @return Response
+     */
+    public function createProductVariations($wcPid, $product, $datas)
+    {
+    foreach($datas['quantity'] as $quantityKey => $data){
+            $response =   $this->client->request(
+            "POST",
+                $this->endpoint.'products/'.$wcPid.'/variations', [
+                // use a different HTTP Basic authentication only for this request
+                'auth_basic' => [$this->username, $this->password],
+                "body" => [
+                    "regular_price" => $product->getSellingPrice(),
+                    'stock_quantity' => $datas['quantity'][$quantityKey],
+                    'manage_stock' => true,
+                    'optional_selected' => true,
+                    'on_sale' => true,
+                    'selected' => true,
+                    "attributes" => [
+                        [
+                            'id' => 4,
+                            "name" => "Couleur",
+                            "slug" => "pa_couleur",
+                            "option" => $datas['color'][$quantityKey]
+                        ],
+                        [
+                            'id' => 1,
+                            "name" => "Taille",
+                            "slug" => "pa_taille",
+                            "option" => $datas['length'][$quantityKey]
+
+                        ]
+                    ],
+                ]
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            // $statusCode = 200
+            if($statusCode === 201){
+
+                $contentType = $response->getHeaders()['content-type'][0];
+                // $contentType = 'application/json'
+                $content = $response->getContent();
+                // $content = '{"id":521583, "name":"symfony-docs", ...}'
+                $content = $response->toArray();
+                // $content = ['id' => 521583, 'name' => 'symfony-docs', ...]
+                
+                $variations = $this->manager->getRepository(ProductVariation::class)->findProductVariation($content['attributes'][0]['option'],$content['attributes'][1]['option'], $product);
+
+                foreach($variations as $variation){
+                    $variation->setVariationId($content['id']);
+                    $this->manager->persist($variation);
+                    $this->manager->flush();
+                }
+            }
+
         }
 
     }

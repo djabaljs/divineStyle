@@ -30,7 +30,7 @@ class Width
     /**
      * @ORM\OneToMany(targetEntity="Product", mappedBy="width")
      */
-    private $products;
+    // private $products;
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="widths")
@@ -60,36 +60,36 @@ class Width
         return $this;
     }
 
-    /**
-     * @return Collection|Product[]
-     */
-    public function getProducts(): Collection
-    {
-        return $this->products;
-    }
+    // /**
+    //  * @return Collection|Product[]
+    //  */
+    // public function getProducts(): Collection
+    // {
+    //     return $this->products;
+    // }
 
-    public function addProduct(Product $product): self
-    {
-        if (!$this->products->contains($product)) {
-            $this->products[] = $product;
-            $product->setWidth($this);
-        }
+    // public function addProduct(Product $product): self
+    // {
+    //     if (!$this->products->contains($product)) {
+    //         $this->products[] = $product;
+    //         $product->setWidth($this);
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    public function removeProduct(Product $product): self
-    {
-        if ($this->products->contains($product)) {
-            $this->products->removeElement($product);
-            // set the owning side to null (unless already changed)
-            if ($product->getWidth() === $this) {
-                $product->setWidth(null);
-            }
-        }
+    // public function removeProduct(Product $product): self
+    // {
+    //     if ($this->products->contains($product)) {
+    //         $this->products->removeElement($product);
+    //         // set the owning side to null (unless already changed)
+    //         if ($product->getWidth() === $this) {
+    //             $product->setWidth(null);
+    //         }
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     public function getRegister(): ?User
     {

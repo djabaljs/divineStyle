@@ -28,18 +28,23 @@ class Length
     private $name;
 
     /**
-     * @ORM\ManyToMany(targetEntity="Product", inversedBy="lengths", cascade={"persist", "remove"}))
-     */
-    private $products;
-
-    /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="lengths")
      */
     private $register;
 
+    /**
+     * @ORM\OneToMany(targetEntity=ProductVariation::class, mappedBy="length")
+     */
+    private $productVariations;
+
+        /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $slug;
+
     public function __construct()
     {
-        $this->products = new ArrayCollection();
+        $this->productVariations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -77,30 +82,56 @@ class Length
         return $this->getName();
     }
 
+  
     /**
-     * @return Collection|Product[]
+     * @return Collection|ProductVariation[]
      */
-    public function getProducts(): Collection
+    public function getProductVariations(): Collection
     {
-        return $this->products;
+        return $this->productVariations;
     }
 
-    public function addProduct(Product $product): self
+    public function addProductVariation(ProductVariation $productVariation): self
     {
-        if (!$this->products->contains($product)) {
-            $this->products[] = $product;
+        if (!$this->productVariations->contains($productVariation)) {
+            $this->productVariations[] = $productVariation;
+            $productVariation->setLength($this);
         }
 
         return $this;
     }
 
-    public function removeProduct(Product $product): self
+    public function removeProductVariation(ProductVariation $productVariation): self
     {
-        if ($this->products->contains($product)) {
-            $this->products->removeElement($product);
+        if ($this->productVariations->contains($productVariation)) {
+            $this->productVariations->removeElement($productVariation);
+            // set the owning side to null (unless already changed)
+            if ($productVariation->getLength() === $this) {
+                $productVariation->setLength(null);
+            }
         }
 
         return $this;
     }
 
+
+    /**
+     * Get the value of slug
+     */ 
+    public function getSlug()
+    {
+        return $this->slug;
+    }
+
+    /**
+     * Set the value of slug
+     *
+     * @return  self
+     */ 
+    public function setSlug($slug)
+    {
+        $this->slug = $slug;
+
+        return $this;
+    }
 }

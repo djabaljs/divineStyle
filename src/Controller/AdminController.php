@@ -44,6 +44,7 @@ use App\Form\AttributeType;
 use App\Form\VersementType;
 use App\Entity\OrderProduct;
 use App\Form\ShopUpdateType;
+use App\Entity\ProductSearch;
 use App\Entity\Replenishment;
 use App\Form\DeliveryManType;
 use App\Form\OrderReturnType;
@@ -51,8 +52,10 @@ use App\Form\PaymentTypeType;
 use App\Entity\ProviderProduct;
 use App\Form\AdminDeliveryType;
 use App\Form\AdministratorType;
+use App\Form\ProductSearchType;
 use App\Form\ProductUpdateType;
 use App\Form\ReplenishmentType;
+use App\Entity\ProductVariation;
 use App\Repository\UserRepository;
 use App\Form\OrderSearchByShopType;
 use App\Form\SimpleAdminProductType;
@@ -64,9 +67,12 @@ use App\Services\Invoice\InvoiceService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Services\Woocommerce\WoocommerceApiService;
+use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -168,56 +174,55 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("/products/products", name="admin_products", methods={"GET"})
+     * @Route("/products/products", name="admin_products", methods={"POST","GET"})
      * @method products
      */
-    public function products(WoocommerceApiService $apiService)
+    public function products(Request $request)
     {
         $products = $this->manager->getRepository(Product::class)->fundProductsNotDeleted();
 
-        
-        $sameProductName = [];
-        $sameProductArray = []; 
-        $sameProductQuantity = [];
+       $slugArray = [];
+       $productArray = [];
 
-        foreach($products as $key => $product){
-           
-            if(!in_array($product->getName(), $sameProductName)){
+       foreach($products as $product){
+           if(!in_array($product->getSlug(), $slugArray)){
+               $slugArray[] = $product->getSlug();
+               $productArray[] = $product;
+           }
+       }
 
-                $sameProductName[] = $product->getName();
-                $sameProductArray[$product->getId()] = $product;
+        $productsVariation = [];
+        $productsNotVariables = [];
+        $productSearch = new ProductSearch();
+        $form = $this->createForm(ProductSearchType::class, $productSearch, ['products' => $productArray]);
+        $form->handleRequest($request);
 
-                if(isset($sameProductQuantity[$product->getSlug()])){
-                    $sameProductQuantity[$product->getSlug()] += $product->getQuantity();
-                }else{
-                    $sameProductQuantity[$product->getSlug()] = $product->getQuantity();
+        $isSearch = false;
+        if($form->isSubmitted() && $form->isValid()){
+           try{
 
-                }
 
+            $product = $this->manager->getRepository(Product::class)->find($productSearch->getProduct());
+
+            if($product->getIsVariable()){
+                  $productsVariation = $this->manager->getRepository(ProductVariation::class)->searchProducts($productSearch);
             }else{
-                if(isset($sameProductQuantity[$product->getSlug()])){
-                    $sameProductQuantity[$product->getSlug()] += $product->getQuantity();
-                }else{
-                    $sameProductQuantity[$product->getSlug()] = $product->getQuantity();
-
-                }
+                $productsNotVariables = $this->manager->getRepository(Product::class)->searchProducstNotVariables($productSearch);
             }
+            $isSearch = true;
 
-        }
+           }catch(\Exception $e){
 
-        $products = null;
-
-        foreach($sameProductArray as $product){
-           
-            if($sameProductQuantity[$product->getSlug()] >= 0){
-                $product->setQuantity($sameProductQuantity[$product->getSlug()]);
-                $products[] = $product;
-            }
+           }
 
         }
 
         return $this->render('admin/products/products/index.html.twig', [
-            'products' =>  $products
+            'products' =>  $products,
+            'form' => $form->createView(),
+            'productsVariation' => $productsVariation,
+            'isSearch' => $isSearch,
+            'productsNotVariables' => $productsNotVariables
         ]);
     }
 
@@ -231,8 +236,6 @@ class AdminController extends AbstractController
     {
 
         $product = new Product();
-        $color = new Color();
-        $length = new Length();
         
         if (in_array('ROLE_SUPER_ADMIN', $this->getUser()->getRoles())){
             $form = $this->createForm(ProductType::class, $product);
@@ -242,106 +245,173 @@ class AdminController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
-         
+
+            $variations = $request->get('shopLengthColorQuantity');
+            $shops = $request->get('shop');
+
             $this->manager->getConnection()->beginTransaction();
             $this->manager->getConnection()->setAutoCommit(false);
 
             try{
-                if($request->get('shopQuantity')){
 
-                        $product->setRegister($this->getUser());
-                        $slugify = new Slugify();
-                        $product->setSlug($slugify->slugify($product->getName()));
-                        
-                        $colorArrays = [];
-                        $lengthArrays = [];
-
-                        foreach($product->getColors() as  $color){
-                            $colorArrays[] = $color->getName();
-                        }
-                        foreach($product->getLengths() as $key => $length){
-                            $lengthArrays[$key] = $length->getName();
-                        }
-
-                        if(is_null($product->getOnSaleAmount()) || $product->getOnSaleAmount() == 0.0){
-                            $product->setOnSaleAmount(null);
-                        }
-
-                        $product->colorArrays = $colorArrays;
-                        $product->lengthArrays = $lengthArrays;
-
-                        $totalQuantity = 0;
-                        $products = [];
-                        foreach($request->get('shopQuantity') as $key => $quantities){
-                            foreach($quantities as $quantity){
-                                if($key != 0 && $quantity != 0){
-                                    $totalQuantity += intval($quantity);
-                                    $productC = clone($product);
-                                    $shop = $this->manager->getRepository(Shop::class)->find($key);
-                                    $productC->setQuantity($quantity);
-                                    $productC->setDeleted(false);
-                                    $productC->setShop($shop);
-                                    $products[] = $productC;
-                                }
-                            }
-                        }
-
-
-                        $product->setQuantity($totalQuantity);
+                $product->setRegister($this->getUser());
+                $slugify = new Slugify();
+                $product->setSlug($slugify->slugify($product->getName()));
                 
-                        $response =  $this->api->post("products", $product);
-                        
-                        $isVariable = false;
-                        if($product->getIsVariable()){
-                            $isVariable = true;
-                        }
 
-                        
-                        try{
-                            foreach($products as $product){
-                                if($isVariable){
-                                  $product->setDeleted(false);
-                                  $product->setWcProductId($response['id'] - 1);
-
-                                  $color->addProduct($product);
-                                  $length->addProduct($product);
-                                  
-                                  $this->manager->persist($color);
-                                  $this->manager->persist($length);
-
-                                  $this->manager->persist($product);
-
-
-                                }else{
-                                  $product->setDeleted(false);
-                                  $product->setWcProductId($response['id']);
-                                  $this->manager->persist($product);
-
-                                }
-
-                            }
-                        }catch(\Exception $e){
-                            foreach($products as $product){
-                                if($isVariable){
-                                  $product->setDeleted(false);
-                                  $product->setWcProductId(null);
-                                }else{
-                                  $product->setDeleted(false);
-                                  $product->setWcProductId(null);
-                                }
-                                $this->manager->persist($product);
-                            }
-                        }
-
-                        $this->manager->flush();
-                        $this->manager->commit();
-
-                        $this->addFlash("success", "Produit créé et envoyé dans le magasin ".$product->getShop()." avec succès!");
-
-                        return $this->redirectToRoute("admin_products_create");
+                if(is_null($product->getOnSaleAmount()) || $product->getOnSaleAmount() == 0.0){
+                    $product->setOnSaleAmount(null);
                 }
+
+                $totalQuantity = 0;
+                $products = [];
+
+                if(!empty($request->get('shopQuantity'))){
+                foreach($request->get('shopQuantity') as $key => $quantities){
+                    foreach($quantities as $quantity){
+                        if($key != 0 && $quantity != 0){
+                            $totalQuantity += intval($quantity);
+                            $productC = clone($product);
+                            $shop = $this->manager->getRepository(Shop::class)->find($key);
+                            $productC->setQuantity($quantity);
+                            $productC->setDeleted(false);
+                            $productC->setShop($shop);
+                            $products[] = $productC;
+                        }
+                    }
+                }
+                }
+
+              
+                $variationArray = [];
+                $productsVariations = [];
+                if(!empty($variations)){
+
+                    foreach($variations as $shopKey => $lengths){
+                        $shop = $this->manager->getRepository(Shop::class)->find($shopKey);
+
+                        foreach($lengths as $lengthKey => $colors){
+
+                            foreach($colors as $colorKey => $quantities){
+                                
+                                foreach($quantities as $quantity){
+
+                                    if($quantity != ""){
+                                        $productVariation = new ProductVariation();
+                                
+
+                                        $productC = clone($product);
+                                        $productC->setDeleted(false);
+                                        $productC->setShop($shop);
+        
+                                        $lengthx = $this->manager->getRepository(Length::class)->find($lengthKey);
+                                        $colorx = $this->manager->getRepository(Color::class)->find($colorKey);
+                                        
+                                        if(!in_array($colorx->getName(), $product->colorArrays) && !in_array($lengthx->getName(),$product->lengthArrays)){
+                                          
+                                        }
+                                          $product->colorArrays[] = $colorx->getName();
+                                            $product->lengthArrays[] = $lengthx->getName();
+
+                                        $productsVariations['color'][] = $colorx->getName();
+                                        $productsVariations['length'][] = $lengthx->getName(); 
+                                        $productsVariations['quantity'][] = $quantity; 
+                                 
+                                        $productC->setQuantity(intval($quantity) != 0 ? intval($quantity) : 0);
+        
+                                        $productVariation->setColor($colorx);
+                                        $productVariation->setLength($lengthx);
+                                        $productVariation->setProduct($productC);
+                                        $productVariation->setQuantity(intval($quantity) != 0 ? intval($quantity) : 0);
+                                        $productVariation->setShop($shop);
+                                        $this->manager->persist($productVariation);
+                    
+                                        $products[] = $productC;
+                                        $variationArray[] = $productVariation;
+        
+                                         $totalQuantity += intval(intval($quantity) != 0 ? intval($quantity) : 0);
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+               
+                }
+
+
+                $product->setQuantity($totalQuantity);
+            
+                $response =  $this->api->post("products", $product);
+
+                $isVariable = false;
+                if($product->getIsVariable()){
+                    $isVariable = true;
+                }
+
+                $wcpID = $response['id'];
+
+                 
+
+
+
+                try{
+                    foreach($products as $product){
+                        if($isVariable){
+                            $product->setDeleted(false);
+                            $product->setWcProductId($wcpID);
+                            $this->manager->persist($product);
+
+                        }else{
+                            $product->setDeleted(false);
+                            $product->setWcProductId($wcpID);
+                            $this->manager->persist($product);
+
+                        }
+
+                    }
+                }catch(\Exception $e){
+                $this->manager->rollback();
+                    throw $e;
+                    foreach($products as $product){
+                        if($isVariable){
+                            $product->setDeleted(false);
+                            $product->setWcProductId(null);
+                        }else{
+                            $product->setDeleted(false);
+                            $product->setWcProductId(null);
+                        }
+                        $this->manager->persist($product);
+                    }
+                }
+
+              
+         
+                $this->manager->flush();
+                $this->manager->commit();
+
+                
+                if($isVariable){
+                    $response = $this->api->createProductVariations($wcpID, $product, $productsVariations);
+
+                    // $length = $this->manager->getRepository(Length::class)->findOneBy(['slug' =>  $response['attributes'][1]['option']]);
+                    // $color = $this->manager->getRepository(Color::class)->findOneBy(['slug' => $response['attributes'][0]['option']]);
+                    
+                    
+
+                  }
+
+                  $this->manager->flush();
+                  $this->manager->commit();
+  
+
+                $this->addFlash("success", "Produit créé !");
+
+                return $this->redirectToRoute("admin_products_create");
             }catch(\Exception $e){
+                $this->manager->rollback();
                 throw $e;
+                
             }
             
         }
@@ -360,8 +430,6 @@ class AdminController extends AbstractController
      */
     public function showProduct(Request $request, Product $product): Response
     {
-        $product = $this->manager->getRepository(Product::class)->findOneBy(['slug' => $product->getSlug()]);
-        
         if(is_null($product)){
             throw $this->createNotFoundException("Ce produit n'existe pas!");
         }
@@ -379,6 +447,7 @@ class AdminController extends AbstractController
      */
     public function updateProduct(Request $request, Product $product): Response
     {   
+        
         if(is_null($product)){
             throw $this->createNotFoundException("Ce produit n'existe pas");
         }
@@ -396,106 +465,118 @@ class AdminController extends AbstractController
             $this->manager->getConnection()->setAutoCommit(false);
 
             try{
-                if($request->get('shopQuantity')){
+
+                $variations = $request->get('shopLengthColorQuantity');
+
+                $product->setRegister($this->getUser());
+                $slugify = new Slugify();
+                $product->setSlug($slugify->slugify($product->getName()));
                 
-                    $totalQuantity = 0;
+                
+                $totalQuantity = 0;
+                if($request->get('shopQuantity')){
+                    $shopQ = $request->get('shopQuantity');
 
-                    foreach($request->get('shopQuantity') as $key => $quantities){
+                    foreach($shopQ as $shopKey => $quantity){
+                        $totalQuantity += intval($quantity);
+                        $shop = $this->manager->getRepository(Shop::class)->find($shopKey);
 
-                        foreach($quantities as $quantity){
+                        foreach($shop->getProducts() as $shopP){
+                            
+                            if($shopP->getId() == $product->getId()){
+                                $shopP->setQuantity($quantity);
 
-                            if($quantity != ""){
-                               $totalQuantity += $quantity;
+                                if(is_null($product->getOnSaleAmount())){
+                                    $shopP->setOnSaleAmount(null);
+                                }else{
+                                    $shopP->setOnSaleAmount($product->getOnSaleAmount());
+                                }
+
+                                $this->manager->persist($shopP);
                             }else{
-                                $quantity = 0;
-                            }
 
-                            $shop = $this->manager->getRepository(Shop::class)->find($key);
-                            $shopProducts = [];
-
-                            foreach($shop->getProducts() as $shopProduct){
-                                $shopProducts[] = $shopProduct;
-                            }
-
-                            if(in_array($product,$shopProducts)){
-                                foreach($shopProducts as $shopProduct){
-                                    if($shopProduct->getShop() === $product->getShop() && $shopProduct->getSlug() === $product->getSlug()){
-                                        $shopProduct->setQuantity($quantity);
+                                $productx = $this->manager->getRepository(Product::class)->findOneBy(['shop' => $shop, 'slug' => $product->getSlug()]);
+                                    
+                                if(!is_null($productx)){
+                                        $productx->setQuantity($quantity);
 
                                         if(is_null($product->getOnSaleAmount())){
-                                            $shopProduct->setOnSaleAmount(null);
+                                            $productx->setOnSaleAmount(null);
                                         }else{
-                                            $shopProduct->setOnSaleAmount($product->getOnSaleAmount());
+                                            $productx->setOnSaleAmount($product->getOnSaleAmount());
                                         }
-
-                                        $this->manager->persist($shopProduct);
-                                    }
-                                }
-                            }else{
-                                if(!empty($shopProducts)){
-                                    foreach($shop->getProducts() as $shopProduct){
-                                        if($shopProduct->getSlug() == $product->getSlug()){
-                                            $shopProduct->setQuantity($quantity);
-    
-                                            if(is_null($product->getOnSaleAmount())){
-                                                $shopProduct->setOnSaleAmount(null);
-                                            }else{
-                                                $shopProduct->setOnSaleAmount($product->getOnSaleAmount());
-                                            }
-    
-                                            $this->manager->persist($shopProduct);
-    
-                                        }else{
-    
-                                            $newProduct = clone($product);
-                                            $newProduct->setQuantity($quantity);
-            
-                                            if(is_null($product->getOnSaleAmount())){
-                                                $newProduct->setOnSaleAmount(null);
-                                            }else{
-                                                $newProduct->setOnSaleAmount($product->getOnSaleAmount());
-                                            }
-            
-                                            $shop->addProduct($newProduct);
-            
-                                            $this->manager->persist($shop);
-                                        }
-                                    }
+        
+                                        $this->manager->persist($productx);
                                 }else{
                                     $newProduct = clone($product);
-                                            $newProduct->setQuantity($quantity);
-            
-                                            if(is_null($product->getOnSaleAmount())){
-                                                $newProduct->setOnSaleAmount(null);
-                                            }else{
-                                                $newProduct->setOnSaleAmount($product->getOnSaleAmount());
-                                            }
-            
-                                            $shop->addProduct($newProduct);
-            
-                                            $this->manager->persist($shop);
-                                }
-                    
-                               
-                            }
 
+                                    $newProduct->setQuantity($quantity);
+                                    $newProduct->setShop($shop);
+
+                                    if(is_null($product->getOnSaleAmount())){
+                                        $newProduct->setOnSaleAmount(null);
+                                    }else{
+                                        $newProduct->setOnSaleAmount($product->getOnSaleAmount());
+                                    }
+    
+                                    $this->manager->persist($newProduct);
+                                }
+              
+                            }
                         }
 
                     }
 
-                    $this->manager->flush();
-                    $this->manager->commit();
-
-                    $product->setQuantity($totalQuantity);
-        
-                    $this->api->put('products',$product);
-
-                    $this->addFlash("success", "Produit modifié avec succès!");
-
-                    return $this->redirectToRoute("admin_products_update", [
-                        "slug" => $product->getSlug(), 
-                    ]);
                 }
+
+                $variationArray = [];
+                if(!empty($variations)){
+                    foreach($variations as $shopKey => $lengths){
+                        $shop = $this->manager->getRepository(Shop::class)->find($shopKey);
+
+                        foreach($lengths as $lengthKey => $colors){
+
+                            foreach($colors as $colorKey => $quantities){
+                                
+                                foreach($quantities as $quantity){
+
+                                    if($quantity != ""){
+
+
+                                        $productVariations = $this->manager->getRepository(ProductVariation::class)->findBy(['shop' => $shop, 'color' => $colorKey, 'length' => $lengthKey]);
+                                         foreach($productVariations as $pV){
+                                             $pV->setQuantity(intval($quantity));
+                                             $pVp = $pV->getProduct();
+                                             $pVp->setQuantity(intval($quantity));
+
+                                             $this->manager->persist($pV);
+                                             $this->manager->persist($pVp);
+
+                                             $totalQuantity += intval(intval($quantity) != 0 ? intval($quantity) : 0);
+
+                                         }
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+               
+                }
+                
+          
+                $this->manager->flush();
+                $this->manager->commit();
+
+                $product->setQuantity($totalQuantity);
+           
+                $this->api->putQ('products',$product);
+
+                $this->addFlash("success", "Produit modifié avec succès!");
+
+                return $this->redirectToRoute("admin_products_update", [
+                    "slug" => $product->getSlug(), 
+                ]);
             
             }catch(\Exception $e){
                 $this->manager->rollback();
@@ -503,15 +584,97 @@ class AdminController extends AbstractController
                 throw $e;
             }
 
-
         } 
+
+
+        if($request->get('isAjaxQetRequest')){
+
+            if($product->getIsVariable()){
+
+                $productsVariation = $this->manager->getRepository(ProductVariation::class)->findProductsVariation($product);
+                
+                $lengthArray = [];
+                $colorArray = [];
+                $shopArray = [];
+
+                foreach($productsVariation as $key => $variation){
+
+                    if(!in_array($variation->getLength(), $lengthArray) && !in_array($variation->getColor(), $colorArray) && !in_array($variation->getShop(), $shopArray)){
+                        
+                        $lengthArray[$variation->getId()] = $variation->getLength();
+                        $colorArray[$variation->getId()] = $variation->getColor();
+                        $shopArray[$variation->getId()] = $variation->getShop();
+                    }
+
+                }
+
+
+                $response = '<div class="row">';
+                foreach($productsVariation as $key => $variation){
+
+                    $shopHTML = $this->removeElement($variation->getId(), $shopArray);
+                    $lengthHTML = $this->removeElement($variation->getId(), $lengthArray);
+                    $colorHTML = $this->removeElement($variation->getId(), $colorArray);
+                    $response .= '
+                    <div class="form-group  col-md-4">
+                        <label for="shop-'.$variation->getShop()->getId().'">Boutique</label>
+                        <select name="shop[]" id="shop-'.$variation->getShop()->getId().'" class="form-control">
+                            <option value="'.$variation->getShop()->getId().'">'.$variation->getShop()->getName().'</option>
+                            '.$shopHTML.'
+                        </select>
+                    </div>
+                    <div class="form-group  col-md-2">
+                        <label for="length-'.$variation->getLength()->getId().'">Taille</label>
+                        <select name="length[]" id="length-'.$variation->getLength()->getId().'" class="form-control">
+                            <option value="'.$variation->getLength()->getId().'">'.$variation->getLength()->getName().'</option>
+                            '.$lengthHTML.'
+                        </select>
+                    </div>
+                    <div class="form-group  col-md-3">
+                        <label for="color-'.$variation->getColor()->getId().'">Couleurs</label>
+                        <select name="color[]" id="color-'.$variation->getColor()->getId().'" class="form-control">
+                            <option value="'.$variation->getColor()->getId().'">'.$variation->getColor()->getName().'</option>
+                            '.$colorHTML.'
+                        </select>
+                    </div>
+                    <div class="form-group  col-md-3">
+                        <label for="quantity-'.$variation->getShop()->getId().'">Quantité</label>
+                        <input type="number" id="quantity-'.$variation->getShop()->getId().'" class="form-control" min="0" value="'.$variation->getQuantity().'" name="shopLengthColorQuantity['.$variation->getShop()->getId().']['.$variation->getLength()->getId().']['.$variation->getColor()->getId().'][]">
+                    </div>
+                    ';
+
+                }
+                $response .='</div>>';
+
+                return $this->json($response);
+            }else{
+
+                $products = $this->manager->getRepository(Product::class)->findBy(['slug' => $product->getSlug(), 'deleted' => 0]);
+                $shops = $this->manager->getRepository(Shop::class)->findBy(['deleted' => 0]);
+
+
+                $response = '';
+                foreach($products as $product){
+                    $response .='
+                    <div class="form-group  col-md-12">
+                        <label for="shop-'.$product->getShop()->getId().'">Quantity Boutique '.$product->getShop().'</label>
+                        <input type="number" class="form-control" value="'.$product->getQuantity().'" style="height:50px;" name="shopQuantity['.$product->getShop()->getId().']">
+                    </div>
+                    ';
+                }
+
+                return $this->json($response);
+
+            }
+
+        }
+
 
         return $this->render('admin/products/products/update.html.twig', [
             'form' => $form->createView(),
             "product" => $product,
-            'shops' => $this->manager->getRepository(Shop::class)->findAll(),
-            'update' => $product->getCategory()->getId()
-
+            'shops' => $this->manager->getRepository(Shop::class)->findBy(['deleted' => 0]),
+            'update' => $product->getCategory()->getId(),
         ]);
     }
 
@@ -523,29 +686,31 @@ class AdminController extends AbstractController
      */
     public function deleteProduct(Product $product): Response
     {
-        $products = $this->manager->getRepository(Product::class)->findBy(['slug' => $product->getSlug()]);
-
+        $product = $this->manager->getRepository(Product::class)->findOneBy(['id' => $product->getId()]);
+      
         if(is_null($product)){
             throw $this->createNotFoundException("Ce produit n'existe pas!");
         }
 
-        $this->manager->getConnection()->beginTransaction();
-        $this->manager->getConnection()->setAutoCommit(false);
-        try{
 
-            foreach($products as $product){
-                $product->setDeleted(true);
-                $this->manager->flush($product);
-            }
+        $product->setDeleted(true);
+        $this->manager->flush($product);
 
-            $this->manager->flush();
-            $this->manager->commit();
+        $this->manager->persist($product);
+        $this->manager->flush();
 
-            $this->addFlash("success", "Produit supprimé du magasin ".$product->getShop()." !");
-        }catch(\Exception $e){
-           throw $e;
+        $this->addFlash("success", "Produit supprimé du magasin ".$product->getShop()." !");
+
+        $products = $this->manager->getRepository(Product::class)->findBy(['slug' => $product->getSlug(), 'deleted' => 0]);
+     
+        $quantity = 0;
+        foreach($products as $productx){
+            $quantity += $productx->getQuantity();
         }
-        $this->api->delete('products', $product);
+
+       
+        $product->setQuantity($quantity);
+        $this->api->putQ('products', $product);
 
         return  $this->redirectToRoute("admin_products");
     }
@@ -1205,6 +1370,9 @@ class AdminController extends AbstractController
         if($form->isSubmitted() && $form->isValid()){
             
             $color->setRegister($this->getUser());
+            $slugify = new Slugify();
+            $color->setSlug($slugify->slugify($color->getName()));
+
             $this->manager->persist($color);
             $this->manager->flush();
 
@@ -1231,6 +1399,10 @@ class AdminController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
+
+            $slugify = new Slugify();
+            $color->setSlug($slugify->slugify($color->getName()));
+
             $this->manager->persist($color);
             $this->manager->flush();
 
@@ -1295,6 +1467,10 @@ class AdminController extends AbstractController
         if($form->isSubmitted() && $form->isValid()){
             
             $length->setRegister($this->getUser());
+
+            $slugify = new Slugify();
+            $length->setSlug($slugify->slugify($length->getName()));
+
             $this->manager->persist($length);
             $this->manager->flush();
 
@@ -1321,6 +1497,11 @@ class AdminController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
+
+            $slugify = new Slugify();
+            $length->setSlug($slugify->slugify($length->getName()));
+
+
             $this->manager->persist($length);
             $this->manager->flush();
 
@@ -1662,6 +1843,9 @@ class AdminController extends AbstractController
         if($form->isSubmitted() && $form->isValid()){
             
             $height->setRegister($this->getUser());
+
+            $slugify = new Slugify();
+            $height->setSlug($slugify->slugify($height->getName()));
             $this->manager->persist($height);
             $this->manager->flush();
 
@@ -1688,6 +1872,10 @@ class AdminController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
+
+            $slugify = new Slugify();
+            $height->setSlug($slugify->slugify($height->getName()));
+
             $this->manager->persist($height);
             $this->manager->flush();
 
@@ -2224,7 +2412,93 @@ class AdminController extends AbstractController
      * @return Response
      */
     public function productsReplenishment(Request $request)
-    {
+    {   
+
+       
+        if($request->get('isAjaxQetRequest') && $request->get('product')){
+            
+            $product = $this->manager->getRepository(Product::class)->findOneBy(['id' => $request->get('product'), 'deleted' => false]);
+
+            if($product->getIsVariable()){
+
+                $productsVariation = $this->manager->getRepository(ProductVariation::class)->findProductsVariation($product);
+                
+                $lengthArray = [];
+                $colorArray = [];
+                $shopArray = [];
+
+                foreach($productsVariation as $key => $variation){
+
+                    if(!in_array($variation->getLength(), $lengthArray) && !in_array($variation->getColor(), $colorArray) && !in_array($variation->getShop(), $shopArray)){
+                        
+                        $lengthArray[$variation->getId()] = $variation->getLength();
+                        $colorArray[$variation->getId()] = $variation->getColor();
+                        $shopArray[$variation->getId()] = $variation->getShop();
+                    }
+
+                }
+
+
+                $response = '<div class="row">';
+                foreach($productsVariation as $key => $variation){
+
+                    $shopHTML = $this->removeElement($variation->getId(), $shopArray);
+                    $lengthHTML = $this->removeElement($variation->getId(), $lengthArray);
+                    $colorHTML = $this->removeElement($variation->getId(), $colorArray);
+                    $response .= '
+                    <div class="form-group  col-md-4">
+                        <label for="shop-'.$variation->getShop()->getId().'">Boutique</label>
+                        <select name="shop[]" id="shop-'.$variation->getShop()->getId().'" class="form-control">
+                            <option value="'.$variation->getShop()->getId().'">'.$variation->getShop()->getName().'</option>
+                            '.$shopHTML.'
+                        </select>
+                    </div>
+                    <div class="form-group  col-md-2">
+                        <label for="length-'.$variation->getLength()->getId().'">Taille</label>
+                        <select name="length[]" id="length-'.$variation->getLength()->getId().'" class="form-control">
+                            <option value="'.$variation->getLength()->getId().'">'.$variation->getLength()->getName().'</option>
+                            '.$lengthHTML.'
+                        </select>
+                    </div>
+                    <div class="form-group  col-md-3">
+                        <label for="color-'.$variation->getColor()->getId().'">Couleurs</label>
+                        <select name="color[]" id="color-'.$variation->getColor()->getId().'" class="form-control">
+                            <option value="'.$variation->getColor()->getId().'">'.$variation->getColor()->getName().'</option>
+                            '.$colorHTML.'
+                        </select>
+                    </div>
+                    <div class="form-group  col-md-3">
+                        <label for="quantity-'.$variation->getShop()->getId().'">Quantité</label>
+                        <input type="number" id="quantity-'.$variation->getShop()->getId().'" class="form-control" min="0" value="'.$variation->getQuantity().'" name="shopLengthColorQuantity['.$variation->getShop()->getId().']['.$variation->getLength()->getId().']['.$variation->getColor()->getId().'][]">
+                    </div>
+                    ';
+
+                }
+                $response .='</div>>';
+
+                return $this->json($response);
+            }else{
+
+                $products = $this->manager->getRepository(Product::class)->findBy(['slug' => $product->getSlug(), 'deleted' => 0]);
+                $shops = $this->manager->getRepository(Shop::class)->findBy(['deleted' => 0]);
+
+
+                $response = '';
+                foreach($products as $product){
+                    $response .='
+                    <div class="form-group  col-md-12">
+                        <label for="shop-'.$product->getShop()->getId().'">Quantity Boutique '.$product->getShop().'</label>
+                        <input type="number" class="form-control" value="'.$product->getQuantity().'" style="height:50px;" name="shopQuantity['.$product->getShop()->getId().']">
+                    </div>
+                    ';
+                }
+
+                return $this->json($response);
+
+            }
+
+        }
+
        $replenishment = new Replenishment();
        $providerProduct = new ProviderProduct();
 
@@ -2244,72 +2518,127 @@ class AdminController extends AbstractController
        $form->handleRequest($request);
 
        if($form->isSubmitted() && $form->isValid()){
-            $this->manager->getConnection()->beginTransaction();
-            $this->manager->getConnection()->setAutoCommit(false);
+          $this->manager->getConnection()->beginTransaction();
+          $this->manager->getConnection()->setAutoCommit(false);
+          
+        try{
+
+            $variations = $request->get('shopLengthColorQuantity');
+
+            $product->setRegister($this->getUser());
+            $slugify = new Slugify();
+            $product->setSlug($slugify->slugify($product->getName()));
             
+            
+            $totalQuantity = 0;
             if($request->get('shopQuantity')){
-                
-                try{
+                $shopQ = $request->get('shopQuantity');
 
-                $providerQuantities = [];
-                $providerQuantity = 0;
-                $totalQuantity = 0;
-                $provider = null;
-                $product = null;
-                $shop = $request->get('shopQuantity');
+                foreach($shopQ as $shopKey => $quantity){
+                    $totalQuantity += intval($quantity);
+                    $shop = $this->manager->getRepository(Shop::class)->find($shopKey);
 
-                foreach($shop as $key => $quantities){
-
-                    foreach($quantities as $quantity){
+                    foreach($shop->getProducts() as $shopP){
                         
-                        $providerQuantities[$key] = intval($quantity);
-                    }
-                    if($key != 0 && !empty($providerQuantities)){
+                        if($shopP->getId() == $product->getId()){
+                            $shopP->setQuantity($quantity);
 
-                        $products = $this->manager->getRepository(Product::class)->findBy(["slug" => $replenishment->getProduct()->getSlug()]);
-                        $provider = $this->manager->getRepository(Provider::class)->find($replenishment->getProvider()->getId());
-                     
-                        foreach($products as $product){
+                            if(is_null($product->getOnSaleAmount())){
+                                $shopP->setOnSaleAmount(null);
+                            }else{
+                                $shopP->setOnSaleAmount($product->getOnSaleAmount());
+                            }
 
-                          if($key == $product->getShop()->getId()){
-                          $totalQuantity += $product->getQuantity();
-                          $product->setQuantity($providerQuantities[$key] + $product->getQuantity());
-                          $this->manager->persist($product);
-                          
-                          }
+                            $this->manager->persist($shopP);
+                        }else{
+
+                            $productx = $this->manager->getRepository(Product::class)->findOneBy(['shop' => $shop, 'slug' => $product->getSlug()]);
+                                
+                            if(!is_null($productx)){
+                                    $productx->setQuantity($quantity);
+
+                                    if(is_null($product->getOnSaleAmount())){
+                                        $productx->setOnSaleAmount(null);
+                                    }else{
+                                        $productx->setOnSaleAmount($product->getOnSaleAmount());
+                                    }
+    
+                                    $this->manager->persist($productx);
+                            }else{
+                                $newProduct = clone($product);
+
+                                $newProduct->setQuantity($quantity);
+                                $newProduct->setShop($shop);
+
+                                if(is_null($product->getOnSaleAmount())){
+                                    $newProduct->setOnSaleAmount(null);
+                                }else{
+                                    $newProduct->setOnSaleAmount($product->getOnSaleAmount());
+                                }
+
+                                $this->manager->persist($newProduct);
+                            }
+          
                         }
-                     }
-
-                     $totalQuantity += $providerQuantities[$key];
-                     $providerQuantity += $providerQuantities[$key];
-                }
-
-                
-                $providerProduct->setProduct($product);
-                $providerProduct->setProvider($provider);
-                $providerProduct->setQuantity($providerQuantity);
-                $this->manager->persist($providerProduct);
-                $this->manager->flush();
-                $this->manager->commit();
-
-                
-                $product->setQuantity($totalQuantity);
-                
-                $this->api->putQ('products', $product);
-                
-                $this->addFlash('success', 'Réapprovisionnement effectué avec succès !');
-                
-
-        
-                return $this->redirectToRoute('admin_products_replenishment');
-             
-                }catch(\Exception $e){
-                    $this->manager->rollback();
-                    $this->addFlash("danger", "Le réapprovisionnement n'a pas été effectué!");
-                    $this->addFlash("danger", $e->getMessage());
+                    }
 
                 }
+
             }
+
+            $variationArray = [];
+            if(!empty($variations)){
+                foreach($variations as $shopKey => $lengths){
+                    $shop = $this->manager->getRepository(Shop::class)->find($shopKey);
+
+                    foreach($lengths as $lengthKey => $colors){
+
+                        foreach($colors as $colorKey => $quantities){
+                            
+                            foreach($quantities as $quantity){
+
+                                if($quantity != ""){
+
+
+                                    $productVariations = $this->manager->getRepository(ProductVariation::class)->findBy(['shop' => $shop, 'color' => $colorKey, 'length' => $lengthKey]);
+                                     foreach($productVariations as $pV){
+                                         $pV->setQuantity(intval($quantity));
+                                         $pVp = $pV->getProduct();
+                                         $pVp->setQuantity(intval($quantity));
+
+                                         $this->manager->persist($pV);
+                                         $this->manager->persist($pVp);
+
+                                         $totalQuantity += intval(intval($quantity) != 0 ? intval($quantity) : 0);
+
+                                     }
+                                }
+                            }
+                        }
+
+                    }
+                }
+           
+            }
+            
+      
+            $this->manager->flush();
+            $this->manager->commit();
+
+            $product->setQuantity($totalQuantity);
+       
+            $this->api->putQ('products',$product);
+
+            $this->addFlash("success", "Réapprovisionnement effectué avec succès!");
+
+            return $this->redirectToRoute('admin_products_replenishment');
+
+        }catch(\Exception $e){
+            $this->manager->rollback();
+
+            throw $e;
+        }
+
        }
 
        return $this->render('admin/products/replenishments/index.html.twig',[
@@ -3213,6 +3542,114 @@ class AdminController extends AbstractController
         return $this->redirectToRoute("admin_managers");
     }
 
+    /**
+     * @Route("/products/variations/create", name="admin_products_variations_create", methods={"POST"})
+     * @method productsVariationsCreate
+     * @return Response
+     */
+    public function productsVariationsCreate(Request $request)
+    {
+        // dd($request->request);
+
+        $lengths = $request->get('lengths');
+        $colors = $request->get('colors');
+        $shops = $this->manager->getRepository(Shop::class)->findBy(['deleted' => 0]);
+
+        $lengthArray = [];
+        $colorArray = [];
+
+        foreach($lengths as $length){
+            $length = $this->manager->getRepository(Length::class)->find($length);
+
+            if(!is_null($length)){
+                $lengthArray[] = $length;
+            }
+        }
+
+        foreach($colors as $color){
+            $color = $this->manager->getRepository(Color::class)->find($color);
+
+            if(!is_null($color)){
+                $colorArray[] = $color;
+            }
+        }
+
+
+        $response = '';
+        for($i = 0; $i < count($shops); $i++){
+            for($j = 0; $j < count($lengthArray); $j++){
+                for($k = 0; $k < count($colorArray); $k++){
+                    $shop = $shops[$i];
+                    $length = $lengthArray[$j];
+                    $color = $colorArray[$k];
+
+                    $shopHTML = $this->removeElement($i, $shops);
+                    $lengthHTML = $this->removeElement($j, $lengthArray);
+                    $colorHTML = $this->removeElement($k, $colorArray);
+
+                $response .= '
+                   <div class="form-group  col-md-4">
+                        <label for="shop-'.$shop->getId().'">Boutique</label>
+                        <select name="shop[]" id="shop-'.$shop->getId().'" class="form-control">
+                            <option value="'.$shop->getId().'">'.$shop->getName().'</option>
+                            '.$shopHTML.'
+                        </select>
+                    </div>
+                     <div class="form-group  col-md-2">
+                        <label for="length-'.$length->getId().'">Taille</label>
+                        <select name="length[]" id="length-'.$length->getId().'" class="form-control">
+                            <option value="'.$length->getId().'">'.$length->getName().'</option>
+                            '.$lengthHTML.'
+                        </select>
+                    </div>
+                    <div class="form-group  col-md-3">
+                        <label for="color-'.$color->getId().'">Couleurs</label>
+                        <select name="color[]" id="color-'.$color->getId().'" class="form-control">
+                            <option value="'.$color->getId().'">'.$color->getName().'</option>
+                            '.$colorHTML.'
+                        </select>
+                    </div>
+                    <div class="form-group  col-md-3">
+                        <label for="quantity-'.$shop->getId().'">Quantité</label>
+                        <input type="number" id="quantity-'.$shop->getId().'" class="form-control" min="0" name="shopLengthColorQuantity['.$shop->getId().']['.$length->getId().']['.$color->getId().'][]">
+                    </div>
+                    ';
+                }
+            }
+
+        }
+
+        return $this->json($response);
+    }
+
+    public function removeElement($key, $array)
+    {
+        unset($array[$key]);
+
+        $arrHTML = '';
+        foreach($array as $arr){
+            $arrHTML .= '<option value="'.$arr->getId().'">'.$arr->getName().'</option>';
+        }
+
+        return $arrHTML;
+    }
 
     
+    /**
+    * @Route("/cache/clear", name="cache_clear")
+    */
+    public function cacheClearAction( ) 
+    {
+        $application = new Application($this->get('kernel'));
+        $application->setAutoExit(false);//exit after run
+        $input = new ArrayInput([
+            'command' => 'cache:clear',
+            '--env'   => 'dev',
+            '--no-warmup' => true
+        ]);
+        $output = new BufferedOutput();
+        $runCode = $application->run($input, $output);
+        $content = $output->fetch();
+        return new Response($content);
+    }
 }

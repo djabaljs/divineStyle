@@ -28,31 +28,21 @@
 					</div>
 					<div class="details col-md-6">
 						<h3 class="product-title">{{product.name}}</h3>
-						{# <div class="rating">
-							<div class="stars">
-								<span class="fa fa-star checked"></span>
-								<span class="fa fa-star checked"></span>
-								<span class="fa fa-star checked"></span>
-								<span class="fa fa-star"></span>
-								<span class="fa fa-star"></span>
-							</div>
-						</div> #}
-						<h4 class="price">Prix actuel: <span>{{product.buyingPrice}} CFA</span></h4>
-						<h5 class="sizes">sizes:
-							<span class="size" data-toggle="tooltip" title="small">s</span>
-							<span class="size" data-toggle="tooltip" title="medium">m</span>
-							<span class="size" data-toggle="tooltip" title="large">l</span>
-							<span class="size" data-toggle="tooltip" title="xtra large">xl</span>
-						</h5>
-						<h5 class="colors">colors:
-							<span class="color orange not-available" data-toggle="tooltip" title="Not In store"></span>
-							<span class="color green"></span>
-							<span class="color blue"></span>
-						</h5>
-						{# <div class="action">
-							<button class="add-to-cart btn btn-default" type="button">add to cart</button>
-							<button class="like btn btn-default" type="button"><span class="fa fa-heart"></span></button>
-						</div> #}
+						<h6 class="price">Prix actuel: <span>{{product.sellingPrice|format_currency('XOF')}}</span></h6>
+						<h6 class="sizes">Tailles:
+						{% for variation in product.productVariations %}
+							{% if variation.product == product %}
+								{{variation.length.name}}
+							{% endif %}
+						{% endfor %}
+						</h6>
+						<h6 class="colors">Couleurs:
+						{% for variation in product.productVariations %}
+							{% if variation.product == product %}
+								{{variation.color.name}}
+							{% endif %}
+						{% endfor %}
+						</h6>
 					</div>
 				</div>
 			</div>

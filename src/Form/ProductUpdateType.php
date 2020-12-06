@@ -42,21 +42,21 @@ class ProductUpdateType extends AbstractType
                 'label' => false,
                 'required' => false,
             ])
-            ->add('colors', EntityType::class, [
-                'label' => false,
-                'class' => Color::class,
-                'required'=>false,
-                'multiple' => true,
+            // ->add('colors', EntityType::class, [
+            //     'label' => false,
+            //     'class' => Color::class,
+            //     'required'=>false,
+            //     'multiple' => true,
 
-            ])
-            ->add('lengths', EntityType::class, [
-                'label' => false,
-                'class' => Length::class,
-                'multiple' => true,
-                'required'=>false,
-                'mapped'=>true,
+            // ])
+            // ->add('lengths', EntityType::class, [
+            //     'label' => false,
+            //     'class' => Length::class,
+            //     'multiple' => true,
+            //     'required'=>false,
+            //     'mapped'=>true,
 
-            ])
+            // ])
             // ->add('quantity', IntegerType::class, [
             //     'label' => false,
             //     'attr' => [

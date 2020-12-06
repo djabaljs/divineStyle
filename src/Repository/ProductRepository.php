@@ -3,8 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\Product;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use App\Entity\ProductSearch;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @method Product|null find($id, $lockMode = null, $lockVersion = null)
@@ -104,5 +105,52 @@ class ProductRepository extends ServiceEntityRepository
             ;
 
         return $qb->getQuery()->getResult();
+    }
+
+
+    public function findProductVariations($product, $shop)
+    {
+      
+        $qb = $this->createQueryBuilder('p');
+        $qb
+            ->andWhere('p.shop = :shop')
+            ->setParameter('shop', $shop)
+            ->andWhere('p.deleted = false')
+            ->andWhere('p.id = :id')
+            ->setParameter('id', $product)
+            ->innerJoin('p.productVariations','v')
+            ->innerJoin('v.product','vp')
+            ->andWhere('vp.id = :product')
+            ->setParameter('product', $product)
+            ->andWhere('v.shop = :shop')
+            ->setParameter('shop', $shop)
+            ;
+
+        return $qb->getQuery()->getOneOrNullResult();
+    }
+
+    public function searchProducstNotVariables(ProductSearch $productSearch)
+    {
+
+        if(!is_null($productSearch->getShop()) && !is_null($productSearch->getProduct())){
+           return $this->createQueryBuilder('p')
+                        ->where('p.deleted = false')
+                        ->andWhere('p.slug = :slug')
+                        ->andWhere('p.shop = :shop')
+                        ->setParameter('slug', $productSearch->getProduct()->getSlug())
+                        ->setParameter('shop', $productSearch->getShop())
+                        ->getQuery()
+                        ->getResult()
+
+           ;
+        }elseif(is_null($productSearch->getShop()) && !is_null($productSearch->getProduct())){
+            return $this->createQueryBuilder('p')
+                         ->where('p.deleted = false')
+                         ->andWhere('p.slug = :slug')
+                         ->setParameter('slug', $productSearch->getProduct()->getSlug())
+                         ->getQuery()
+                         ->getResult()
+            ;
+         }
     }
 }

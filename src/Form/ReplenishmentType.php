@@ -33,9 +33,11 @@ class ReplenishmentType extends AbstractType
                 'class' => Provider::class,
                 'label' => false,
                 'placeholder' => 'Fournisseur',
-
-                'attr' => [
-                ]
+                'query_builder' => function(EntityRepository $er){
+                    return $er->createQueryBuilder('p')
+                              ->where('p.deleted = false')
+                    ;
+                }
             ])
         ;
     }

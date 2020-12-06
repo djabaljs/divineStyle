@@ -70,6 +70,11 @@ class Shop
      */
     private $deleted;
 
+    /**
+     * @ORM\OneToMany(targetEntity=ProductVariation::class, mappedBy="shop")
+     */
+    private $productVariations;
+
 
     public function __construct()
     {
@@ -77,6 +82,7 @@ class Shop
         $this->customers = new ArrayCollection();
         $this->products = new ArrayCollection();
         $this->orders = new ArrayCollection();
+        $this->productVariations = new ArrayCollection();
     }
 
  
@@ -272,6 +278,37 @@ class Shop
     public function setDeleted(bool $deleted): self
     {
         $this->deleted = $deleted;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|ProductVariation[]
+     */
+    public function getProductVariations(): Collection
+    {
+        return $this->productVariations;
+    }
+
+    public function addProductVariation(ProductVariation $productVariation): self
+    {
+        if (!$this->productVariations->contains($productVariation)) {
+            $this->productVariations[] = $productVariation;
+            $productVariation->setShop($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProductVariation(ProductVariation $productVariation): self
+    {
+        if ($this->productVariations->contains($productVariation)) {
+            $this->productVariations->removeElement($productVariation);
+            // set the owning side to null (unless already changed)
+            if ($productVariation->getShop() === $this) {
+                $productVariation->setShop(null);
+            }
+        }
 
         return $this;
     }

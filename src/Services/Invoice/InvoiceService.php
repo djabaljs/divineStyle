@@ -11,6 +11,7 @@ use Symfony\Component\Asset\PathPackage;
 use App\Repository\OrderProductRepository;
 use App\Repository\PaymentRepository;
 use App\Repository\PaymentTypeRepository;
+use App\Repository\ProductVariationRepository;
 use Symfony\Component\Asset\VersionStrategy\StaticVersionStrategy;
 
 
@@ -42,23 +43,29 @@ class InvoiceService{
 
 
     /**
-     * @var deliveryRepository();
+     * @var deliveryRepository;
      */
 
     protected $deliveryRepository;
 
 
     /**
-     * @var paymentTypeRepository();
+     * @var paymentTypeRepository;
      */
 
     protected $paymentTypeRepository;
 
+      /**
+     * @var productVariation;
+     */
+
+    protected $productVariation;
 
 
 
 
-     public function __construct(OrderProductRepository $orderProductRepository, PaymentRepository $paymentRepository, DeliveryRepository $deliveryRepository, PaymentTypeRepository $paymentTypeRepository)
+
+     public function __construct(OrderProductRepository $orderProductRepository, PaymentRepository $paymentRepository, DeliveryRepository $deliveryRepository, PaymentTypeRepository $paymentTypeRepository, ProductVariationRepository $productVariationRepository)
      {
          $this->mpdf = new Mpdf([
             'margin_left' => 20,
@@ -71,6 +78,7 @@ class InvoiceService{
          $this->paymentRepository = $paymentRepository;
          $this->deliveryRepository = $deliveryRepository;
          $this->paymentTypeRepository = $paymentTypeRepository;
+         $this->productVariation = $this->productVariation;
      }
 
 
@@ -95,10 +103,26 @@ class InvoiceService{
 
       
        foreach($orders as $key => $order){
+        $variationHTML = '';
+
+        if($order->getProducts()->getProductVariations()){
+            foreach($order->getProducts()->getProductVariations() as $variation){
+                $variationHTML .='<td>'.$variation->getLength().'</td>';
+                $variationHTML .='<td>'.$variation->getColor().'</td>';
+             }  
+    
+        }else{
+            $variationHTML .='<td>0</td>';
+            $variationHTML .='<td>0</td>';
+        }
+       
          $key += 1;
          $content .= '<tr>';
          $content .= '<td>'.$key.'</td>';
          $content .= '<td>'.$order->getProducts()->getName().'</td>';
+        
+         $content.= $variationHTML;
+
          if(is_null($order->getProducts()->getOnSaleAmount()) || $order->getProducts()->getOnSaleAmount() == 0.0){
             $content .= '<td>'.number_format($order->getProducts()->getSellingPrice()).'</td>';
          }else{
@@ -223,8 +247,10 @@ class InvoiceService{
                 <thead>
                     <tr>
                         <td width="10%">No.</td>
-                        <td width="45%">Designation</td>
-                        <td width="15%">P.U</td>
+                        <td width="20%">Designation</td>
+                        <td width="10%">Taille</td>
+                        <td width="15%">Couleur</td>
+                        <td width="10%">P.U</td>
                         <td width="15%">Q<sup>t</sup></td>
                         <td width="20%">Total</td>
                     </tr>
@@ -235,7 +261,7 @@ class InvoiceService{
                     <!-- END ITEMS HERE -->
                    
                     <tr>
-                        <td class="blanktotal" colspan="3" rowspan="4">
+                        <td class="blanktotal" colspan="5" rowspan="4">
                         <br /><br /><br /><br /><br /><br /><br />  '.$paymentBody.'<br /><br /><br /><br /><br /><br />
                         </td>
                         <td class="totals">Sous-total:</td>

@@ -30,12 +30,18 @@ class Height
     /**
      * @ORM\OneToMany(targetEntity="Product", mappedBy="height")
      */
-    private $products;
+    // private $products;
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="heights")
      */
     private $register;
+
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $slug;
 
     public function __construct()
     {
@@ -60,36 +66,36 @@ class Height
         return $this;
     }
 
-    /**
-     * @return Collection|Product[]
-     */
-    public function getProducts(): Collection
-    {
-        return $this->products;
-    }
+    // /**
+    //  * @return Collection|Product[]
+    //  */
+    // public function getProducts(): Collection
+    // {
+    //     return $this->products;
+    // }
 
-    public function addProduct(Product $product): self
-    {
-        if (!$this->products->contains($product)) {
-            $this->products[] = $product;
-            $product->setHeight($this);
-        }
+    // public function addProduct(Product $product): self
+    // {
+    //     if (!$this->products->contains($product)) {
+    //         $this->products[] = $product;
+    //         $product->setHeight($this);
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    public function removeProduct(Product $product): self
-    {
-        if ($this->products->contains($product)) {
-            $this->products->removeElement($product);
-            // set the owning side to null (unless already changed)
-            if ($product->getHeight() === $this) {
-                $product->setHeight(null);
-            }
-        }
+    // public function removeProduct(Product $product): self
+    // {
+    //     if ($this->products->contains($product)) {
+    //         $this->products->removeElement($product);
+    //         // set the owning side to null (unless already changed)
+    //         if ($product->getHeight() === $this) {
+    //             $product->setHeight(null);
+    //         }
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     public function getRegister(): ?User
     {
@@ -106,5 +112,25 @@ class Height
     public function __toString()
     {
         return $this->getName();
+    }
+
+    /**
+     * Get the value of slug
+     */ 
+    public function getSlug()
+    {
+        return $this->slug;
+    }
+
+    /**
+     * Set the value of slug
+     *
+     * @return  self
+     */ 
+    public function setSlug($slug)
+    {
+        $this->slug = $slug;
+
+        return $this;
     }
 }

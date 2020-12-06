@@ -81,16 +81,11 @@
                                                     {{form_row(form.provider, {attr:{'class': 'form-control', 'style':'height:50px'}})}}
                                                 </div>
                                             </div>
-                                              {% for shop in shops %}
-                                                  <div class="col-md-12">
-                                                    <div class="form-group">
-                                                        <label for="product_provider">Quantité à réapprovisionner dans {{shop.name}}</label>
-                                                        <input type="number" class="form-control" name="shopQuantity[{{shop.id}}][]" min="0" style="height:50px" />
-                                                    </div>
-                                                 </div> 
-                                            {% endfor %}
                                         </div>
-                                      </div>
+                                        <div class="col-md-6" id="data">
+
+                                        </div>
+                                        </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
                                             <button type="submit" class="btn btn-success"><i class="fas fa-recycle"></i> Faire le réapprovisionnement</button>
@@ -115,6 +110,21 @@
 $('#replenishment_product').select2();
 $('#replenishment_provider').select2();
 $('#replenishment_shop').select2();
+
+
+
+$('#replenishment_product').change(function(){
+
+    $.ajax({
+        url: 'http://localhost:8000/user/admin/products/replenishment/',
+        type: 'POST',
+        data: {isAjaxQetRequest: true, product:$(this).val()},
+        success:function(data){
+            $('#data').html(data);
+        }
+    })
+
+})
 
 </script>
 {% endblock %}

@@ -62,24 +62,20 @@ class Product
      */
     private $shop;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="Length", mappedBy="products", cascade={"persist"}))
-     * @ORM\JoinColumn(nullable=true)
-     * 
-     */
+
     private $lengths;
 
      /**
      * @ORM\ManyToOne(targetEntity="Width", inversedBy="products")
      * @ORM\JoinColumn(nullable=true)
      */
-    private $width;
+    // private $width;
 
     /**
      * @ORM\ManyToOne(targetEntity="Height", inversedBy="products")
      * @ORM\JoinColumn(nullable=true)
      */
-    private $height;
+    // private $height;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -101,10 +97,6 @@ class Product
      */
     private $minimumStock;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="Color", mappedBy="products", cascade={"persist"})
-     * @ORM\JoinColumn(onDelete="CASCADE")
-     */
     private $colors;
 
 
@@ -113,8 +105,8 @@ class Product
      */
     private $isVariable;
 
-    public $colorArrays;
-    public $lengthArrays;
+    public $colorArrays = [];
+    public $lengthArrays = [];
 
     /**
      * @ORM\OneToMany(targetEntity=OrderProduct::class, mappedBy="products", cascade={"persist","remove"}, orphanRemoval=true)
@@ -143,12 +135,18 @@ class Product
      */
     private $deleted;
 
+    /**
+     * @ORM\OneToMany(targetEntity=ProductVariation::class, mappedBy="product")
+     */
+    private $productVariations;
+
     public function __construct()
     {
         $this->lengths = new ArrayCollection();
         $this->colors = new ArrayCollection();
         $this->orderProducts = new ArrayCollection();
         $this->providerProducts = new ArrayCollection();
+        $this->productVariations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -230,29 +228,29 @@ class Product
         return $this;
     }
 
-    public function getWidth(): ?Width
-    {
-        return $this->width;
-    }
+    // public function getWidth(): ?Width
+    // {
+    //     return $this->width;
+    // }
 
-    public function setWidth(?Width $width): self
-    {
-        $this->width = $width;
+    // public function setWidth(?Width $width): self
+    // {
+    //     $this->width = $width;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    public function getHeight(): ?Height
-    {
-        return $this->height;
-    }
+    // public function getHeight(): ?Height
+    // {
+    //     return $this->height;
+    // }
 
-    public function setHeight(?Height $height): self
-    {
-        $this->height = $height;
+    // public function setHeight(?Height $height): self
+    // {
+    //     $this->height = $height;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     public function getBuyingPrice(): ?float
     {
@@ -315,83 +313,7 @@ class Product
         return $this;
     }
 
-    /**
-     * @return Collection|Length[]
-     */
-    public function getLengths(): Collection
-    {
-        return $this->lengths;
-    }
-
-    public function addLength(Length $length): self
-    {
-        if (!$this->lengths->contains($length)) {
-            $this->lengths[] = $length;
-            $length->addProduct($this);
-        }
-
-        return $this;
-    }
-
-    public function removeLength(Length $length): self
-    {
-        if ($this->lengths->contains($length)) {
-            $this->lengths->removeElement($length);
-            $length->removeProduct($this);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Color[]
-     */
-    public function getColors(): Collection
-    {
-        return $this->colors;
-    }
-
-    public function addColor(Color $color): self
-    {
-        if (!$this->colors->contains($color)) {
-            $this->colors[] = $color;
-            $color->addProduct($this);
-        }
-
-        return $this;
-    }
-
-    public function removeColor(Color $color): self
-    {
-        if ($this->colors->contains($color)) {
-            $this->colors->removeElement($color);
-            $color->removeProduct($this);
-        }
-
-        return $this;
-    }
-
-    public function setLengths($length)
-    {
-        foreach($this->getLengths() as $key =>  $length){
-            if(in_array($length, $this->getLengths())){
-                $this->$lengths[$key] = $product;
-            }
-        }
-
-        return $this->lengths;
-    }
-
-    public function setColors($colors) {
-       $colorArrays = [];
-
-       foreach($colors as $color){
-           $colorArrays[] = $color;
-       }
-
-        $this->colors = new ArrayCollection($colorArrays);
- 
-    }
+   
 
     public function getOrder(): ?Order
     {
@@ -530,4 +452,75 @@ class Product
         return $this;
     }
 
+    /**
+     * @return Collection|ProductVariation[]
+     */
+    public function getProductVariations(): Collection
+    {
+        return $this->productVariations;
+    }
+
+    public function addProductVariation(ProductVariation $productVariation): self
+    {
+        if (!$this->productVariations->contains($productVariation)) {
+            $this->productVariations[] = $productVariation;
+            $productVariation->setProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProductVariation(ProductVariation $productVariation): self
+    {
+        if ($this->productVariations->contains($productVariation)) {
+            $this->productVariations->removeElement($productVariation);
+            // set the owning side to null (unless already changed)
+            if ($productVariation->getProduct() === $this) {
+                $productVariation->setProduct(null);
+            }
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * Get the value of lengths
+     */ 
+    public function getLengths()
+    {
+        return $this->lengths;
+    }
+
+    /**
+     * Set the value of lengths
+     *
+     * @return  self
+     */ 
+    public function setLengths($lengths)
+    {
+        $this->lengths = $lengths;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of colors
+     */ 
+    public function getColors()
+    {
+        return $this->colors;
+    }
+
+    /**
+     * Set the value of colors
+     *
+     * @return  self
+     */ 
+    public function setColors($colors)
+    {
+        $this->colors = $colors;
+
+        return $this;
+    }
 }

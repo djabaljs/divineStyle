@@ -77,6 +77,8 @@
                                                 <th>Catégories</th>
                                                 <th>Prix  de vente</th>
                                                 <th>Prix  promo</th>
+                                                <th>Tailles</th>
+                                                <th>Couleurs</th>
                                                 <th>Qt en stock</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -102,11 +104,34 @@
                                                 {% else %}
                                                 <td>{{ 0|format_currency('XOF')}}</td>
                                                 {% endif %}
-                                                <td {% if product.minimumStock == product.quantity or product.quantity == 0  %} style="background:red;color:#FFF"{% else %} style="background:green; color:#FFF"{% endif %}>
-                                                 {{ product.quantity }}
+                                                <td>
+                                                {% if product.isVariable %}
+                                                    {% for variation in product.productVariations %}
+                                                      {{variation.length.name}}
+                                                    {% endfor %}
+                                                {% endif %}
+                                          
                                                 </td>
                                                 <td>
-                                                <a href="{{path('manager_products_show', {slug: product.slug})}}" class="btn btn-info btn-xs"><i class="fas fa-eye"></i></a>
+                                                 {% if product.isVariable %}
+                                                    {% for variation in product.productVariations %}
+                                                      {{variation.color.name}}
+                                                    {% endfor %}
+                                                {% endif %}
+                                          
+                                                </td>
+                                                <td {% if product.minimumStock == product.quantity or product.quantity == 0  %} style="background:red;color:#FFF"{% else %} style="background:green; color:#FFF"{% endif %}>
+                                                {% if product.isVariable %}
+                                                    {% for variation in product.productVariations %}
+                                                      {{variation.quantity}}
+                                                    {% endfor %}
+                                                {% else %}
+                                                     {{product.quantity}}
+                                                {% endif %}
+
+                                                </td>
+                                                <td>
+                                                <a href="{{path('manager_products_show', {id: product.id})}}" class="btn btn-info btn-xs"><i class="fas fa-eye"></i></a>
                                                 </td>
                                             </tr>
                                            {% endfor %}
@@ -119,6 +144,8 @@
                                                 <th>Catégories</th>
                                                 <th>Prix  de vente</th>
                                                 <th>Prix  promo</th>
+                                                <th>Tailles</th>
+                                                <th>Couleurs</th>
                                                 <th>Qt en stock</th>
                                                 <th>Actions</th>
                                             </tr>
