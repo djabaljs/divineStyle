@@ -53,6 +53,10 @@ class Attribute
 
     public $text;
 
+    public $lengths =  [];
+
+    public $colors = [];
+
     /**
      * @ORM\Column(type="string", length=255)
      */

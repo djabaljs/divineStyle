@@ -28,7 +28,7 @@ class ProviderProduct
     private $provider;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Product::class, inversedBy="providerProducts")
+     * @ORM\ManyToOne(targetEntity=Product::class, inversedBy="providerProducts", cascade={"persist"})
      * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $product;
@@ -37,6 +37,16 @@ class ProviderProduct
      * @ORM\Column(type="integer")
      */
     private $quantity;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Length::class, inversedBy="providerProducts")
+     */
+    private $length;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Color::class, inversedBy="providerProducts")
+     */
+    private $color;
 
     public function getId(): ?int
     {
@@ -76,6 +86,30 @@ class ProviderProduct
     public function setProduct(?Product $product): self
     {
         $this->product = $product;
+
+        return $this;
+    }
+
+    public function getLength(): ?Length
+    {
+        return $this->length;
+    }
+
+    public function setLength(?Length $length): self
+    {
+        $this->length = $length;
+
+        return $this;
+    }
+
+    public function getColor(): ?Color
+    {
+        return $this->color;
+    }
+
+    public function setColor(?Color $color): self
+    {
+        $this->color = $color;
 
         return $this;
     }

@@ -67,6 +67,7 @@ class ProductVariationRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('v')
                     ->innerJoin('v.product','p')
                     ->where('p.slug = :slug')
+                    ->andWhere('p.deleted = false')
                     ->setParameter('slug', $product->getSlug())
                     ->getQuery()
                     ->getResult()
@@ -238,7 +239,7 @@ class ProductVariationRepository extends ServiceEntityRepository
 
     }
 
-    public function findProductVariation($color, $length, $product)
+    public function findProductVariation($color, $length, $product, $shopName)
     {
         return  $this->createQueryBuilder('v')
                      ->innerJoin('v.color','c')
@@ -248,8 +249,58 @@ class ProductVariationRepository extends ServiceEntityRepository
                      ->andWhere('l.name LIKE :length')
                      ->setParameter('length', '%'.$length.'%')
                      ->innerJoin('v.product','p')
+                     ->andWhere('p.deleted = false')
                      ->andWhere('p.wcProductId = :id')
                      ->setParameter('id', $product->getWcProductId())
+                     ->InnerJoin('v.shop','s')
+                     ->andWhere('s.name = :name')
+                     ->setParameter('name', $shopName)
+                     ->getQuery()
+                     ->getResult()
+        ;
+
+    }
+
+    public function findOneProductBySlug($shop, $color, $length, $product)
+    {
+        return  $this->createQueryBuilder('v')
+                     ->andWhere('v.color = :color')
+                     ->setParameter('color',$color)
+                     ->andWhere('v.length = :length')
+                     ->setParameter('length', $length)
+                     ->innerJoin('v.product','p')
+                     ->andWhere('p.deleted = false')
+                     ->andWhere('p.slug = :slug')
+                     ->setParameter('slug', $product->getSlug())
+                     ->andWhere('v.shop = :shop')
+                     ->setParameter('shop', $shop)
+                     ->getQuery()
+                     ->getResult()
+        ;
+
+    }
+
+    public function findAllProductBySlug($product)
+    {
+        return  $this->createQueryBuilder('v')
+                   
+                     ->innerJoin('v.product','p')
+                     ->andWhere('p.deleted = false')
+                     ->andWhere('p.slug = :slug')
+                     ->setParameter('slug', $product->getSlug())
+                     ->getQuery()
+                     ->getResult()
+        ;
+
+    }
+
+    public function findProductNotDeletedVariation($product)
+    {
+        return  $this->createQueryBuilder('v')
+                     ->innerJoin('v.product','p')
+                     ->andWhere('p.deleted = false')
+                     ->andWhere('p.slug = :slug')
+                     ->setParameter('slug', $product->getSlug())
                      ->getQuery()
                      ->getResult()
         ;

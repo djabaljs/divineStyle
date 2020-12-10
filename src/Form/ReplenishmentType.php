@@ -3,11 +3,13 @@
 namespace App\Form;
 
 use App\Entity\Shop;
+use App\Entity\Color;
+use App\Entity\Length;
 use App\Entity\Product;
 use App\Entity\Provider;
 use App\Entity\Replenishment;
-use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityRepository;
+use App\Repository\ProductRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -39,6 +41,21 @@ class ReplenishmentType extends AbstractType
                     ;
                 }
             ])
+            ->add('lengths', EntityType::class, [
+                'label' => false,
+                'class' => Length::class,
+                'multiple' => true,
+                'required'=>false,
+                'mapped'=>true,
+
+            ])
+            ->add('colors', EntityType::class, [
+                'label' => false,
+                'class' => Color::class,
+                'required'=>false,
+                'multiple' => true,
+
+            ])
         ;
     }
 
@@ -47,6 +64,7 @@ class ReplenishmentType extends AbstractType
         $resolver->setDefaults([
             'data_class' => Replenishment::class,
             'products' => null
+            
         ]);
     }
 }

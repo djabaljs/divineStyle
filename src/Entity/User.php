@@ -102,7 +102,7 @@ class User implements UserInterface
     /**
      * @ORM\OneToMany(targetEntity=Width::class, mappedBy="register")
      */
-    private $widths;
+    // private $widths;
 
     /**
      * @ORM\OneToMany(targetEntity=Height::class, mappedBy="register")
@@ -145,7 +145,7 @@ class User implements UserInterface
         $this->categories = new ArrayCollection();
         $this->colors = new ArrayCollection();
         $this->lengths = new ArrayCollection();
-        $this->widths = new ArrayCollection();
+        // $this->widths = new ArrayCollection();
         $this->heights = new ArrayCollection();
         $this->attributes = new ArrayCollection();
         $this->versements = new ArrayCollection();
@@ -504,36 +504,36 @@ class User implements UserInterface
         return $this;
     }
 
-    /**
-     * @return Collection|Width[]
-     */
-    public function getWidths(): Collection
-    {
-        return $this->widths;
-    }
+    // /**
+    //  * @return Collection|Width[]
+    //  */
+    // public function getWidths(): Collection
+    // {
+    //     return $this->widths;
+    // }
 
-    public function addWidth(Width $width): self
-    {
-        if (!$this->widths->contains($width)) {
-            $this->widths[] = $width;
-            $width->setRegister($this);
-        }
+    // public function addWidth(Width $width): self
+    // {
+    //     if (!$this->widths->contains($width)) {
+    //         $this->widths[] = $width;
+    //         $width->setRegister($this);
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    public function removeWidth(Width $width): self
-    {
-        if ($this->widths->contains($width)) {
-            $this->widths->removeElement($width);
-            // set the owning side to null (unless already changed)
-            if ($width->getRegister() === $this) {
-                $width->setRegister(null);
-            }
-        }
+    // public function removeWidth(Width $width): self
+    // {
+    //     if ($this->widths->contains($width)) {
+    //         $this->widths->removeElement($width);
+    //         // set the owning side to null (unless already changed)
+    //         if ($width->getRegister() === $this) {
+    //             $width->setRegister(null);
+    //         }
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     /**
      * @return Collection|Height[]
@@ -542,7 +542,7 @@ class User implements UserInterface
     {
         return $this->heights;
     }
-
+    
     public function addHeight(Height $height): self
     {
         if (!$this->heights->contains($height)) {

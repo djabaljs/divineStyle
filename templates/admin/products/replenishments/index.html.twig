@@ -68,7 +68,7 @@
                             <div class="card-body">
                                 {{form_start(form)}}
                                     <div class="row">
-                                        <div class="col-md-6">
+                                        <div class="col-md-5">
                                            <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="replenishment_product">Produit à réapprovisionner</label>
@@ -81,9 +81,29 @@
                                                     {{form_row(form.provider, {attr:{'class': 'form-control', 'style':'height:50px'}})}}
                                                 </div>
                                             </div>
+                                            <div class="col-md-12 ">
+                                                <div class="form-group">
+                                                    <a type="buttonn" id="newVariation" class="btn btn-primary form-control" style="color:#fff;">Créer une nouvelle variation</a>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12 element">
+                                                <div class="form-group">
+                                                        <label for="product_lengths">Taille</label>
+                                                        {{form_row(form.lengths, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-12 element">
+                                                <div class="form-group">
+                                                    <label for="product_colors">Couleur</label>
+                                                    {{form_row(form.colors, {attr:{'class': 'form-control','style':'height:50px'}})}}
+                                                </div>
+                                                <a type="button" class="btn btn-info form-control" id="variationButton">Créer les variations pour tous les attributs</a>
+                                            </div>
+                                            <br/>
+                                            <div class="row" id="newVariationData">
+                                            </div>
                                         </div>
-                                        <div class="col-md-6" id="data">
-
+                                        <div class="col-md-7" id="data">
                                         </div>
                                         </div>
                                         <div class="col-md-6">
@@ -110,12 +130,23 @@
 $('#replenishment_product').select2();
 $('#replenishment_provider').select2();
 $('#replenishment_shop').select2();
+$('#replenishment_lengths').select2({
+    placeholder: "Tailles disponibles",
+    allowClear: true
+});
+$('#replenishment_colors').select2({
+    placeholder: "Couleurs disponibles",
+    allowClear: true
+});
 
-
-
+$('.element').hide();
+$('#newVariation').click(function(){
+    $('.element').show();
+})
 $('#replenishment_product').change(function(){
 
-    $.ajax({
+    if($(this).val() != 0){
+          $.ajax({
         url: 'http://localhost:8000/user/admin/products/replenishment/',
         type: 'POST',
         data: {isAjaxQetRequest: true, product:$(this).val()},
@@ -124,7 +155,21 @@ $('#replenishment_product').change(function(){
         }
     })
 
+    }
+  
 })
+$('#variationButton').click(function(){
+    var lenghts = $('#replenishment_lengths').val();
+    var colors =  $('#replenishment_colors').val();
 
+    $.ajax({
+        url: "{{path('admin_products_variations_create')}}",
+        type: 'POST',
+        data: {lengths: lenghts, colors: colors},
+        success: function(data){
+            $('#newVariationData').html(data);
+        }
+    });
+})
 </script>
 {% endblock %}

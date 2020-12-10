@@ -14,6 +14,10 @@ class Replenishment{
 
     private $shop;
 
+    public $lengths = [];
+
+    public $colors = [];
+
     /**
      * Get the value of product
      */ 

@@ -315,16 +315,16 @@ $('#customerx').hide();
 $('*[id*=customerProperties]').hide();
 var total = $('#totals').val();
 
-
 function cartAction(action,product_code) {
 var queryString = "";
+
 	if(action != "") {
 		switch(action) {
 			case "add":
 				queryString = 'action='+action+'&code='+ product_code+'&quantity='+$("#qty_"+product_code).val()+'&color='+$("#color-"+product_code).val()+'&length='+$("#length-"+product_code).val();
 			break;
 			case "remove":
-				queryString = 'action='+action+'&code='+ product_code;
+				queryString = 'action='+action+'&code='+ product_code+'&quantity='+$("#qty_"+product_code).val()+'&color='+$("#color-"+product_code).val()+'&length='+$("#length-"+product_code).val();
 			break;
 			case "empty":
 				queryString = 'action='+action;
@@ -336,17 +336,27 @@ var queryString = "";
 	url: "http://localhost:8000/user/manager/products/orders/create",
 	data:queryString,
 	type: "POST",
-    dataType: 'json',
 	success:function(data){
         if(data.status == 201){
           $('#cart-item').append(data.response);
           $('#total').html('<strong>Total: Cfa '+data.total+'</strong>');
           $('#endTotal').html('<strong>NET: Cfa '+data.total+' </strong>');
+          $('[id^=btnRemoveAction-]').click(function(){
+                $('#'+this.id+'').each(function(){
+                    alert(this.id)
+                    cartAction("remove",data.code);
+                })
+          });
+
         }else if(data.status == 200){
-       
           $('#cart-item').html(data.response);
           $('#total').html('<strong>Total: Cfa '+data.total+' </strong>');
           $('#endTotal').html('<strong>NET: Cfa '+data.total+' </strong>');
+          $('[id^=btnRemoveAction-]').click(function(){
+           $('#'+this.id+'').each(function(){
+               cartAction("remove",data.code);
+             })
+          });
         }
 		if(action != "") {
 			switch(action) {
@@ -424,7 +434,6 @@ $("#billing_amountPaid").keypress(function(){
          $("#billing_paymentType").prop("required", true);
     }
 });
-
 
 
 

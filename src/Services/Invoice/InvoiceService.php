@@ -105,15 +105,20 @@ class InvoiceService{
        foreach($orders as $key => $order){
         $variationHTML = '';
 
-        if($order->getProducts()->getProductVariations()){
-            foreach($order->getProducts()->getProductVariations() as $variation){
-                $variationHTML .='<td>'.$variation->getLength().'</td>';
-                $variationHTML .='<td>'.$variation->getColor().'</td>';
+        if(!is_null($order->getProducts())){
+
+                if($order->getProducts()->getIsVariable()){
+
+                    foreach($order->getProducts()->getProductVariations() as $variation){
+                        $variationHTML .='<td>'.$variation->getLength().'</td>';
+                        $variationHTML .='<td>'.$variation->getColor().'</td>';
+                    }
+                }else{
+                    $variationHTML .='<td>//</td>';
+                    $variationHTML .='<td>//</td>';
+             
              }  
     
-        }else{
-            $variationHTML .='<td>0</td>';
-            $variationHTML .='<td>0</td>';
         }
        
          $key += 1;

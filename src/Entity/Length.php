@@ -42,9 +42,15 @@ class Length
      */
     private $slug;
 
+    /**
+     * @ORM\OneToMany(targetEntity=ProviderProduct::class, mappedBy="length")
+     */
+    private $providerProducts;
+
     public function __construct()
     {
         $this->productVariations = new ArrayCollection();
+        $this->providerProducts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -131,6 +137,37 @@ class Length
     public function setSlug($slug)
     {
         $this->slug = $slug;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|ProviderProduct[]
+     */
+    public function getProviderProducts(): Collection
+    {
+        return $this->providerProducts;
+    }
+
+    public function addProviderProduct(ProviderProduct $providerProduct): self
+    {
+        if (!$this->providerProducts->contains($providerProduct)) {
+            $this->providerProducts[] = $providerProduct;
+            $providerProduct->setLength($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProviderProduct(ProviderProduct $providerProduct): self
+    {
+        if ($this->providerProducts->contains($providerProduct)) {
+            $this->providerProducts->removeElement($providerProduct);
+            // set the owning side to null (unless already changed)
+            if ($providerProduct->getLength() === $this) {
+                $providerProduct->setLength(null);
+            }
+        }
 
         return $this;
     }

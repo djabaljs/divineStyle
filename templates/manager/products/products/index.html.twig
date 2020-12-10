@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css" href="{{asset('concept/assets/vendor/datatables/css/buttons.bootstrap4.css')}}">
     <link rel="stylesheet" type="text/css" href="{{asset('concept/assets/vendor/datatables/css/select.bootstrap4.css')}}">
     <link rel="stylesheet" type="text/css" href="{{asset('concept/assets/vendor/datatables/css/fixedHeader.bootstrap4.css')}}">
+    <link rel="stylesheet" href="{{asset('concept/assets/vendor/select2/css/select2.css')}}"/>
 {% endblock %}
 {% block body %}
 <div class="container-fluid dashboard-content ">
@@ -42,7 +43,7 @@
                     <!-- ============================================================== -->
                 </div>
                 <br/>
-                  {# <div class="row">
+                  <div class="row">
                     <!-- ============================================================== -->
                     <!-- button  -->
                     <!-- ============================================================== -->
@@ -53,7 +54,58 @@
                     <!-- button  -->
                     <!-- ============================================================== -->
                 </div>
-                <br/> #}
+                <br/>
+                 <div class="row">
+                    <!-- ============================================================== -->
+                    <!-- data table  -->
+                    <!-- ============================================================== -->
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Rechercher un produit</h5>
+                            </div>
+                            <div class="card-body">
+                                        {{form_start(form)}}
+                                         <div class="row">
+                                           <div class="col-md-2">
+                                                <div class="form-group">
+                                                    <label for="product_name">Nom</label>
+                                                    {{form_row(form.shop, {attr:{'class': 'form-control', 'placeholder':'Nom du produit','style':'height:50px'}})}}
+                                                </div>
+                                          </div>
+                                          <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label for="product_name">Nom</label>
+                                                    {{form_row(form.product, {attr:{'class': 'form-control', 'placeholder':'Nom du produit','style':'height:50px'}})}}
+                                                </div>
+                                          </div>
+                                          <div class="col-md-2">
+                                                <div class="form-group">
+                                                    <label for="product_name">Nom</label>
+                                                    {{form_row(form.length, {attr:{'class': 'form-control', 'placeholder':'Nom du produit','style':'height:50px'}})}}
+                                                </div>
+                                          </div>
+                                           <div class="col-md-2">
+                                                <div class="form-group">
+                                                    <label for="product_name">Nom</label>
+                                                    {{form_row(form.color, {attr:{'class': 'form-control', 'placeholder':'Nom du produit','style':'height:50px'}})}}
+                                                </div>
+                                          </div>
+                                           <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <br/>
+                                                    <button type="submit" class="btn btn-success"><i class="fas fa-search"></i> Effectuer la recherche</button>
+                                                </div>
+                                            </div>  
+                                           </div>
+                                {{form_end(form)}}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ============================================================== -->
+                    <!-- end data table  -->
+                    <!-- ============================================================== -->
+                </div>
                 <!-- ============================================================== -->
                 <!-- end pageheader -->
                 <!-- ============================================================== -->
@@ -65,6 +117,7 @@
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="mb-0">Liste des produits</h5>
+                                <h2 align="right" id="result"></h2>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
@@ -73,6 +126,7 @@
                                             <tr>
                                                 <th>N°</th>
                                                 <th>Images</th>
+                                                <th>Boutique</th>
                                                 <th>Noms</th>
                                                 <th>Catégories</th>
                                                 <th>Prix  de vente</th>
@@ -84,9 +138,65 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                           {% for product in products %}
-                                             <tr>
-                                                <td>{{loop.index}}</td>
+                                            {% set total = 0 %}
+                                            {% set name = '' %}
+                                            {% if isSearch %}
+                                            {% if productsVariation is not empty %}
+                                            {% for variation in productsVariation %}
+                                            {% set name = variation.product.name %}
+                                            <tr>
+                                            <td>{{loop.index}}</td>
+                                            <td>
+                                            {% if variation.product.imageUrls is not empty  %}
+                                            <img src="{{variation.product.imageUrls[0]['src']}}" class="img-thumbnail" style="width:100px" />
+                                            {% else %}
+                                            <p>Aucune image</p>
+                                            {% endif %}
+                                            </td>
+                                            <td>{{variation.product.shop}}</td>
+                                            <td>{{variation.product.name}}</td>
+                                            <td>{{variation.product.category.name}}</td>
+                                            <td>{{variation.product.sellingPrice|format_currency('XOF')}}</td>
+                                            {% if variation.product.onSaleAmount is not null %}
+                                            <td>{{variation.product.getOnSaleAmount|format_currency('XOF')}}</td>
+                                            {% else %}
+                                            <td>{{ 0|format_currency('XOF')}}</td>
+                                            {% endif %}
+                                            <td>
+                                            {% if variation.product.isVariable %}
+                                                {% for variation in variation.product.productVariations %}
+                                                {{variation.length.name}}
+                                                {% endfor %}
+                                            {% endif %}
+                                            </td>
+                                            <td>
+                                            {% if variation.product.isVariable %}
+                                                {% for variation in variation.product.productVariations %}
+                                                {{variation.color.name}}
+                                                {% endfor %}
+                                            {% endif %}
+                                            </td>
+                                            <td {% if variation.product.minimumStock == variation.product.quantity or variation.product.quantity == 0  %} style="background:red;color:#FFF"{% else %} style="background:green; color:#FFF"{% endif %}>
+                                            {% if variation.product.isVariable %}
+                                                {% for variation in variation.product.productVariations %}
+                                                {{variation.quantity}}
+                                                {% set total = total + variation.quantity %}
+                                                {% endfor %}
+                                            {% else %}
+                                                {{product.quantity}}
+                                            {% endif %}
+                                            </td>
+                                            <td>
+                                            <a href="{{path('manager_products_show', {id: variation.product.id})}}" class="btn btn-info btn-xs"><i class="fas fa-eye"></i></a>
+                                            </td>
+                                            </tr>
+                                            {% endfor %}
+                                            {% elseif productsNotVariables is not empty  %}
+                                            {% set total = 0 %}
+                                            {% for product in productsNotVariables %}
+                                            {% set name = product.name %}
+                                            <tr>
+                                            <td>{{loop.index}}</td>
                                                 <td>
                                                 {% if product.imageUrls is not empty  %}
                                                 <img src="{{product.imageUrls[0]['src']}}" class="img-thumbnail" style="width:100px" />
@@ -94,6 +204,7 @@
                                                 <p>Aucune image</p>
                                                 {% endif %}
                                                 </td>
+                                                <td>{{product.shop}}</td>
                                                 <td>{{product.name}}</td>
                                                 <td>
                                                 {{product.category.name}}
@@ -105,41 +216,82 @@
                                                 <td>{{ 0|format_currency('XOF')}}</td>
                                                 {% endif %}
                                                 <td>
-                                                {% if product.isVariable %}
-                                                    {% for variation in product.productVariations %}
-                                                      {{variation.length.name}}
-                                                    {% endfor %}
-                                                {% endif %}
-                                          
+                                                //
                                                 </td>
                                                 <td>
-                                                 {% if product.isVariable %}
-                                                    {% for variation in product.productVariations %}
-                                                      {{variation.color.name}}
-                                                    {% endfor %}
-                                                {% endif %}
-                                          
+                                                //
                                                 </td>
                                                 <td {% if product.minimumStock == product.quantity or product.quantity == 0  %} style="background:red;color:#FFF"{% else %} style="background:green; color:#FFF"{% endif %}>
-                                                {% if product.isVariable %}
-                                                    {% for variation in product.productVariations %}
-                                                      {{variation.quantity}}
-                                                    {% endfor %}
-                                                {% else %}
-                                                     {{product.quantity}}
-                                                {% endif %}
+                                                    {{product.quantity}}
+                                                {% set total = total + product.quantity %}
 
                                                 </td>
                                                 <td>
                                                 <a href="{{path('manager_products_show', {id: product.id})}}" class="btn btn-info btn-xs"><i class="fas fa-eye"></i></a>
                                                 </td>
                                             </tr>
-                                           {% endfor %}
+                                            {% endfor %}
+                                            {% endif %}
+                                        {% else %}
+                                            {% for product in products %}
+                                            {% set total = total + product.quantity %}
+                                                <tr>
+                                                <td>{{loop.index}}</td>
+                                                <td>
+                                                {% if product.imageUrls is not empty  %}
+                                                <img src="{{product.imageUrls[0]['src']}}" class="img-thumbnail" style="width:100px" />
+                                                {% else %}
+                                                <p>Aucune image</p>
+                                                {% endif %}
+                                                </td>
+                                                <td>{{product.shop}}</td>
+                                                <td>{{product.name}}</td>
+                                                <td>{{product.category.name}}</td>
+                                                <td>{{product.sellingPrice|format_currency('XOF')}}</td>
+                                                {% if product.onSaleAmount is not null %}
+                                                <td>{{product.getOnSaleAmount|format_currency('XOF')}}</td>
+                                                {% else %}
+                                                <td>{{ 0|format_currency('XOF')}}</td>
+                                                {% endif %}
+                                                <td>
+                                                {% if product.isVariable %}
+                                                    {% for variation in product.productVariations %}
+                                                    {{variation.length.name}}
+                                                    {% endfor %}
+                                                {% else %}
+                                                  //
+                                                {% endif %}
+                                                </td>
+                                                <td>
+                                                {% if product.isVariable %}
+                                                    {% for variation in product.productVariations %}
+                                                    {{variation.color.name}}
+                                                    {% endfor %}
+                                                {% else %}
+                                                    //
+                                                {% endif %}
+                                                </td>
+                                                <td {% if product.minimumStock == product.quantity or product.quantity == 0  %} style="background:red;color:#FFF"{% else %} style="background:green; color:#FFF"{% endif %}>
+                                                {% if product.isVariable %}
+                                                    {% for variation in product.productVariations %}
+                                                    {{variation.quantity}}
+                                                    {% endfor %}
+                                                {% else %}
+                                                    {{product.quantity}}
+                                                {% endif %}
+                                                </td>
+                                                <td>
+                                                <a href="{{path('manager_products_show', {id: product.id})}}" class="btn btn-info btn-xs"><i class="fas fa-eye"></i></a>
+                                                </td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% endif %}
                                         </tbody>
                                         <tfoot>
                                             <tr>
                                                 <th>N°</th>
                                                 <th>Images</th>
+                                                <th>Boutique</th>
                                                 <th>Noms</th>
                                                 <th>Catégories</th>
                                                 <th>Prix  de vente</th>
@@ -150,6 +302,8 @@
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>
+                                        <input type="hidden" id ="productName" value="{{name}}">
+                                        <input type="hidden" id ="productQuantity" value="{{total}}">
                                     </table>
                                 </div>
                             </div>
@@ -166,6 +320,7 @@
     <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.22/js/dataTables.bootstrap4.min.js"></script>
+    <script src="{{asset('concept/assets/vendor/select2/js/select2.min.js')}}"></script>
 
 
     <script>
@@ -177,5 +332,13 @@
     });
    
     } );
+
+    $('#product_search_shop').select2();
+    $('#product_search_product').select2();
+    $('#product_search_length').select2();
+    $('#product_search_color').select2();
+
+    $('#result').html($('#productName').val() != "" ? $('#productName').val()+' :'+$('#productQuantity').val() : 'Produits :'+$('#productQuantity').val());
+
     </script>
 {% endblock %}

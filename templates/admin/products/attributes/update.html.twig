@@ -1,4 +1,8 @@
 {% extends 'base.html.twig' %}
+{% block stylesheets %}
+ <link rel="stylesheet" href="{{asset('concept/assets/vendor/select2/css/select2.css')}}"/>
+  
+{% endblock %}
 {% block body %}
 <div class="container-fluid dashboard-content ">
       <!-- ============================================================== -->
@@ -73,12 +77,23 @@
                                                 {{form_row(form.name, {attr:{'class': 'form-control', 'placeholder':'Nom de l\'attribut','style':'height:50px'}})}}
                                             </div>
                                         </div>
-                                        <div class="col-md-12">
-                                            <div class="form-group">
-                                                <label for="attribute_text">Valeurs séparées par (,)</label>
-                                                {{form_row(form.text, {attr:{'class': 'form-control','style':'height:100px','placeholder':'S|M|D'}})}}
+                                        {% if color == 1 %}
+                                         <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="attribute_colors">Couleurs utilisées pour les variations</label>
+                                                    {{form_row(form.colors)}}
+                                                </div>
                                             </div>
-                                        </div>
+                                        {% else %}
+                                          <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label for="attribute_lengths">Tailles utilisées pour les variations</label>
+                                                    {{form_row(form.lengths)}}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                     
+                                           
                                         <div class="col-md-12">
                                             <div class="form-group">
                                                 <label for="attribute_visible">Visible sur la page produit</label>
@@ -110,4 +125,17 @@
                 
 
 </div>
+{% endblock %}
+{% block javascripts %}
+ <script src="{{asset('concept/assets/vendor/select2/js/select2.min.js')}}"></script>
+ <script>
+    $('#attribute_lengths').select2({
+        placeholder: "Tailles disponibles",
+        allowClear: true
+    });
+    $('#attribute_colors').select2({
+        placeholder: "Tailles disponibles",
+        allowClear: true
+    });
+</script>
 {% endblock %}

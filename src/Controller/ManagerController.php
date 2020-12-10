@@ -23,7 +23,9 @@ use App\Form\DeliveryType;
 use App\Entity\OrderReturn;
 use App\Form\VersementType;
 use App\Entity\OrderProduct;
+use App\Entity\ProductSearch;
 use App\Form\OrderReturnType;
+use App\Form\ProductSearchType;
 use App\Entity\ProductVariation;
 use App\Repository\ShopRepository;
 use App\Form\OrderReturnUpdateType;
@@ -132,50 +134,56 @@ class ManagerController extends AbstractController
     }
    
    /**
-     * @Route("/products/products", name="manager_products", methods={"GET"})
+     * @Route("/products/products", name="manager_products", methods={"GET", "POST"})
      * @return Response
      */
-    public function products()
+    public function products(Request $request)
     {
-        $products = $this->manager->getRepository(Product::class)->findBy(['shop' => $this->shop, 'deleted' => 0]);
-        // dd($products);
-        $productNames = [];
+        $shopProducts = $this->manager->getRepository(Product::class)->findBy(['shop' => $this->shop, 'deleted' => 0]);
+        
+        $products = $this->manager->getRepository(Product::class)->fundProductsNotDeleted();
+        $slugArray = [];
         $productArray = [];
-
-
-        $colors = [];
-        $lengths = [];
-
-
-
-        // foreach($products as $product){
-        //     if(!in_array($product->getSlug(), $productNames)){
-        //          $productNames[] = $product->getSlug();
-        //          $productArray[$product->getSlug()] = $product;
-
-        //             // foreach($product->getLengths() as $length){
-        //             //     if(!in_array($length, $productLengths)){
-        //             //         $productLengths[] = $length;
-
-        //                     // foreach($product->getColors() as $color){
-        //                     //     if(!in_array($color, $productColors)){
-        //                     //         $productColors[] = $color;
-        //                         // }
-        //                     //  }
-                        
-        //                 // }
-        //         // }
-        //     }else{
-        //         $productx = $productArray[$product->getSlug()];
-                
-        //         $productx->setQuantity($productx->getQuantity() + $product->getQuantity());
-
-        //         $productArray[$product->getSlug()] = $productx;
-        //     }
-        // }
+ 
+        foreach($products as $product){
+            if(!in_array($product->getSlug(), $slugArray)){
+                $slugArray[] = $product->getSlug();
+                $productArray[] = $product;
+            }
+        }
+ 
+         $productsVariation = [];
+         $productsNotVariables = [];
+         $productSearch = new ProductSearch();
+         $form = $this->createForm(ProductSearchType::class, $productSearch, ['products' => $productArray]);
+         $form->handleRequest($request);
+ 
+         $isSearch = false;
+         if($form->isSubmitted() && $form->isValid()){
+            try{
+ 
+ 
+             $product = $this->manager->getRepository(Product::class)->find($productSearch->getProduct());
+ 
+             if($product->getIsVariable()){
+                   $productsVariation = $this->manager->getRepository(ProductVariation::class)->searchProducts($productSearch);
+             }else{
+                 $productsNotVariables = $this->manager->getRepository(Product::class)->searchProducstNotVariables($productSearch);
+             }
+             $isSearch = true;
+ 
+            }catch(\Exception $e){
+ 
+            }
+ 
+         }
 
         return $this->render('manager/products/products/index.html.twig', [
-            'products' => $products
+            'products' => $products,
+            'productsVariation' => $productsVariation,
+            'isSearch' => $isSearch,
+            'productsNotVariables' => $productsNotVariables,
+            'form' => $form->createView()
         ]);
     }
 
@@ -290,64 +298,77 @@ class ManagerController extends AbstractController
            $total = 0;
            $color = null;
            $length = null;
+           $code = 0;
             if($request->get('action')){
             
                switch($request->get('action')){
                     case "add":
                         if($request->get('quantity')){
-
+                            
                             $product = $this->manager->getRepository(Product::class)->findProductVariations($request->get('code'), $this->shop);
-                           
-                            $color = $this->manager->getRepository(Color::class)->find($request->get('color'));
-                            $length = $this->manager->getRepository(Length::class)->find($request->get('length'));
+                            
+                            $color = '';
+                            $length = '';
+
+                            if(is_null($product)){
+                                 $product = $this->manager->getRepository(Product::class)->findOneBy(['id' => $request->get('code'), 'shop' => $this->shop]);
+                                
+                                 $color = '//';
+                                 $length = '//';
+                            }else{
+
+                                $color = $this->manager->getRepository(Color::class)->find($request->get('color'));
+                                $length = $this->manager->getRepository(Length::class)->find($request->get('length'));
+
+                                $color = $color->getName();
+                                $length = $length->getName();
+                            }
+
                             $itemArray = [
                                 $product->getId() =>[
                                     'name'=>$product->getName(), 
                                     'code'=>$product->getId(), 
                                     'quantity'=>$request->get("quantity"), 
-                                    'length' => $length->getName(),
-                                    'color' => $color->getName(),
+                                    'length' => $length,
+                                    'color' => $color,
                                     'price'=> $product->getOnSaleAmount() != null ? $product->getOnSaleAmount() : $product->getSellingPrice()
                                      ]
                                 ];
-                              
+                              $code = $product->getId();
                                 if(!empty($session->get("cart_item"))) {
                                     if(in_array($product->getId(), $session->get("cart_item"))) {
                                         foreach($session->get("cart_item") as $k => $v) {
-                                                if($product->getId() == $k)
-                                                    $session->get("cart_item")[$k]["quantity"] = $request->get("quantity");
-                                                    $session->get("cart_item")[$k]["length"] = $color->getName();
-                                                    $session->get("cart_item")[$k]["color"] = $length->getName();
+                                            if($product->getId() == $k)
+                                                $session->get("cart_item")[$k]["quantity"] = $request->get("quantity");
+                                                $session->get("cart_item")[$k]["length"] = $color;
+                                                $session->get("cart_item")[$k]["color"] = $length;
 
-
-                                        }
-                                    } else {
+                                            }
+                                    }else{
 
                                         $items = $session->get('cart_item', []);
                                         array_push($items, [
                                             'name'=>$product->getName(), 
                                             'code'=>$product->getId(), 
                                             'quantity'=>$request->get("quantity"), 
-                                            'length' => $length->getName(),
-                                            'color' => $color->getName(),
+                                            'length' => $length,
+                                            'color' => $color,
                                             'price'=> $product->getOnSaleAmount() != null ? $product->getOnSaleAmount() : $product->getSellingPrice()
 
                                         ]);
 
                                         $session->set('cart_item', $items);
-
-                                         $i = 1;
                                             $response .= '<tr id="element-'.$product->getId().'">';
                                                 $response .= '<td>'.$product->getName().'</td>';
-                                                $response .= '<td>'.$length->getName().'</td>';
-                                                $response .= '<td>'.$color->getName().'</td>';
+                                                $response .= '<td>'.$length.'</td>';
+                                                $response .= '<td>'.$color.'</td>';
                                                 if(is_null($product->getOnSaleAmount())){
                                                     $response .= '<td>'.number_format($product->getSellingPrice()).'</td>';
                                                    }else{
                                                     $response .= '<td>'.number_format($product->getOnSaleAmount()).'</td>';
                                                    }
                                                 $response .= '<td>'.$request->get('quantity').'</td>';
-                                                $response .= '<td><button onclick="cartAction("remove","'.$product->getId().'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-trash"></i></button></td>';
+                                                $response .= '<td><button id="btnRemoveAction-'.$request->get('code').'"  class=" btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-trash"></i></button></td>';
                                             $response .= '</tr>';
                                         foreach($session->get('cart_item', []) as $v){
                                             $total += $v['price'] * $v['quantity'];
@@ -361,15 +382,15 @@ class ManagerController extends AbstractController
                                     $i = 1;
                                     $response .= '<tr id="element-'.$product->getId().'">';
                                         $response .= '<td>'.$product->getName().'</td>';
-                                        $response .= '<td>'.$length->getName().'</td>';
-                                        $response .= '<td>'.$color->getName().'</td>';
+                                        $response .= '<td>'.$length.'</td>';
+                                        $response .= '<td>'.$color.'</td>';
                                         if(is_null($product->getOnSaleAmount())){
                                             $response .= '<td>'.number_format($product->getSellingPrice()).'</td>';
                                            }else{
                                             $response .= '<td>'.number_format($product->getOnSaleAmount()).'</td>';
                                            }
                                         $response .= '<td>'.$request->get('quantity').'</td>';
-                                        $response .= '<td><button onclick="cartAction("remove","'.$product->getId().'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-trash"></i></button></td>';
+                                        $response .= '<td><button id="btnRemoveAction-'.$request->get('code').'"  class=" btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-trash"></i></button></td>';
                                     $response .= '</tr>';
 
                                     foreach($session->get('cart_item', []) as $v){
@@ -381,44 +402,91 @@ class ManagerController extends AbstractController
                     case "remove":
                         if(!empty($session->get("cart_item"))) {
                             foreach($session->get("cart_item") as $k => $v) {
-                                    if($request->get("code") == $k){
-                                        $code = $request->get("code");
-                                        $items = $session->get('cart_item', []);
-                                        unset($items[$k]);
-                                        $session->set('cart_item', $items);
+                               $color = $this->manager->getRepository(Color::class)->find($request->get('color'));
+                               $length = $this->manager->getRepository(Length::class)->find($request->get('length'));
+                                    // if($session->get("cart_item")[$k]['code']){
 
-                                        foreach($session->get('cart_item', []) as $v){
-                                            $total += $v['price'] * $v['quantity'];
-                                                $response .= '<tr id="element-'.$v['code'].'">';
-                                                $response .= '<td>'.$v['name'].'</td>';
-                                                $response .= '<td>'.$length.'</td>';
-                                                $response .= '<td>'.$color.'</td>';
-                                                $response .= '<td>'.number_format($v['price']).'</td>';
-                                                $response .= '<td>'.$v['quantity'].'</td>';
-                                                $response .= '<td><button onclick="cartAction("remove","'.$v["code"].'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-trash"></i></button></td>';
-                                                $response .= '</tr>';
-                                        }
+                                        $product = $this->manager->getRepository(Product::class)->findOneBy(['id' => $request->get('code'),'deleted' => 0]);
+                                        $color = $this->manager->getRepository(Color::class)->find($request->get('color'));
+                                        $length = $this->manager->getRepository(Length::class)->find( $request->get('length'));
+                                        
 
-                                    }else{
-                                        $code = $request->get("code");
-                                        $items = $session->get('cart_item', []);
-                                        unset($items[$k]);
-                                        $session->set('cart_item', $items);
+                                       $element = [];
+                                       if(!is_null($product) && !is_null($color) && !is_null($length)){
+                                        $element = [
+                                            "name" => $product->getName(),
+                                            "code" => $product->getId(),
+                                            "quantity" => $request->get("quantity"),
+                                            "color" => $color->getName(),
+                                            "length" => $length->getName(),
+                                            "price" => $product->getOnSaleAmount() != null ? $product->getOnSaleAmount():  $product->getSellingPrice()
+                                        ];
+                                       }
 
-                                        foreach($session->get('cart_item', []) as $v){
-                                            $total += $v['price'] * $v['quantity'];
+                                      if(!empty($element)){
 
-                                            $response .= '<tr id="element-'.$v['code'].'">';
-                                            $response .= '<td>'.$v['name'].'</td>';
-                                            $response .= '<td>'.$length.'</td>';
-                                            $response .= '<td>'.$color.'</td>';
-                                            $response .= '<td>'.number_format($v['price']).'</td>';
-                                            $response .= '<td>'.$v['quantity'].'</td>';
-                                            $response .= '<td><button onclick="cartAction("remove","'.$v["code"].'");" class="btnRemoveAction btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-trash"></i></button></td>';
-                                            $response .= '</tr>';
-                                        }
+                                            $items = $session->get('cart_item', []);
 
-                                    }
+                                            $elementKey = array_search($element, $items);
+                                            
+                                            if(count($items) == 1){
+                                                $session->remove('cart_item');
+
+                                                foreach($session->get('cart_item', []) as $v){
+                                                    $total += $v['price'] * $v['quantity'];
+                                                        $response .= '<tr>';
+                                                        $response .= '</tr>';
+                                                }
+                                            }else{
+
+                                            unset($items[$elementKey]);
+                                            $session->set('cart_item', $items);
+                                        
+                                            foreach($session->get('cart_item', []) as $v){
+                                                $total += $v['price'] * $v['quantity'];
+                                                    $response .= '<tr id="element-'.$v['code'].'">';
+                                                    $response .= '<td>'.$v['name'].'</td>';
+                                                    $response .= '<td>'.$length.'</td>';
+                                                    $response .= '<td>'.$color.'</td>';
+                                                    $response .= '<td>'.number_format($v['price']).'</td>';
+                                                    $response .= '<td>'.$v['quantity'].'</td>';
+                                                    $response .= '<td><button id="btnRemoveAction-'.$v['code'].'"   class=" btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-trash"></i></button></td>';
+                                                    $response .= '</tr>';
+                                                }
+                                            }
+                                      }else{
+                                        $session->remove('cart_item');
+                                        $response .= '<tr>';
+                                        $response .= '</tr>';
+                                      }
+
+                                    
+                                   
+
+                                    // }else{
+
+                                    //     $code = $request->get("code");
+                                        
+                                    //     $items = $session->get('cart_item', []);
+                                    
+                                    //     unset($items[$k]);
+                                    //     $session->set('cart_item', $items);
+
+                                    //     foreach($session->get('cart_item', []) as $v){
+                                    //         $total += $v['price'] * $v['quantity'];
+
+                                    //         $response .= '<tr id="element-'.$v['code'].'">';
+                                    //         $response .= '<td>'.$v['name'].'</td>';
+                                    //         $response .= '<td>'.$length.'</td>';
+                                    //         $response .= '<td>'.$color.'</td>';
+                                    //         $response .= '<td>'.number_format($v['price']).'</td>';
+                                    //         $response .= '<td>'.$v['quantity'].'</td>';
+                                    //         $response .= '<td><button id="btnRemoveAction-'.$v['code'].'"  class=" btn btn-danger btn-sm" style="color:#fff;"><i class="fas fa-trash"></i></button></td>';
+                                    //         $response .= '</tr>';
+                                    //     }
+
+                                    // }
+
                                     if(empty($session->get("cart_item"))){
                                         $items = $session->get('cart_item', []);
                                         unset($items[$k]);
@@ -436,7 +504,7 @@ class ManagerController extends AbstractController
                }
             }
 
-            return $request->get('action') == 'add' ? $this->json(['status' => 201,'response' => $response, 'total' => number_format($total)]): $this->json(['status' => 200,'response' => $response, 'code' => $code, 'total'=> number_format($total)]);
+            return $request->get('action') == 'add' ? $this->json(['status' => 201,'response' => $response, 'total' => number_format($total), 'code' => $code]): $this->json(['status' => 200,'response' => $response, 'code' => $code, 'total'=> number_format($total)]);
         }
 
 

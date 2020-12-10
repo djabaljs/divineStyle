@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Entity\Shop;
 use App\Entity\OrderSearch;
 use App\Entity\PaymentType;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -23,6 +24,11 @@ class OrderSearchByShopType extends AbstractType
                 'placeholder' => 'Magasin',
                 'label' => false,
                 'required' => false,
+                'query_builder' => function(EntityRepository $er){
+                    return $er->createQueryBuilder('s')
+                              ->where('s.deleted = false')
+                    ;
+                }
             ])
             ->add('start', DateType::class, [
                 'label' => false,
