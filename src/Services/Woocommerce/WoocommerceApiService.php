@@ -2,7 +2,11 @@
 
 namespace App\Services\Woocommerce;
 
+use App\Entity\Shop;
+use App\Entity\Color;
+use App\Entity\Length;
 use App\Entity\Product;
+use App\Entity\ProviderProduct;
 use App\Entity\ProductVariation;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\ProductVariationRepository;
@@ -484,10 +488,307 @@ class WoocommerceApiService  extends AbstractController
         $element = [];
         $variationArray = [];
         $shopVariation = [];
+        $i = 0;
+
+        foreach($datas['quantity'] as $quantityKey => $data){
+
+            $element = [
+                'color' => $datas['color'][$quantityKey],
+                'length' => $datas['length'][$quantityKey],
+            ];
+
+            if(!in_array($element, $array)){
+                $array[$i] = $element;
+                $variationArray[$i] = $element;
+                $variationArray[$i]['quantity'] = $datas['quantity'][$quantityKey];
+                $variationArray[$i]['shop'] = $datas['shop'][$quantityKey];
+
+            }else{
+                $key = array_search($element,$array);
+                $el = $variationArray[$key];
+                $quantity = $el['quantity'];
+                $quantity += $datas['quantity'][$quantityKey];
+                $variationArray[$key]['quantity'] = $quantity;
+            }      
+
+            $shopVariation[$i]['shop']= $datas['shop'][$quantityKey];
+            $shopVariation[$i]['color'] = $datas['color'][$quantityKey];
+            $shopVariation[$i]['length'] = $datas['length'][$quantityKey];
+            $shopVariation[$i]['quantity'] = $datas['quantity'][$quantityKey];
+
+
+            $i++;
+        }
+
+
+        foreach($variationArray as $key => $variation){
+
+            $newVariation = new ProductVariation();
+            $providerProduct = new ProviderProduct();
+            
+            try{
+                $response =   $this->client->request(
+                    "POST",
+                    $this->endpoint.'products/'.$wcPid.'/variations', [
+                    // use a different HTTP Basic authentication only for this request
+                    'auth_basic' => [$this->username, $this->password],
+                    "body" => [
+                        "regular_price" => $product->getSellingPrice(),
+                        'stock_quantity' => $variation['quantity'],
+                        'manage_stock' => true,
+                        'optional_selected' => true,
+                        'on_sale' => true,
+                        'selected' => true,
+                        "attributes" => [
+                            [
+                                'id' => 4,
+                                "name" => "Couleur",
+                                "slug" => "pa_couleur",
+                                "option" => $variation['color']
+                            ],
+                            [
+                                'id' => 1,
+                                "name" => "Taille",
+                                "slug" => "pa_taille",
+                                "option" => $variation['length']
+
+                            ]
+                        ],
+                    ]
+                ]);
+                    
+                $statusCode = $response->getStatusCode();
+                // $statusCode = 200
+                if($statusCode === 201){
+
+                    $contentType = $response->getHeaders()['content-type'][0];
+                    // $contentType = 'application/json'
+                    // $content = '{"id":521583, "name":"symfony-docs", ...}'
+                    $content = $response->toArray();
+                    // $content = ['id' => 521583, 'name' => 'symfony-docs', ...]
+                
+                    $shop = $this->manager->getRepository(Shop::class)->findOneBy(['name' => $shopVariation[$key]['shop']]);
+                    $color  = $this->manager->getRepository(Color::class)->findOneBy(['name' => $shopVariation[$key]['color']]);
+                    $length  = $this->manager->getRepository(Length::class)->findOneBy(['name' => $shopVariation[$key]['length']]);
+                    
+                    $productC = clone($product);
+                    
+                    $productC->setDeleted(false);
+                    $productC->setShop($shop);
+                    $productC->setQuantity($shopVariation[$key]['quantity']);
+                   
+
+                    $newVariation->setColor($color);
+                    $newVariation->setLength($length);
+                    $newVariation->setShop($shop);
+                    $newVariation->setProduct($productC);
+                    $newVariation->setQuantity($shopVariation[$key]['quantity']);
+                    $newVariation->setVariationId($content['id']);
+
+                    $providerProduct->setProvider($productC->getProvider());
+                    $providerProduct->setColor($color);
+                    $providerProduct->setLength($length);
+                    $providerProduct->setQuantity($shopVariation[$key]['quantity']);
+                    $providerProduct->setProduct($productC);
+                    
+                    $this->manager->persist($newVariation);
+                    $this->manager->persist($providerProduct);
+
+                }
+            }catch(\Exception $e){
+            }
+
+
+            
+          
+        
+        }
+
+    }
+
+    public function updateOneVariationQuantity($wcPid,$variationId, $quantity)
+    {
         try{
+
+          $response =  $this->client->request(
+                "PUT",
+                    $this->endpoint.'products/'.$wcPid.'/variations/'.$variationId, [
+                    // use a different HTTP Basic authentication only for this request
+                    'auth_basic' => [$this->username, $this->password],
+                    "body" => [
+                        'stock_quantity' => $quantity,
+                    ]
+                ]);
+
+            $statusCode = $response->getStatusCode();
+                // $statusCode = 200
+
+                if($statusCode === 200){
+
+                    $contentType = $response->getHeaders()['content-type'][0];
+                    // $contentType = 'application/json'
+                    $content = $response->getContent();
+                    // $content = '{"id":521583, "name":"symfony-docs", ...}'
+                    $content = $response->toArray();
+                    // $content = ['id' => 521583, 'name' => 'symfony-docs', ...]
+                    return $content;
+
+                }
+        }catch(\Exception $e){
+            throw $e;
+        }
+    }
+
+    public function createReplenishementVariations($wcPid, $product, $datas)
+    {
+               
+        $array = [];
+        $element = [];
+        $variationArray = [];
+        $shopVariation = [];
+        $i = 0;
+
+        foreach($datas['quantity'] as $quantityKey => $data){
+
+            $element = [
+                'color' => $datas['color'][$quantityKey],
+                'length' => $datas['length'][$quantityKey],
+            ];
+
+            if(!in_array($element, $array)){
+                $array[$i] = $element;
+                $variationArray[$i] = $element;
+                $variationArray[$i]['quantity'] = $datas['quantity'][$quantityKey];
+                $variationArray[$i]['shop'] = $datas['shop'][$quantityKey];
+
+            }else{
+                $key = array_search($element,$array);
+                $el = $variationArray[$key];
+                $quantity = $el['quantity'];
+                $quantity += $datas['quantity'][$quantityKey];
+                $variationArray[$key]['quantity'] = $quantity;
+            }      
+
+            $shopVariation[$i]['shop']= $datas['shop'][$quantityKey];
+            $shopVariation[$i]['color'] = $datas['color'][$quantityKey];
+            $shopVariation[$i]['length'] = $datas['length'][$quantityKey];
+            $shopVariation[$i]['quantity'] = $datas['quantity'][$quantityKey];
+
+
+            $i++;
+        }
+
+
+        $variationExist = false;
+        $variationClone = null;
+        foreach($variationArray as $key => $variation){
+
+            $newVariation = new ProductVariation();
+            $providerProduct = new ProviderProduct();
+               
+            $productVariation = $this->manager->getRepository(ProductVariation::class)->findProductVariation($variation['color'], $variation['length'], $product, $variation['shop']);
+
+                  if(!empty($productVariation)){
+                    foreach($productVariation as $variationClone){
+                        $variationClone->setQuantity($variationClone->getQuantity() + $variation['quantity']);
+                        $productClone = $variationClone->getProduct();
+                        $productClone->setQuantity($variationClone->getQuantity());
+                        
+                        $this->manager->persist($productClone);
+                        $this->manager->persist($variationClone);
+
+                        $this->updateOneVariationQuantity($productClone->getWcProductId(), $variationClone->getVariationId(), $variationClone->getQuantity());
+                    }
+                }else{
+
+
+                try{
+                    $response =   $this->client->request(
+                        "POST",
+                        $this->endpoint.'products/'.$wcPid.'/variations', [
+                        // use a different HTTP Basic authentication only for this request
+                        'auth_basic' => [$this->username, $this->password],
+                        "body" => [
+                            "regular_price" => $product->getSellingPrice(),
+                            'stock_quantity' => $variation['quantity'],
+                            'manage_stock' => true,
+                            'optional_selected' => true,
+                            'on_sale' => true,
+                            'selected' => true,
+                            "attributes" => [
+                                [
+                                    'id' => 4,
+                                    "name" => "Couleur",
+                                    "slug" => "pa_couleur",
+                                    "option" => $variation['color']
+                                ],
+                                [
+                                    'id' => 1,
+                                    "name" => "Taille",
+                                    "slug" => "pa_taille",
+                                    "option" => $variation['length']
+
+                                ]
+                            ],
+                        ]
+                    ]);
+                        
+                    $statusCode = $response->getStatusCode();
+                    // $statusCode = 200
+                    if($statusCode === 201){
+
+                        $contentType = $response->getHeaders()['content-type'][0];
+                        // $contentType = 'application/json'
+                        // $content = '{"id":521583, "name":"symfony-docs", ...}'
+                        $content = $response->toArray();
+                        // $content = ['id' => 521583, 'name' => 'symfony-docs', ...]
+                    
+                        $shop = $this->manager->getRepository(Shop::class)->findOneBy(['name' => $shopVariation[$key]['shop']]);
+                        $color  = $this->manager->getRepository(Color::class)->findOneBy(['name' => $shopVariation[$key]['color']]);
+                        $length  = $this->manager->getRepository(Length::class)->findOneBy(['name' => $shopVariation[$key]['length']]);
+                        
+                        $productC = clone($product);
+                        
+                        $productC->setDeleted(false);
+                        $productC->setShop($shop);
+                        $productC->setQuantity($shopVariation[$key]['quantity']);
+                    
+
+                        $newVariation->setColor($color);
+                        $newVariation->setLength($length);
+                        $newVariation->setShop($shop);
+                        $newVariation->setProduct($productC);
+                        $newVariation->setQuantity($shopVariation[$key]['quantity']);
+                        $newVariation->setVariationId($content['id']);
+
+                        $providerProduct->setProvider($productC->getProvider());
+                        $providerProduct->setColor($color);
+                        $providerProduct->setLength($length);
+                        $providerProduct->setQuantity($shopVariation[$key]['quantity']);
+                        $providerProduct->setProduct($productC);
+                        
+                        $this->manager->persist($newVariation);
+                        $this->manager->persist($providerProduct);
+
+                    }
+                }catch(\Exception $e){
+                }
+           }
+
+        }
+
+    }
+    public function updateReplenishmentVariation($wcPid,$product,$datas)
+    {
+
+        $array = [];
+        $element = [];
+        $variationArray = [];
+
+ 
             $i = 0;
             foreach($datas['quantity'] as $quantityKey => $data){
-
+               
                 $element = [
                     'color' => $datas['color'][$quantityKey],
                     'length' => $datas['length'][$quantityKey],
@@ -497,40 +798,43 @@ class WoocommerceApiService  extends AbstractController
                     $array[$i] = $element;
                     $variationArray[$i] = $element;
                     $variationArray[$i]['quantity'] = $datas['quantity'][$quantityKey];
-                    $variationArray[$i]['shop'] = $datas['shop'][$quantityKey];
+                    $variationArray[$i]['variationId'] = $datas['variationId'];
+                    $variationArray[$i]['shop'] = $datas['shop'];
 
+                    
                 }else{
+
                     $key = array_search($element,$array);
                     $el = $variationArray[$key];
                     $quantity = $el['quantity'];
                     $quantity += $datas['quantity'][$quantityKey];
                     $variationArray[$key]['quantity'] = $quantity;
                 }      
-
+                
                 $shopVariation[$i]['shop']= $datas['shop'][$quantityKey];
                 $shopVariation[$i]['color'] = $datas['color'][$quantityKey];
                 $shopVariation[$i]['length'] = $datas['length'][$quantityKey];
                 $shopVariation[$i]['quantity'] = $datas['quantity'][$quantityKey];
 
-
                 $i++;
             }
 
-
-            $shopVariationId = [];
-            $variationExist = false;
             foreach($variationArray as $key => $variation){
+              
+            $variations = $this->manager->getRepository(ProductVariation::class)->findProductVariation($shopVariation[$key]['color'],$shopVariation[$key]['length'], $product, $shopVariation[$key]['shop']);
+            
+            if(!empty($variations)){
 
-                    $variations = $this->manager->getRepository(ProductVariation::class)->findProductVariation($shopVariation[$key]['color'],$shopVariation[$key]['length'], $product, $shopVariation[$key]['shop']);
-                    
-                    foreach($variations as $v){
-                        if($v->getVariationId()){
-                            $variationExist = true;
-                        }
+                foreach($variations as $v){
+                    if($v->getVariationId()){
+                        $variationExist = true;
+                        $vClone = $v;
                     }
+                }
 
-                 
-                    if(!$variationExist){
+             
+                if(!$variationExist){
+                    try{
                         $response =   $this->client->request(
                             "POST",
                             $this->endpoint.'products/'.$wcPid.'/variations', [
@@ -567,149 +871,211 @@ class WoocommerceApiService  extends AbstractController
     
                             $contentType = $response->getHeaders()['content-type'][0];
                             // $contentType = 'application/json'
-                            // $content = $response->getContent();
                             // $content = '{"id":521583, "name":"symfony-docs", ...}'
                             $content = $response->toArray();
                             // $content = ['id' => 521583, 'name' => 'symfony-docs', ...]
-                            $shopVariationId[$key]['shop'][$key] = $shopVariation[$key]['shop'];
-                            $shopVariationId[$key]['color'][$key] = $shopVariation[$key]['color'];
-                            $shopVariationId[$key]['length'][$key] = $shopVariation[$key]['length'];
-                            $shopVariationId[$key]['quantity'][$key] = $shopVariation[$key]['quantity'];
-                            $shopVariationId[$key]['variationId'][$key] = $content['id'];
+                            $variation = new ProductVariation();
+                            $providerProduct = new ProviderProduct();
+                            
+                            $shop = $this->manager->getRepository(Shop::class)->findOneBy(['name' => $shopVariation[$key]['shop']]);
+                            $color  = $this->manager->getRepository(Color::class)->findOneBy(['name' => $shopVariation[$key]['color']]);
+                            $length  = $this->manager->getRepository(Length::class)->findOneBy(['name' => $shopVariation[$key]['length']]);
+                            
+                            $product->setDeleted(false);
+                            $product->setShop($shop);
+                            $variation->setColor($color);
+                            $variation->setLength($length);
+                            $variation->setShop($shop);
+                            $variation->setProduct($product);
+                            $variation->setQuantity($shopVariation[$key]['quantity']);
+                            $variation->setVariationId($content['id']);
+    
+                            $providerProduct->setProvider($product->getProvider());
+                            $providerProduct->setColor($color);
+                            $providerProduct->setLength($length);
+                            $providerProduct->setQuantity($shopVariation[$key]['quantity']);
+                            $providerProduct->setProduct($product);
+    
+    
+                            $this->manager->persist($variation);
+                            $this->manager->persist($providerProduct);
     
                         }
-                    }else{
+                    }catch(\Exception $e){
 
-                        $vClone = null;
-                        $vExist = false;
+                        $variation = new ProductVariation();
+                        $providerProduct = new ProviderProduct();
+                        
+                        $shop = $this->manager->getRepository(Shop::class)->findOneBy(['name' => $shopVariation[$key]['shop']]);
+                        $color  = $this->manager->getRepository(Color::class)->findOneBy(['name' => $shopVariation[$key]['color']]);
+                        $length  = $this->manager->getRepository(Length::class)->findOneBy(['name' => $shopVariation[$key]['length']]);
+                        
+                        $product->setDeleted(false);
+                        $product->setShop($shop);
+                        $variation->setColor($color);
+                        $variation->setLength($length);
+                        $variation->setShop($shop);
+                        $variation->setProduct($product);
+                        $variation->setQuantity($shopVariation[$key]['quantity']);
+                        $variation->setVariationId(null);
 
-                        foreach($variations as $v){
-                            if($v->getVariationId()){
-                                $vClone = clone($v);
-                                $vExist = true;
-                            }
-                        }
+                        $providerProduct->setProvider($product->getProvider());
+                        $providerProduct->setColor($color);
+                        $providerProduct->setLength($length);
+                        $providerProduct->setQuantity($shopVariation[$key]['quantity']);
+                        $providerProduct->setProduct($product);
 
-                        if($vExist){
-                            $newVariation = $this->manager->getRepository(ProductVariation::class)->find($vClone);
-                          
-                            $newVariation->setQuantity($newVariation->getQuantity() +  $variation['quantity']);
 
-                            $product = $this->manager->getRepository(Product::class)->find($variation->getProduct());
-                            
-                            $product->setQuantity($newVariation->getQuantity());
-
-                            $this->manager->persist($newVariation);
-                            $this->manager->persist($product);
-
-                            $this->updateOneVariationQuantity($product->getWcProductId(), $newVariation->getVariationId(),$newVariation->getQuantity());
-
-                        }
-
+                        $this->manager->persist($variation);
+                        $this->manager->persist($providerProduct);
                     }
 
-          
-            }
-
-            // if(!$variationExist){
-            //     foreach($shopVariation as $shopVKey => $shopV){
-            //         foreach($shopVariationId as $key => $variationId){
-                      
-            //               if($variationId['shop'][$key] == $shopV['shop'] && $variationId['color'][$key] == $shopV['color'] && $variationId['length'][$key] == $shopV['length']){
-            //                 $variations = $this->manager->getRepository(ProductVariation::class)->findProductVariation($shopV['color'],$shopV['length'], $product, $shopV['shop']);
-                           
-            //                 $vId = intval($variationId['variationId'][$key]);
-            //                 $quantity = intval($variationId['quantity'][$key]);
-    
-            //                 $variationExist = false;
-            //                 $variationObj = null;
-            //                 $oldQuantity = 0;
-            //                 foreach($variations as $variation){
-    
-            //                     if($variation->getVariationId() != null){
-            //                         $variationExist = true;
-            //                         $oldQuantity += $variation->getQuantity();
-            //                         $variationObj = clone($variation);
-            //                     }
-    
-            //                     if($variationExist && is_null($variation->getVariationId())){
-                                  
-            //                       $variationObj->setQuantity($oldQuantity + $quantity);
-            //                       $product = $variationObj->getProduct();
-    
-            //                       $product->setQuantity($oldQuantity + $quantity);
-                                
-            //                       $this->manager->persist($variationObj);
-            //                       $this->manager->persist($product);
-            //                     }elseif(is_null($variation->getVariationId())){
-            //                         $variation->setQuantity($quantity);
-            //                         $product = $variation->getProduct();
-      
-            //                         $product->setQuantity($product->getQuantity() + $quantity);
-            //                         $variation->setVariationId($vId);
-    
-            //                         $this->manager->persist($variation);
-            //                         $this->manager->persist($product);
-            //                     }
-    
-            //                 }
-    
-            //             }
-            //         }
-            //     }
-                      
-            // }
-     
-
-        }catch(\Exception $e){
-            throw $e;
-            $this->manager->rollback();
-        }
-
-    }
-
-    public function updateOneVariationQuantity($wcPid,$variationId, $quantity)
-    {
-        try{
-
-          $response =  $this->client->request(
-                "PUT",
-                    $this->endpoint.'products/'.$wcPid.'/variations/'.$variationId, [
-                    // use a different HTTP Basic authentication only for this request
-                    'auth_basic' => [$this->username, $this->password],
-                    "body" => [
-                        'stock_quantity' => $quantity,
-                    ]
-                ]);
-
-            $statusCode = $response->getStatusCode();
-                // $statusCode = 200
-
-                if($statusCode === 200){
-
-                    $contentType = $response->getHeaders()['content-type'][0];
-                    // $contentType = 'application/json'
-                    $content = $response->getContent();
-                    // $content = '{"id":521583, "name":"symfony-docs", ...}'
-                    $content = $response->toArray();
-                    // $content = ['id' => 521583, 'name' => 'symfony-docs', ...]
-                    $this->addFlash("success", "La quantité du produit a été modifié sur le site de vente.");
                     
-                    return $content;
+                }else{
+                    
+                    $variation = new ProductVariation();
+                    $providerProduct = new ProviderProduct();
+                    
+                    $shop = $this->manager->getRepository(Shop::class)->findOneBy(['name' => $shopVariation[$key]['shop']]);
+                    $color  = $this->manager->getRepository(Color::class)->findOneBy(['name' => $shopVariation[$key]['color']]);
+                    $length  = $this->manager->getRepository(Length::class)->findOneBy(['name' => $shopVariation[$key]['length']]);
+                    
+
+                    $newVariation = $this->manager->getRepository(ProductVariation::class)->find($vClone);
+                    
+                    $newVariation->setQuantity($newVariation->getQuantity() +  $shopVariation[$key]['quantity']);
+
+                    $product = $this->manager->getRepository(Product::class)->find($newVariation->getProduct());
+                    
+                    $product->setQuantity($newVariation->getQuantity());
+                    
+                    $providerProduct->setProvider($product->getProvider());
+                    $providerProduct->setColor($color);
+                    $providerProduct->setLength($length);
+                    $providerProduct->setQuantity($shopVariation[$key]['quantity']);
+                    $providerProduct->setProduct($product);
+
+                    $this->manager->persist($newVariation);
+                    $this->manager->persist($product);
+                    $this->manager->persist($providerProduct);
+                    
+                    $this->updateOneVariationQuantity($product->getWcProductId(), $newVariation->getVariationId(),$newVariation->getQuantity());
 
                 }
-        }catch(\Exception $e){
-            throw $e;
+            }else{
+                try{
+                    $response =   $this->client->request(
+                        "POST",
+                        $this->endpoint.'products/'.$wcPid.'/variations', [
+                        // use a different HTTP Basic authentication only for this request
+                        'auth_basic' => [$this->username, $this->password],
+                        "body" => [
+                            "regular_price" => $product->getSellingPrice(),
+                            'stock_quantity' => $variation['quantity'],
+                            'manage_stock' => true,
+                            'optional_selected' => true,
+                            'on_sale' => true,
+                            'selected' => true,
+                            "attributes" => [
+                                [
+                                    'id' => 4,
+                                    "name" => "Couleur",
+                                    "slug" => "pa_couleur",
+                                    "option" => $variation['color']
+                                ],
+                                [
+                                    'id' => 1,
+                                    "name" => "Taille",
+                                    "slug" => "pa_taille",
+                                    "option" => $variation['length']
+
+                                ]
+                            ],
+                        ]
+                    ]);
+                        
+                    $statusCode = $response->getStatusCode();
+                    // $statusCode = 200
+                    if($statusCode === 201){
+
+                        $contentType = $response->getHeaders()['content-type'][0];
+                        // $contentType = 'application/json'
+                        // $content = '{"id":521583, "name":"symfony-docs", ...}'
+                        $content = $response->toArray();
+                        // $content = ['id' => 521583, 'name' => 'symfony-docs', ...]
+
+                        $variation = new ProductVariation();
+                        $providerProduct = new ProviderProduct();
+                        
+                        $shop = $this->manager->getRepository(Shop::class)->findOneBy(['name' => $shopVariation[$key]['shop']]);
+                        $color  = $this->manager->getRepository(Color::class)->findOneBy(['name' => $shopVariation[$key]['color']]);
+                        $length  = $this->manager->getRepository(Length::class)->findOneBy(['name' => $shopVariation[$key]['length']]);
+                        
+                        $product->setDeleted(false);
+                        $product->setShop($shop);
+                        // $product->setQuantity(intval($shopVariation[$key]['quantity']));
+                        $variation->setColor($color);
+                        $variation->setLength($length);
+                        $variation->setShop($shop);
+                        $variation->setProduct($product);
+                        $variation->setQuantity($shopVariation[$key]['quantity']);
+                        $variation->setVariationId($content['id']);
+
+                        $providerProduct->setProvider($product->getProvider());
+                        $providerProduct->setColor($color);
+                        $providerProduct->setLength($length);
+                        $providerProduct->setQuantity($shopVariation[$key]['quantity']);
+                        $providerProduct->setProduct($product);
+                        
+                        $this->manager->persist($product);
+                        $this->manager->persist($variation);
+                        $this->manager->persist($providerProduct);
+
+                    }
+                }catch(\Exception $e){
+                    throw $e;
+                    $variation = new ProductVariation();
+                    $providerProduct = new ProviderProduct();
+                    
+                    $shop = $this->manager->getRepository(Shop::class)->findOneBy(['name' => $shopVariation[$key]['shop']]);
+                    $color  = $this->manager->getRepository(Color::class)->findOneBy(['name' => $shopVariation[$key]['color']]);
+                    $length  = $this->manager->getRepository(Length::class)->findOneBy(['name' => $shopVariation[$key]['length']]);
+                    
+                    $product->setDeleted(false);
+                    $product->setShop($shop);
+                    $variation->setColor($color);
+                    $variation->setLength($length);
+                    $variation->setShop($shop);
+                    $variation->setProduct($product);
+                    $variation->setQuantity($shopVariation[$key]['quantity']);
+                    $variation->setVariationId(null);
+
+                    $providerProduct->setProvider($product->getProvider());
+                    $providerProduct->setColor($color);
+                    $providerProduct->setLength($length);
+                    $providerProduct->setQuantity($shopVariation[$key]['quantity']);
+                    $providerProduct->setProduct($product);
+
+
+                    $this->manager->persist($variation);
+                    $this->manager->persist($providerProduct);
+                }
+                
+            }
+
         }
+       
     }
+
 
     public function updateProductVariations($wcPid,$product,$datas)
     {
+
         $array = [];
         $element = [];
         $variationArray = [];
 
-        try{
+ 
             $i = 0;
             foreach($datas['quantity'] as $quantityKey => $data){
                
@@ -718,12 +1084,13 @@ class WoocommerceApiService  extends AbstractController
                     'length' => $datas['length'][$quantityKey],
                 ];
 
-            
                 if(!in_array($element, $array)){
                     $array[$i] = $element;
                     $variationArray[$i] = $element;
                     $variationArray[$i]['quantity'] = $datas['quantity'][$quantityKey];
                     $variationArray[$i]['variationId'] = $datas['variationId'];
+                    $variationArray[$i]['shop'] = $datas['shop'];
+
                     
                 }else{
 
@@ -734,17 +1101,23 @@ class WoocommerceApiService  extends AbstractController
                     $variationArray[$key]['quantity'] = $quantity;
                 }      
                 
+                $shopVariation[$i]['shop']= $datas['shop'][$quantityKey];
+                $shopVariation[$i]['color'] = $datas['color'][$quantityKey];
+                $shopVariation[$i]['length'] = $datas['length'][$quantityKey];
+                $shopVariation[$i]['quantity'] = $datas['quantity'][$quantityKey];
+
                 $i++;
             }
 
             foreach($variationArray as $key => $variation){
-      
-                $this->client->request(
-                    "PUT",
-                        $this->endpoint.'products/'.$wcPid.'/variations/'.$variation['variationId'][$key], [
-                        // use a different HTTP Basic authentication only for this request
-                        'auth_basic' => [$this->username, $this->password],
-                        "body" => [
+              
+                try{
+                  $response =   $this->client->request(
+                        "PUT",
+                            $this->endpoint.'products/'.$wcPid.'/variations/'.$variation['variationId'][$key], [
+                            // use a different HTTP Basic authentication only for this request
+                            'auth_basic' => [$this->username, $this->password],
+                            "body" => [
                             "regular_price" => $product->getSellingPrice(),
                             'manage_stock' => true,
                             'stock_quantity' => $variation['quantity'],
@@ -761,11 +1134,12 @@ class WoocommerceApiService  extends AbstractController
                             ],
                         ]
                     ]);
-            }
-        }catch(\Exception $e){
-            throw $e;
-        }
+                }catch(\Exception $e){
+                    $this->addFlash("danger", $e->getMessage());
+                }
 
+        }
+       
     }
 
     public function deleteProductVariations($wcPid, $variationId)
@@ -792,6 +1166,7 @@ class WoocommerceApiService  extends AbstractController
                 }
     
         }catch(\Exception $e){
+
         }
 
     }

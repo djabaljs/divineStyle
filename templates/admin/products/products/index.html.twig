@@ -69,25 +69,25 @@
                                          <div class="row">
                                            <div class="col-md-2">
                                                 <div class="form-group">
-                                                    <label for="product_name">Nom</label>
+                                                    <label for="product_name">Magasin</label>
                                                     {{form_row(form.shop, {attr:{'class': 'form-control', 'placeholder':'Nom du produit','style':'height:50px'}})}}
                                                 </div>
                                           </div>
                                           <div class="col-md-3">
                                                 <div class="form-group">
-                                                    <label for="product_name">Nom</label>
+                                                    <label for="product_name">Produit</label>
                                                     {{form_row(form.product, {attr:{'class': 'form-control', 'placeholder':'Nom du produit','style':'height:50px'}})}}
                                                 </div>
                                           </div>
                                           <div class="col-md-2">
                                                 <div class="form-group">
-                                                    <label for="product_name">Nom</label>
+                                                    <label for="product_name">Taille</label>
                                                     {{form_row(form.length, {attr:{'class': 'form-control', 'placeholder':'Nom du produit','style':'height:50px'}})}}
                                                 </div>
                                           </div>
                                            <div class="col-md-2">
                                                 <div class="form-group">
-                                                    <label for="product_name">Nom</label>
+                                                    <label for="product_name">Couleur</label>
                                                     {{form_row(form.color, {attr:{'class': 'form-control', 'placeholder':'Nom du produit','style':'height:50px'}})}}
                                                 </div>
                                           </div>
@@ -138,6 +138,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
+
                                             {% set total = 0 %}
                                             {% set name = '' %}
                                             {% if isSearch %}
@@ -304,7 +305,9 @@
                                                 <td>
                                                 {% if product.isVariable %}
                                                     {% for variation in product.productVariations %}
-                                                    {{variation.length.name}}
+                                                     {% if variation.product == product %}
+                                                       {{variation.length.name}}
+                                                     {% endif %}
                                                     {% endfor %}
                                                 {% else %}
                                                   //
@@ -313,7 +316,9 @@
                                                 <td>
                                                 {% if product.isVariable %}
                                                     {% for variation in product.productVariations %}
-                                                    {{variation.color.name}}
+                                                    {% if variation.product == product %}
+                                                       {{variation.color.name}}
+                                                     {% endif %}
                                                     {% endfor %}
                                                 {% else %}
                                                     //

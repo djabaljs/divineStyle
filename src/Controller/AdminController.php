@@ -8,7 +8,6 @@ use App\Entity\User;
 use App\Entity\Color;
 use App\Entity\Order;
 use App\Entity\Width;
-use App\Entity\Height;
 use App\Entity\Length;
 use App\Form\FundType;
 use App\Form\ShopType;
@@ -18,12 +17,10 @@ use App\Entity\Invoice;
 use App\Entity\Payment;
 use App\Entity\Product;
 use App\Form\ColorType;
-use App\Form\WidthType;
 use App\Entity\Category;
 use App\Entity\Customer;
 use App\Entity\Delivery;
 use App\Entity\Provider;
-use App\Form\HeightType;
 use App\Form\LengthType;
 use App\Entity\Attribute;
 use App\Entity\Versement;
@@ -33,7 +30,6 @@ use App\Form\ProductType;
 use App\Form\SettingType;
 use App\Form\CategoryType;
 use App\Form\CustomerType;
-use App\Form\DeliveryType;
 use App\Form\ProviderType;
 use Cocur\Slugify\Slugify;
 use App\Entity\DeliveryMan;
@@ -47,13 +43,11 @@ use App\Form\ShopUpdateType;
 use App\Entity\ProductSearch;
 use App\Entity\Replenishment;
 use App\Form\DeliveryManType;
-use App\Form\OrderReturnType;
 use App\Form\PaymentTypeType;
 use App\Entity\ProviderProduct;
 use App\Form\AdminDeliveryType;
 use App\Form\AdministratorType;
 use App\Form\ProductSearchType;
-use App\Form\ProductUpdateType;
 use App\Form\ReplenishmentType;
 use App\Entity\ProductVariation;
 use App\Repository\UserRepository;
@@ -180,6 +174,7 @@ class AdminController extends AbstractController
     public function products(Request $request)
     {
        $products = $this->manager->getRepository(Product::class)->fundProductsNotDeleted();
+   
        $slugArray = [];
        $productArray = [];
 
@@ -216,6 +211,7 @@ class AdminController extends AbstractController
 
         }
 
+      
         return $this->render('admin/products/products/index.html.twig', [
             'products' =>  $products,
             'form' => $form->createView(),
@@ -266,19 +262,19 @@ class AdminController extends AbstractController
                 $products = [];
 
                 if(!empty($request->get('shopQuantity'))){
-                foreach($request->get('shopQuantity') as $key => $quantities){
-                    foreach($quantities as $quantity){
-                        if($key != 0 && $quantity != 0){
-                            $totalQuantity += intval($quantity);
-                            $productC = clone($product);
-                            $shop = $this->manager->getRepository(Shop::class)->find($key);
-                            $productC->setQuantity($quantity);
-                            $productC->setDeleted(false);
-                            $productC->setShop($shop);
-                            $products[] = $productC;
+                    foreach($request->get('shopQuantity') as $key => $quantities){
+                        foreach($quantities as $quantity){
+                            if($key != 0 && $quantity != 0){
+                                $totalQuantity += intval($quantity);
+                                $productC = clone($product);
+                                $shop = $this->manager->getRepository(Shop::class)->find($key);
+                                $productC->setQuantity($quantity);
+                                $productC->setDeleted(false);
+                                $productC->setShop($shop);
+                                $products[] = $productC;
+                            }
                         }
                     }
-                }
                 }
 
               
@@ -296,39 +292,15 @@ class AdminController extends AbstractController
                                 foreach($quantities as $quantity){
 
                                     if($quantity != ""){
-                                        $productVariation = new ProductVariation();
-                                
-
-                                        $productC = clone($product);
-                                        $productC->setDeleted(false);
-                                        $productC->setShop($shop);
         
                                         $lengthx = $this->manager->getRepository(Length::class)->find($lengthKey);
                                         $colorx = $this->manager->getRepository(Color::class)->find($colorKey);
                                         
-                                        if(!in_array($colorx->getName(), $product->colorArrays) && !in_array($lengthx->getName(),$product->lengthArrays)){
-                                          
-                                        }
-
                                         $productsVariations['color'][] = $colorx->getName();
                                         $productsVariations['length'][] = $lengthx->getName(); 
                                         $productsVariations['quantity'][] = $quantity; 
                                         $productsVariations['shop'][] = $shop->getName(); 
-
-                                 
-                                        $productC->setQuantity(intval($quantity) != 0 ? intval($quantity) : 0);
-        
-                                        $productVariation->setColor($colorx);
-                                        $productVariation->setLength($lengthx);
-                                        $productVariation->setProduct($productC);
-                                        $productVariation->setQuantity(intval($quantity) != 0 ? intval($quantity) : 0);
-                                        $productVariation->setShop($shop);
-                                        $this->manager->persist($productVariation);
-                    
-                                        $products[] = $productC;
-                                        $variationArray[] = $productVariation;
-        
-                                         $totalQuantity += intval(intval($quantity) != 0 ? intval($quantity) : 0);
+                                        $totalQuantity += intval(intval($quantity) != 0 ? intval($quantity) : 0);
                                     }
                                 }
                             }
@@ -346,6 +318,7 @@ class AdminController extends AbstractController
                     $product->colorArrays[] = $color->getName();
                 }
 
+                
                 $product->setQuantity($totalQuantity);
 
                 $response =  $this->api->post("products", $product);
@@ -361,16 +334,14 @@ class AdminController extends AbstractController
                 }catch(\Exception $e){
                     $wcpID = 0;
                 }
-                 
 
                 try{
-                    
-
                     foreach($products as $product){
                         if($isVariable){
                             $product->setDeleted(false);
                             $product->setWcProductId($wcpID);
                             $this->manager->persist($product);
+
 
                         }else{
                             $product->setDeleted(false);
@@ -381,8 +352,7 @@ class AdminController extends AbstractController
 
                     }
                 }catch(\Exception $e){
-                $this->manager->rollback();
-                    throw $e;
+
                     foreach($products as $product){
                         if($isVariable){
                             $product->setDeleted(false);
@@ -391,16 +361,18 @@ class AdminController extends AbstractController
                             $product->setDeleted(false);
                             $product->setWcProductId(null);
                         }
+
                         $this->manager->persist($product);
                     }
                 }
 
-                $this->manager->flush();
-
 
                 
                 if($isVariable){
-                  $this->api->createProductVariations($wcpID, $product, $productsVariations);
+                    $product->setWcProductId($wcpID);
+                    $product->setDeleted(false);
+
+                     $this->api->createProductVariations($wcpID, $product, $productsVariations);
                 }
 
 
@@ -411,8 +383,8 @@ class AdminController extends AbstractController
 
                 return $this->redirectToRoute("admin_products_create");
             }catch(\Exception $e){
-                $this->manager->rollback();
                 throw $e;
+                $this->manager->rollback();
                 
             }
             
@@ -543,10 +515,11 @@ class AdminController extends AbstractController
                             foreach($colors as $colorKey => $quantities){
                                 
                                 foreach($quantities as $quantity){
-                                    
-                                    $totalQuantity += intval($quantity);
                                    
                                     if($quantity != ""){
+
+                                        $totalQuantity += intval($quantity);
+
                                         $color = $this->manager->getRepository(Color::class)->find($colorKey);
                                         $length = $this->manager->getRepository(Length::class)->find($lengthKey);
                                     
@@ -576,11 +549,11 @@ class AdminController extends AbstractController
 
                 $this->manager->flush();
                 $this->manager->commit();
+
                 $product->setQuantity($totalQuantity);
                 $this->api->putQ('products',$product);
 
                 if($product->getIsVariable()){
-
                          
                     $productVariations = $this->manager->getRepository(ProductVariation::class)->findAllProductBySlug($product);
 
@@ -589,6 +562,8 @@ class AdminController extends AbstractController
                       $productsVariations['length'][] = $variation->getLength()->getName(); 
                       $productsVariations['variationId'][] = $variation->getVariationId(); 
                       $productsVariations['quantity'][] = $variation->getQuantity(); 
+                      $productsVariations['shop'][] = $variation->getShop()->getName(); 
+
                     }
                    $this->api->updateProductVariations($product->getWcProductId(), $product, $productsVariations);
                 }
@@ -736,7 +711,7 @@ class AdminController extends AbstractController
                     }
 
                 }catch(\Exception $e){
-                 throw $e;
+                    $this->addFlash("danger", $e->getMessage());
                 }
             }
           
@@ -2617,6 +2592,7 @@ class AdminController extends AbstractController
             
             $oldQuantity = 0;
             $totalQuantity = 0;
+            $products = [];
             if($request->get('shopQuantity')){
                 $shopQ = $request->get('shopQuantity');
  
@@ -2629,6 +2605,7 @@ class AdminController extends AbstractController
                            $product = $this->manager->getRepository(Product::class)->findOneBy(['shop' => $shop, 'slug' => $replenishment->getProduct()->getSlug(), 'deleted' => 0]);
 
                            if(!is_null($product)){
+
                             $totalQuantity += $product->getQuantity() + $quantity;
 
                             $product->setQuantity($product->getQuantity() + intval($quantity));
@@ -2636,22 +2613,18 @@ class AdminController extends AbstractController
                             $providerProduct->setProvider($replenishment->getProvider());
                             $providerProduct->setProduct($replenishment->getProduct());
 
+                            $products[] = $product;
                             $this->manager->persist($product);
                             $this->manager->persist($providerProduct);
-
 
                         }    
                     }
                 }
             }
 
-        
           
-            $variationArray = [];
-            $variationArray = [];
             $productsVariations = [];
-            $newQuantity = 0;
-            $newVariation = false;
+            $oldVariation = false;
             if(!empty($variations)){
 
                 foreach($variations as $shopKey => $lengths){
@@ -2667,30 +2640,12 @@ class AdminController extends AbstractController
                                     $color = $this->manager->getRepository(Color::class)->find($colorKey);
                                     $length = $this->manager->getRepository(Length::class)->find($lengthKey);
 
-                                    $productVariations = $this->manager->getRepository(ProductVariation::class)->findOneProductBySlug($shop,$color,$length,$replenishment->getProduct());
-                               
-                                    foreach($productVariations as $pV){
+                                    $productsVariations['color'][] = $color->getName();
+                                    $productsVariations['length'][] = $length->getName(); 
+                                    $productsVariations['quantity'][] = $quantity; 
+                                    $productsVariations['shop'][] = $shop->getName(); 
 
-                                        $pV->setQuantity($pV->getQuantity() + intval($quantity));
-                                        $pVp = $pV->getProduct();
-
-                                        $pVp->setQuantity($pVp->getQuantity() + intval($quantity));
-
-                                        $providerProduct->setProduct($pVp);
-                                        $providerProduct->setQuantity($quantity);
-                                        $providerProduct->setColor($pV->getColor());
-                                        $providerProduct->setLength($pV->getLength());
-                                        $providerProduct->setProvider($replenishment->getProvider());
-
-                                        $this->manager->persist($providerProduct);
-
-                                        $this->manager->persist($pV);
-                                        $this->manager->persist($pVp);
-
-
-                                        $totalQuantity += $pV->getQuantity();
-
-                                    }
+                                    $oldVariation = true;
                                 }
                             }
                         }
@@ -2701,6 +2656,7 @@ class AdminController extends AbstractController
             }
 
 
+            $newVariation = false;
             if(!empty($newVariations)){
           
                 foreach($newVariations as $shopKey => $lengths){
@@ -2715,50 +2671,14 @@ class AdminController extends AbstractController
 
                                 if($quantity != ""){
 
-                                    $productVariation = new ProductVariation();
-
-                                    $productC = clone($product);
-                                    $productC->setDeleted(false);
-                                    $productC->setShop($shop);
-    
                                     $lengthx = $this->manager->getRepository(Length::class)->find($lengthKey);
                                     $colorx = $this->manager->getRepository(Color::class)->find($colorKey);
-                                    
-                                    if(!in_array($colorx->getName(), $product->colorArrays) && !in_array($lengthx->getName(),$product->lengthArrays)){
-                                        
-                                    }
-                                    $product->colorArrays[] = $colorx->getName();
-                                    $product->lengthArrays[] = $lengthx->getName();
-
-
+                                  
                                     $productsVariations['color'][] = $colorx->getName();
                                     $productsVariations['length'][] = $lengthx->getName(); 
                                     $productsVariations['quantity'][] = $quantity; 
                                     $productsVariations['shop'][] = $shop->getName(); 
 
-                                
-                                    $productC->setQuantity(intval($quantity) != 0 ? intval($quantity) : 0);
-    
-                                    $productVariation->setColor($colorx);
-                                    $productVariation->setLength($lengthx);
-                                    $productVariation->setProduct($productC);
-                                    $productVariation->setQuantity(intval($quantity) != 0 ? intval($quantity) : 0);
-                                    $productVariation->setShop($shop);
-                                    
-                                    $this->manager->persist($productVariation);
-                
-                                    $products[] = $productC;
-                                    $variationArray[] = $productVariation;
-                                    
-                                    $providerProduct->setProduct($productC);
-                                    $providerProduct->setQuantity($quantity);
-                                    $providerProduct->setColor($colorx);
-                                    $providerProduct->setLength($lengthx);
-                                    $providerProduct->setProvider($replenishment->getProvider());
-                                    $this->manager->persist($providerProduct);
-
-
-                                    $newQuantity += intval(intval($quantity) != 0 ? intval($quantity) : 0);
                                     $newVariation = true;
 
                                 }
@@ -2771,39 +2691,66 @@ class AdminController extends AbstractController
 
             }
 
-            
-            
 
+       
             $product =  $replenishment->getProduct();
 
        
             if($product->getIsVariable()){
-                  
-                if($newVariation){
 
-                    $this->api->createProductVariations($product->getWcProductId(), $product, $productsVariations);
+                if($newVariation && $oldVariation){
+               
+                    try{
+                        $this->api->createReplenishementVariations($product->getWcProductId(), $product, $productsVariations);
+                        $this->manager->flush();
 
-                }else{
-
+                    }catch(\Exception $e){
+                                $this->addFlash("danger", $e->getMessage());
+                    }
                     $productVariations = $this->manager->getRepository(ProductVariation::class)->findAllProductBySlug($product);
-                
-                    foreach($productVariations as $variation){
-    
-                            $productsVariations['shop'][] = $variation->getShop()->getName();
-                            $productsVariations['color'][] = $variation->getColor()->getName();
-                            $productsVariations['length'][] = $variation->getLength()->getName(); 
-                            $productsVariations['variationId'][] = $variation->getVariationId(); 
-                            $productsVariations['quantity'][] = $variation->getQuantity();
-                        }
-        
-                    $this->api->updateProductVariations($product->getWcProductId(), $product, $productsVariations);
-                    
-    
-                }
-                
 
-              
-              
+                    $variationQ = 0;
+                    foreach($productVariations as $variation){
+                
+                        $productsVariations['shop'][] = $variation->getShop()->getName();
+                        $productsVariations['color'][] = $variation->getColor()->getName();
+                        $productsVariations['length'][] = $variation->getLength()->getName(); 
+                        $productsVariations['variationId'][] = $variation->getVariationId(); 
+                        $productsVariations['quantity'][] = $variation->getQuantity();
+                        $variationQ += $variation->getQuantity();
+                    }
+
+                    try{
+                        $this->api->updateReplenishmentVariation($product->getWcProductId(), $product, $productsVariations);
+                        $this->manager->flush();
+                    }catch(\Exception $e){
+                             $this->addFlash("danger", $e->getMessage());
+                    }
+                }elseif(!$newVariation && $oldVariation){
+                    
+                    $productVariations = $this->manager->getRepository(ProductVariation::class)->findAllProductBySlug($product);
+
+                    $variationQ = 0;
+                    foreach($productVariations as $variation){
+                
+                        $productsVariations['shop'][] = $variation->getShop()->getName();
+                        $productsVariations['color'][] = $variation->getColor()->getName();
+                        $productsVariations['length'][] = $variation->getLength()->getName(); 
+                        $productsVariations['variationId'][] = $variation->getVariationId(); 
+                        $productsVariations['quantity'][] = $variation->getQuantity();
+                    }
+
+                    try{
+                        $this->api->updateReplenishmentVariation($product->getWcProductId(), $product, $productsVariations);
+                        $this->manager->flush();
+                    }catch(\Exception $e){
+                             $this->addFlash("danger", $e->getMessage());
+                    }
+                }elseif($newVariation && !$oldVariation){
+                    $this->api->createReplenishementVariations($product->getWcProductId(), $product, $productsVariations);
+                }
+                    
+                    
                 $productsx = $this->manager->getRepository(Product::class)->findBy(['deleted' => 0, 'slug' => $product->getSlug()]);
                 
                 $quantity = 0;
@@ -2811,10 +2758,8 @@ class AdminController extends AbstractController
                     $quantity += $productx->getQuantity();
                 }
 
-            $this->manager->flush();
-            $this->manager->commit();
-
-        
+            
+    
                 $product->setQuantity($quantity);
 
 
@@ -2823,8 +2768,11 @@ class AdminController extends AbstractController
 
             }   
             
+         
             $this->api->putQ('products', $product);
 
+            $this->manager->flush();
+            $this->manager->commit();
             $this->addFlash("success", "Réapprovisionnement effectué avec succès!");
 
             return $this->redirectToRoute('admin_products_replenishment');
