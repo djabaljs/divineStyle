@@ -232,11 +232,12 @@ class AdminController extends AbstractController
 
         $product = new Product();
         
-        if (in_array('ROLE_SUPER_ADMIN', $this->getUser()->getRoles())){
-            $form = $this->createForm(ProductType::class, $product);
-        }elseif(in_array('ROLE_ADMIN', $this->getUser()->getRoles())){
-            $form = $this->createForm(SimpleAdminProductType::class, $product);
-        }
+        // if (in_array('ROLE_SUPER_ADMIN', $this->getUser()->getRoles())){
+        // }elseif(in_array('ROLE_ADMIN', $this->getUser()->getRoles())){
+        //     $form = $this->createForm(SimpleAdminProductType::class, $product);
+        // }
+        $form = $this->createForm(ProductType::class, $product);
+
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
@@ -3687,7 +3688,7 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @Route("/products/variations/create", name="admin_products_variations_create", methods={"POST"})
+     * @Route("/products/variations/create", name="admin_products_variations_create", methods={"POST", "GET"})
      * @method productsVariationsCreate
      * @return Response
      */

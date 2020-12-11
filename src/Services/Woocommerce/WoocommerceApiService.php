@@ -56,9 +56,9 @@ class WoocommerceApiService  extends AbstractController
       public function __construct(HttpClientInterface $client, ContainerInterface $container, ProductVariationRepository $productVariationRepository, EntityManagerInterface $manager)
       {
           $this->client = $client;
-          $this->endpoint = $container->getParameter('TEST_API_ENDPOINT');
-          $this->username = $container->getParameter('TEST_USERNAME');
-          $this->password = $container->getParameter('TEST_PASSWORD');
+          $this->endpoint = $container->getParameter('DIVINE_STYLES_API_ENDPOINT');
+          $this->username = $container->getParameter('DIVINE_STYLES_USERNAME');
+          $this->password = $container->getParameter('DIVINE_STYLES_PASSWORD');
           $this->productVariationRepository = $productVariationRepository;
           $this->manager = $manager;
       } 
@@ -120,13 +120,13 @@ class WoocommerceApiService  extends AbstractController
                                 ],
                                 "attributes" => [
                                     [
-                                        "id" => 4,
+                                        "id" => 1,
                                         "variation" => true,
                                         "visible"   => true,
                                         "options" => $data->colorArrays
                                     ],
                                     [
-                                        "id" => 1,
+                                        "id" => 2,
                                         "variation" => true,
                                         "visible"   => true,
                                         "options" => $data->lengthArrays
@@ -541,13 +541,13 @@ class WoocommerceApiService  extends AbstractController
                         'selected' => true,
                         "attributes" => [
                             [
-                                'id' => 4,
+                                'id' => 1,
                                 "name" => "Couleur",
                                 "slug" => "pa_couleur",
                                 "option" => $variation['color']
                             ],
                             [
-                                'id' => 1,
+                                'id' => 2,
                                 "name" => "Taille",
                                 "slug" => "pa_taille",
                                 "option" => $variation['length']
@@ -717,13 +717,13 @@ class WoocommerceApiService  extends AbstractController
                             'selected' => true,
                             "attributes" => [
                                 [
-                                    'id' => 4,
+                                    'id' => 1,
                                     "name" => "Couleur",
                                     "slug" => "pa_couleur",
                                     "option" => $variation['color']
                                 ],
                                 [
-                                    'id' => 1,
+                                    'id' => 2,
                                     "name" => "Taille",
                                     "slug" => "pa_taille",
                                     "option" => $variation['length']
@@ -849,13 +849,13 @@ class WoocommerceApiService  extends AbstractController
                                 'selected' => true,
                                 "attributes" => [
                                     [
-                                        'id' => 4,
+                                        'id' => 1,
                                         "name" => "Couleur",
                                         "slug" => "pa_couleur",
                                         "option" => $variation['color']
                                     ],
                                     [
-                                        'id' => 1,
+                                        'id' => 2,
                                         "name" => "Taille",
                                         "slug" => "pa_taille",
                                         "option" => $variation['length']
@@ -978,13 +978,13 @@ class WoocommerceApiService  extends AbstractController
                             'selected' => true,
                             "attributes" => [
                                 [
-                                    'id' => 4,
+                                    'id' => 1,
                                     "name" => "Couleur",
                                     "slug" => "pa_couleur",
                                     "option" => $variation['color']
                                 ],
                                 [
-                                    'id' => 1,
+                                    'id' =>2,
                                     "name" => "Taille",
                                     "slug" => "pa_taille",
                                     "option" => $variation['length']
@@ -1123,11 +1123,11 @@ class WoocommerceApiService  extends AbstractController
                             'stock_quantity' => $variation['quantity'],
                             "attributes" => [
                                 [
-                                    'id' => 4,
+                                    'id' => 1,
                                     "option" => $variation['color']
                                 ],
                                 [
-                                    'id' => 1,
+                                    'id' => 2,
                                     "option" => $variation['length']
         
                                 ]

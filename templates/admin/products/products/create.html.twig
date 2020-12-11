@@ -78,14 +78,14 @@
                                                     {{form_row(form.name, {attr:{'class': 'form-control', 'placeholder':'Nom du produit','style':'height:50px'}})}}
                                                 </div>
                                             </div>
-                                            {% if is_granted("ROLE_SUPER_ADMIN") %}
+                                            {# {% if is_granted("ROLE_SUPER_ADMIN") %} #}
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="product_unit_price">Prix d'achat</label>
                                                     {{form_row(form.buyingPrice, {attr:{'class': 'form-control', 'style':'height:50px'}})}}
                                                 </div>
                                             </div>
-                                            {% endif %}
+                                            {# {% endif %} #}
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label for="product_selling_price">Prix de vente</label>
@@ -174,6 +174,23 @@
 {% block javascripts %}
  <script src="{{asset('concept/assets/vendor/select2/js/select2.min.js')}}"></script>
  <script>
+
+    $('#simple_admin_product_lengths').select2({
+        placeholder: "Tailles disponibles",
+        allowClear: true
+    });
+        $('#simple_admin_product_colors').select2({
+        placeholder: "Couleurs disponibles",
+        allowClear: true
+    });
+    $('#simple_admin_product_isVariable').select2({
+        placeholder: "Selectionner le type",
+        allowClear: true
+    })
+    $('#simple_admin_product_category').select2({
+        placeholder: "Selectionner le type",
+        allowClear: true
+    })
     $('#product_lengths').select2({
         placeholder: "Tailles disponibles",
         allowClear: true
@@ -198,6 +215,7 @@
         placeholder: "Selectionner le magasin",
         allowClear: true
     });
+
 
 
     $('.element').hide();
@@ -233,5 +251,23 @@ $('#variationButton').click(function(){
         }
     });
 })
+
+$('#simple_admin_product_isVariable').change(function(){
+        if($(this).val() == 0){
+            $('.element').hide();
+            $('#data').hide();
+            $('#data-simple').show();
+            $('#product_length').removeAttr('required');
+            $('#product_color').removeAttr('required');
+        }else if($(this).val() == 1){
+            $('.element').show();
+             $('#data').show();
+            $('#data-simple').hide();
+            $('#product_length').removeAttr('required');
+            $('#product_color').removeAttr('required');
+             $('#product_length').attr('required', '');
+            $('#product_color').attr('required', '');
+        }
+    });
  </script>
 {% endblock %}

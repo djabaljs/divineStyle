@@ -147,7 +147,7 @@ $('#replenishment_product').change(function(){
 
     if($(this).val() != 0){
           $.ajax({
-        url: 'http://localhost:8000/user/admin/products/replenishment/',
+        url: 'https://divinestylestock.net/user/admin/products/replenishment/',
         type: 'POST',
         data: {isAjaxQetRequest: true, product:$(this).val()},
         success:function(data){
