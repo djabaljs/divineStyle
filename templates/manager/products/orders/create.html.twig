@@ -71,8 +71,14 @@
                     <!-- data table  -->
                     <!-- ============================================================== -->
                         <div class="row">
+                        <!-- <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="productSearch">Effectuer une recherche de produit</label>
+                                <input type="text" class="form-control productSearch" id="productSearch" style="height:45px">
+                            </div>
+                        </div> -->
                             <div class="col-md-12" id="products">
-                                <div class="row">
+                                <div class="row" id="searchData">
                                     {% for product in products %}
                                             <div class="col-lg-3">
                                                 <div class="card">
@@ -149,7 +155,7 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="col-md-12">
-                                        <div class="table-responsive" >
+                                        <div class="table-responsive">
                                         <table id="example" class="table table-striped table-bordered second" style="width:100%">
                                             <thead>
                                                 <tr>
@@ -343,7 +349,7 @@ var queryString = "";
           $('#endTotal').html('<strong>NET: Cfa '+data.total+' </strong>');
           $('[id^=btnRemoveAction-]').click(function(){
                 $('#'+this.id+'').each(function(){
-                    alert(this.id)
+             
                     cartAction("remove",data.code);
                 })
           });
@@ -510,5 +516,16 @@ $("#length").change(function(){
         }
     })
 })
+
+$('#productSearch').keyup(function(){
+    $.ajax({
+        url: '{{path("manager_search_product")}}',
+        type: 'POST',
+        data: {searchData: $(this).val()},
+        success: function(data){
+            $('#searchData').html(data);
+        }
+    })
+});
  </script>
 {% endblock %}

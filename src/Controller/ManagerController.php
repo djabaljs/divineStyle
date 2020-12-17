@@ -32,6 +32,7 @@ use App\Form\OrderReturnUpdateType;
 use App\Repository\PaymentRepository;
 use App\Services\Invoice\ReturnInvoice;
 use App\Services\Invoice\InvoiceService;
+use App\Services\Invoice\PrinterInvoice;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Security;
@@ -139,9 +140,8 @@ class ManagerController extends AbstractController
      */
     public function products(Request $request)
     {
-        $shopProducts = $this->manager->getRepository(Product::class)->findBy(['shop' => $this->shop, 'deleted' => 0]);
+        $products = $this->manager->getRepository(Product::class)->findBy(['shop' => $this->shop, 'deleted' => 0]);
         
-        $products = $this->manager->getRepository(Product::class)->fundProductsNotDeleted();
         $slugArray = [];
         $productArray = [];
  
@@ -289,7 +289,7 @@ class ManagerController extends AbstractController
      * @param InvoiceService $invoiceService
      * @return Response
      */
-    public function productordersCreate(Request $request, SessionInterface $session, InvoiceService $invoiceService): Response
+    public function productordersCreate(Request $request, SessionInterface $session, InvoiceService $invoiceService, PrinterInvoice $printer): Response
     {
 
         if($request->isXmlHttpRequest()){
@@ -565,9 +565,12 @@ class ManagerController extends AbstractController
                         $length = $this->manager->getRepository(Length::class)->findOneBy(['name' => $item['length']]);
                         $color = $this->manager->getRepository(Color::class)->findOneBy(['name' => $item['color']]);
                         $productVariation =  $this->manager->getRepository(ProductVariation::class)->findOneBy(['length' => $length, 'color' => $color, 'shop' => $this->shop]);
-
+                        
+                        $productVariation->setQuantity($productVariation->getQuantity() - $item['quantity']);
+                                            
                         $product = $productVariation->getProduct();
 
+                        $this->manager->persist($productVariation);
                     }
 
                     
@@ -700,15 +703,32 @@ class ManagerController extends AbstractController
 
 
                 foreach($sameProducts as $product){
+                    if($product->getIsVariable()){
+                         
+                        $productVariations = $this->manager->getRepository(ProductVariation::class)->findAllProductBySlug($product);
+    
+                        foreach($productVariations as $variation){
+                          $productsVariations['color'][] = $variation->getColor()->getName();
+                          $productsVariations['length'][] = $variation->getLength()->getName(); 
+                          $productsVariations['variationId'][] = $variation->getVariationId(); 
+                          $productsVariations['quantity'][] = $variation->getQuantity(); 
+                          $productsVariations['shop'][] = $variation->getShop()->getName(); 
+    
+                        }
+                       $this->api->updateProductVariations($product->getWcProductId(), $product, $productsVariations);
+                    }
+
                     $this->api->putQ('products', $product);
                 }
+
+
 
                 $session->remove('cart_item');
 
                 $logo = $request->getUriForPath('/concept/assets/images/logo.jpg');
 
                 if($payment->getAmountPaid() > 0){
-                    $invoiceService->generateInvoice($invoice, $logo);
+                    $printer->generateInvoice($invoice, $logo);
                     $this->addFlash("success", "Vente effectuée avec succès");
                     return $this->redirectToRoute('manager_products_orders_create');
                 }else{
@@ -798,14 +818,16 @@ class ManagerController extends AbstractController
      * @param InvoiceService $invoiceService
      * @return Response
      */
-    public function productsOrdersInvoiceShow(Invoice $invoice, InvoiceService $invoiceService)
+    public function productsOrdersInvoiceShow(Invoice $invoice, InvoiceService $invoiceService, PrinterInvoice $printer)
     {
         $invoice = $this->manager->getRepository(Invoice::class)->find($invoice->getId());
 
         if(is_null($invoice))
             throw $this->createNotFoundException('Cette facture n\'existe pas!');
 
-       return $invoiceService->generateInvoice($invoice,'');
+    //    return $invoiceService->generateInvoice($invoice,'');
+    return $printer->generateInvoice($invoice,'');
+
     }
 
 
@@ -1459,4 +1481,87 @@ class ManagerController extends AbstractController
         }
         return $this->json($quantity);
     }
+
+    /**
+     * @Route("/search-product", name="manager_search_product", methods={"POST", "GET"})
+     * @return Response
+    */
+    public function searchProduct(Request $request, SessionInterface $session)
+    {
+        $searchData = $request->get('searchData');
+
+        $products = $this->manager->getRepository(Product::class)->findProductByNameLike($searchData, $this->shop);
+        
+        $productNames = [];
+        $productArray = [];
+
+
+        $colors = [];
+        $lengths = [];
+
+        foreach($products as $product){
+            foreach($product->getProductVariations() as $variation){
+                if(!in_array($variation->getLength(), $lengths) && !in_array($variation->getColor(), $colors)){
+                    $lengths[] = $variation->getLength();
+                    $colors[] = $variation->getColor();
+                }
+            }
+        }
+
+        foreach($products as $product){
+            if(!in_array($product->getSlug(), $productNames)){
+              
+                 $product->colorArrays = $colors;
+                 $product->lengthArrays = $lengths;
+
+                 $product->setColors($colors);
+                 $productNames[] = $product->getSlug();
+                 $productArray[$product->getSlug()] = $product;
+
+            }else{
+                $productx = $productArray[$product->getSlug()];
+                
+                $productx->setQuantity($productx->getQuantity() + $product->getQuantity());
+
+                $productArray[$product->getSlug()] = $productx;
+            }
+        }
+
+        $html = '';
+       foreach($productArray as $key => $product){
+        $in_session = 0;
+        $id = 0;
+        if(!empty($session->get('cart_item', []))){
+            $session_code_array = $session->get('cart_item',[])[$key];
+            $id = $productArray[$key] - 1;
+
+            if(in_array($id, $session_code_array)){
+                $in_session = 1;
+            }
+        }
+
+        $html .='
+        <div class="col-lg-3">
+            <div class="card">
+                <img class="card-img" src="https://s3.eu-central-1.amazonaws.com/bootstrapbaymisc/blog/24_days_bootstrap/vans.png" alt="Vans">
+                <div class="card-body">
+                <h4 class="card-title">'.$product->getName().'</h4>
+                <h6 class="card-subtitle mb-2 text-muted">Catégorie: '.$product->getCategory().'</h6>
+                <h6 class="card-subtitle mb-2 text-muted">En stock: '.$product->getQuantity().'</h6>
+                <h6 class="card-subtitle mb-2 text-muted">Tailles: </h6>
+                <h6 class="card-subtitle mb-2 text-muted">Couleurs: </h6>
+                <p class="card-text">
+                <div class="buy d-flex justify-content-between align-items-center">
+                    <div class="price text-success"><h5 class="mt-4">'.$product->getSellingPrice().' CFA</div>
+                    <button class="btn btn-danger btn-sm btnAdded"id="added_'.$product->getId().'"  $in_session != 1 ?? style="display:none">Ajouté</button>
+                </div>
+                </div>
+            </div>
+        </div>
+        ';
+       }
+
+       return $this->json($html);
+    }
+
 }

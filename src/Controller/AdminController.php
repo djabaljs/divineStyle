@@ -58,6 +58,7 @@ use App\Repository\ProductRepository;
 use App\Repository\DeliveryRepository;
 use App\Services\Invoice\ReturnInvoice;
 use App\Services\Invoice\InvoiceService;
+use App\Services\Invoice\PrinterInvoice;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -2102,7 +2103,7 @@ class AdminController extends AbstractController
      * @param InvoiceService $invoiceService
      * @return Response
      */
-    public function productordersCreate(Request $request, SessionInterface $session, InvoiceService $invoiceService): Response
+    public function productordersCreate(Request $request, SessionInterface $session, InvoiceService $invoiceService,PrinterInvoice $printer): Response
     {
         
         $invoice = $this->manager->getRepository(Invoice::class)->find(26);
@@ -2352,7 +2353,7 @@ class AdminController extends AbstractController
                 $logo = $request->getUriForPath('/concept/assets/images/logo.jpg');
 
                 if($payment->getAmountPaid() > 0){
-                    $invoiceService->generateInvoice($invoice, $logo);
+                    $printer->generateInvoice($invoice, $logo);
                     $this->addFlash("success", "Vente effectuée avec succès");
                     return $this->redirectToRoute('admin_products_orders_create');
                 }else{
@@ -2404,14 +2405,14 @@ class AdminController extends AbstractController
      * @param InvoiceService $invoiceService
      * @return Response
      */
-    public function productsOrdersInvoiceShow(Invoice $invoice, InvoiceService $invoiceService)
+    public function productsOrdersInvoiceShow(Invoice $invoice, InvoiceService $invoiceService, PrinterInvoice $printer)
     {
         $invoice = $this->manager->getRepository(Invoice::class)->find($invoice->getId());
 
         if(is_null($invoice))
             throw $this->createNotFoundException('Cette facture n\'existe pas!');
-
-       return $invoiceService->generateInvoice($invoice,'');
+       
+       return $printer->generateInvoice($invoice,'');
     }
 
       /**

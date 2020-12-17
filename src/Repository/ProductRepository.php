@@ -55,6 +55,7 @@ class ProductRepository extends ServiceEntityRepository
 
         $qb 
             ->where('p.name LIKE :name')
+            ->andWhere('p.deleted = false')
             ->setParameter('name', '%'.$name.'%')
             ;
         return $qb->getQuery()->getResult();
@@ -152,5 +153,20 @@ class ProductRepository extends ServiceEntityRepository
                          ->getResult()
             ;
          }
+    }
+
+    
+    public function findProductByNameLike($name, $shop)
+    {
+        $qb = $this->createQueryBuilder('p');
+
+        $qb 
+            ->where('p.name LIKE :name')
+            ->andWhere('p.deleted = false')
+            ->andWhere('p.shop = :shop')
+            ->setParameter('name', '%'.$name.'%')
+            ->setParameter('shop', $shop)
+            ;
+        return $qb->getQuery()->getResult();
     }
 }

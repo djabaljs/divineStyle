@@ -79,7 +79,7 @@
                                                     <h6 class="card-subtitle mb-2 text-muted">Couleurs: {{product.colors}}</h6>
                                                     <p class="card-text">
                                                     <div class="buy d-flex justify-content-between align-items-center">
-                                                        <div class="price text-success"><h5 class="mt-4">{{product.sellingPrice}} CFA</div>
+                                                        <div class="price text-success"><h5 class="mt-4">{{product.sellingPrice|format_currency('XOF')}}</div>
                                                         <input type="number" class="price"  value="{% if product.quantity <= 0 %}0{% else %}1{% endif %}" name="quantity" id="qty_{{product.id}}" min="0" max="{{product.quantity}}">
                                                             {% set in_session = 0 %}
                                                             {% if app.session.get('cart_item') is empty %}
